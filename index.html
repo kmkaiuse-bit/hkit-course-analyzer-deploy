@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HKIT Course Exemption Analyzer</title>
+    <meta name="description" content="Advanced Standing Application Processing System for Hong Kong Institute of Technology">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>🎓 HKIT Course Exemption Analyzer</h1>
+            <p>Advanced Standing Application Processing System</p>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="main-content">
+            <!-- File Upload Section -->
+            <div class="card">
+                <h2>📁 Upload Transcripts</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <p><strong>Drop CSV/Excel/PDF files here</strong></p>
+                    <p>or click to browse</p>
+                    <input type="file" id="fileInput" class="file-input" multiple accept=".csv,.xlsx,.xls,.pdf,application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+                    <button class="upload-btn" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">
+                        Choose Files
+                    </button>
+                </div>
+                <div class="file-list" id="fileList"></div>
+                <div id="templateInfo"></div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="card">
+                <h2>⚙️ Analysis Settings</h2>
+                
+                <div style="margin-bottom: 15px;">
+                    <label><strong>Programme Type:</strong></label>
+                    <select id="programmeType">
+                        <option value="">Select Programme</option>
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label><strong>Analysis Mode:</strong></label>
+                    <select id="analysisMode">
+                        <option value="unified">HKIT Unified Template</option>
+                        <option value="standard">Standard CSV Analysis</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label>
+                        <input type="checkbox" id="multiFileMode" checked>
+                        Multi-file Integration Mode
+                    </label>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
+                    <h4 style="color: #4a5568; margin-bottom: 10px;">📋 Instructions:</h4>
+                    <ol style="color: #2d3748; font-size: 0.9rem;">
+                        <li>Upload student transcript files (CSV/Excel/PDF)</li>
+                        <li>Select the target programme</li>
+                        <li>Click "Analyze Files" to process</li>
+                        <li>Review results and export as needed</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- 學生資訊輸入區域 -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8" id="studentInfoCard" style="display: none;">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">👨‍🎓 學生資訊</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- 學生姓名 -->
+                <div class="space-y-2">
+                    <label for="studentName" class="block text-sm font-medium text-gray-700">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        學生姓名 *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="studentName" 
+                        placeholder="請輸入學生姓名"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                    >
+                </div>
+
+                <!-- 申請編號 -->
+                <div class="space-y-2">
+                    <label for="applicationNumber" class="block text-sm font-medium text-gray-700">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                        </svg>
+                        申請編號 *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="applicationNumber" 
+                        placeholder="例如：APP2024001"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                    >
+                </div>
+
+                <!-- 申請課程 -->
+                <div class="space-y-2">
+                    <label for="appliedProgramme" class="block text-sm font-medium text-gray-700">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                        申請課程 *
+                    </label>
+                    <select 
+                        id="appliedProgramme" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        required
+                    >
+                        <option value="">請選擇申請課程</option>
+                        <!-- 選項將由 JavaScript 動態填入 -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- 驗證狀態顯示 -->
+            <div id="validationStatus" class="mt-4 hidden">
+                <div class="flex items-center space-x-2 text-sm">
+                    <svg class="w-4 h-4" id="validationIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span id="validationText">學生資訊已完整填寫</span>
+                </div>
+            </div>
+
+            <!-- 保存按鈕 -->
+            <div class="mt-6 text-center">
+                <button id="saveStudentInfoBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    保存學生資訊
+                </button>
+            </div>
+        </div>
+
+        <!-- Analysis Section -->
+        <div class="card analysis-section">
+            <h2>🔍 Analysis & Results</h2>
+            
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-primary" id="analyzeBtn" disabled>
+                    🔍 Analyze Files
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">
+                    🗑️ Clear All
+                </button>
+                
+                <!-- 編輯模式控制按鈕 -->
+                <button class="btn btn-secondary" id="editBtn" style="display: none;">
+                    ✏️ 編輯結果
+                </button>
+                <button class="btn btn-primary" id="saveBtn" style="display: none;">
+                    💾 保存修改
+                </button>
+                <button class="btn btn-secondary" id="cancelBtn" style="display: none;">
+                    ❌ 取消編輯
+                </button>
+                <button class="btn btn-secondary" id="resetBtn" style="display: none;">
+                    🔄 重置原始
+                </button>
+                
+                <!-- 排課計劃按鈕 -->
+                <button class="btn btn-primary" id="generateStudyPlanBtn" style="display: none;">
+                    📅 生成排課計劃
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div id="statusMessage" style="color: #667eea; font-size: 0.9rem; margin-top: 5px;"></div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" style="display: none;">
+                <!-- 學生資訊顯示卡片 -->
+                <div id="studentInfoDisplay" class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border border-blue-200" style="display: none;">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800" id="displayStudentName">學生姓名</h3>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <span id="displayApplicationNumber">申請編號</span>
+                                    <span class="text-gray-400">|</span>
+                                    <span id="displayAppliedProgramme">申請課程</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="editStudentInfoBtn" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            編輯資訊
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="results-container">
+                    <h3>📊 Analysis Results</h3>
+                    
+                    <!-- Export Options -->
+                    <div class="export-options">
+                        <button class="btn btn-secondary" id="downloadBtn" style="display: none;" onclick="downloadIntegratedResults()">
+                            📄 下載 CSV
+                        </button>
+                        <button class="btn btn-secondary" id="downloadExcelBtn" style="display: none;" onclick="downloadExcelApplication()">
+                            📉 下載Excel申請表
+                        </button>
+                        <button class="btn btn-secondary" id="downloadPdfBtn" style="display: none;" onclick="generatePdfApplication()">
+                            📄 生成PDF申請表
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportJSON()">
+                            📄 Export JSON
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportCSV()">
+                            📊 Export CSV
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportTemplate()">
+                            📋 Export Template
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportSummary()">
+                            📝 Export Summary
+                        </button>
+                    </div>
+                    
+                    <!-- Summary Statistics -->
+                    <div id="summaryStats"></div>
+                    
+                    <!-- View Mode Selection -->
+                    <div style="margin: 20px 0;">
+                        <label>
+                            <input type="radio" name="viewMode" value="table" checked>
+                            📋 Table View
+                        </label>
+                        <label style="margin-left: 15px;">
+                            <input type="radio" name="viewMode" value="json">
+                            🔧 JSON View
+                        </label>
+                    </div>
+                    
+                    <!-- Table View -->
+                    <div id="tableView"></div>
+                    
+                    <!-- JSON View -->
+                    <div id="jsonView" style="display: none;">
+                        <div class="json-output" id="jsonOutput"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; color: white; opacity: 0.8; margin-top: 40px; font-size: 0.9rem;">
+            <p>© 2025 Hong Kong Institute of Technology - Course Exemption Analyzer</p>
+            <p style="margin-top: 5px;">Powered by AI for Advanced Standing Applications</p>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="config/api-config.js"></script>
+    <script src="assets/js/modules/studentInfoManager.js"></script>
+    <script src="assets/js/modules/editModeController.js"></script>
+    <script src="assets/js/modules/studyPlanGenerator.js"></script>
+    <script src="assets/js/modules/advancedExporter.js"></script>
+    <script src="assets/js/templates.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/file-handler.js"></script>
+    <script src="assets/js/gemini-api.js"></script>
+    <script src="assets/js/results-display.js"></script>
+    <script src="assets/js/export-manager.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

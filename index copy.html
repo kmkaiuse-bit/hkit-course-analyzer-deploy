@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HKIT Course Exemption Analyzer</title>
+    <meta name="description" content="Advanced Standing Application Processing System for Hong Kong Institute of Technology">
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>🎓 HKIT Course Exemption Analyzer</h1>
+            <p>Advanced Standing Application Processing System</p>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="main-content">
+            <!-- File Upload Section -->
+            <div class="card">
+                <h2>📁 Upload Transcripts</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <p><strong>Drop CSV/Excel/PDF files here</strong></p>
+                    <p>or click to browse</p>
+                    <input type="file" id="fileInput" class="file-input" multiple accept=".csv,.xlsx,.xls,.pdf,application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+                    <button class="upload-btn" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">
+                        Choose Files
+                    </button>
+                </div>
+                <div class="file-list" id="fileList"></div>
+                <div id="templateInfo"></div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="card">
+                <h2>⚙️ Analysis Settings</h2>
+                
+                <div style="margin-bottom: 15px;">
+                    <label><strong>Programme Type:</strong></label>
+                    <select id="programmeType">
+                        <option value="">Select Programme</option>
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label><strong>Analysis Mode:</strong></label>
+                    <select id="analysisMode">
+                        <option value="unified">HKIT Unified Template</option>
+                        <option value="standard">Standard CSV Analysis</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label>
+                        <input type="checkbox" id="multiFileMode" checked>
+                        Multi-file Integration Mode
+                    </label>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-radius: 8px;">
+                    <h4 style="color: #4a5568; margin-bottom: 10px;">📋 Instructions:</h4>
+                    <ol style="color: #2d3748; font-size: 0.9rem;">
+                        <li>Upload student transcript files (CSV/Excel/PDF)</li>
+                        <li>Select the target programme</li>
+                        <li>Click "Analyze Files" to process</li>
+                        <li>Review results and export as needed</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Section -->
+        <div class="card analysis-section">
+            <h2>🔍 Analysis & Results</h2>
+            
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn btn-primary" id="analyzeBtn" disabled>
+                    🔍 Analyze Files
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">
+                    🗑️ Clear All
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div id="statusMessage" style="color: #667eea; font-size: 0.9rem; margin-top: 5px;"></div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" style="display: none;">
+                <div class="results-container">
+                    <h3>📊 Analysis Results</h3>
+                    
+                    <!-- Export Options -->
+                    <div class="export-options">
+                        <button class="btn btn-secondary" onclick="exportJSON()">
+                            📄 Export JSON
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportCSV()">
+                            📊 Export CSV
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportTemplate()">
+                            📋 Export Template
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportSummary()">
+                            📝 Export Summary
+                        </button>
+                    </div>
+                    
+                    <!-- Summary Statistics -->
+                    <div id="summaryStats"></div>
+                    
+                    <!-- View Mode Selection -->
+                    <div style="margin: 20px 0;">
+                        <label>
+                            <input type="radio" name="viewMode" value="table" checked>
+                            📋 Table View
+                        </label>
+                        <label style="margin-left: 15px;">
+                            <input type="radio" name="viewMode" value="json">
+                            🔧 JSON View
+                        </label>
+                    </div>
+                    
+                    <!-- Table View -->
+                    <div id="tableView"></div>
+                    
+                    <!-- JSON View -->
+                    <div id="jsonView" style="display: none;">
+                        <div class="json-output" id="jsonOutput"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; color: white; opacity: 0.8; margin-top: 40px; font-size: 0.9rem;">
+            <p>© 2025 Hong Kong Institute of Technology - Course Exemption Analyzer</p>
+            <p style="margin-top: 5px;">Powered by AI for Advanced Standing Applications</p>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="config/api-config.js"></script>
+    <script src="assets/js/templates.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/file-handler.js"></script>
+    <script src="assets/js/gemini-api.js"></script>
+    <script src="assets/js/results-display.js"></script>
+    <script src="assets/js/export-manager.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

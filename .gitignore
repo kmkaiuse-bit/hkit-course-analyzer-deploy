@@ -1,0 +1,45 @@
+# API Keys and Credentials
+config/api-config.js
+*.env
+.env*
+
+# Development files
+debug.html
+backup/
+docs/
+*.md
+!README.md
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Analysis output files
+assets/images/*.csv
+assets/images/*.xlsx
+assets/images/*.json
+
+# Temporary files
+*.tmp
+*.temp

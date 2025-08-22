@@ -205,7 +205,7 @@ const App = {
     },
 
     /**
-     * Validate inputs before analysis safely
+     * Validate inputs before analysis safely (FIXED - No API key check)
      * @returns {boolean} True if valid
      */
     validateInputs() {
@@ -231,15 +231,8 @@ const App = {
                 return false;
             }
 
-            // Validate API configuration
-            if (typeof validateConfig === 'undefined' || !validateConfig()) {
-                if (typeof Utils !== 'undefined' && Utils.showError) {
-                    Utils.showError('Gemini API key not configured. Please add your API key in config/api-config.js');
-                } else {
-                    alert('Gemini API key not configured. Please add your API key in config/api-config.js');
-                }
-                return false;
-            }
+            // ✅ REMOVED API key validation - now handled by Vercel Functions
+            console.log('🚀 Validation passed - using Vercel Functions for secure API calls');
 
             return true;
         } catch (error) {

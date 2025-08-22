@@ -1,12 +1,36 @@
 {
-  "version": 2,
-  "builds": [
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "framework": null,
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 10,
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
     {
-      "src": "**",
-      "use": "@vercel/static"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     }
   ],
-  "env": {
-    "GEMINI_API_KEY": "@gemini-api-key"
-  }
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    }
+  ]
 }

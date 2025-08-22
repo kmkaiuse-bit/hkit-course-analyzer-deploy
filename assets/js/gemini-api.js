@@ -1,6 +1,6 @@
 /**
- * Gemini API Integration - Fixed Stack Overflow Issue
- * Handles both text files and PDF files directly
+ * Gemini API Integration - 安全版本
+ * 通过Vercel Functions调用，不暴露API密钥
  */
 
 const GeminiAPI = {
@@ -12,9 +12,9 @@ const GeminiAPI = {
      * @returns {Promise<Array>} Analysis results
      */
     async analyzeTranscripts(transcriptContent, programmeId, files = []) {
-        // Validate API configuration
+        // Validate API configuration (always true for Vercel Functions)
         if (!validateConfig()) {
-            throw new Error('Gemini API key not configured. Please add your API key in config/api-config.js');
+            throw new Error('API configuration error');
         }
 
         // Get programme template
@@ -119,29 +119,23 @@ IMPORTANT RULES:
     },
 
     /**
-     * Call Gemini API with support for both text and PDF files
+     * Call Gemini API through Vercel Function (安全版本)
      * @param {string} prompt - Analysis prompt
      * @param {Array} files - Array of file objects
      * @returns {Promise<Object>} API response
      */
     async callAPI(prompt, files = []) {
         try {
-            const requestBody = {
-                contents: [{
-                    parts: [
-                        {
-                            text: prompt
-                        }
-                    ]
-                }],
-                generationConfig: {
-                    temperature: API_CONFIG.gemini.temperature,
-                    maxOutputTokens: API_CONFIG.gemini.maxTokens
-                }
+            // 构建请求数据
+            const requestData = {
+                prompt: prompt,
+                model: 'gemini-1.5-pro'
             };
 
-            // Add PDF files directly to the request
+            // 如果有PDF文件，处理成base64
             if (files.length > 0) {
+                requestData.files = [];
+                
                 for (const fileObj of files) {
                     if (fileObj.file.type === 'application/pdf') {
                         try {
@@ -155,11 +149,10 @@ IMPORTANT RULES:
                             const arrayBuffer = await fileObj.file.arrayBuffer();
                             const base64Data = this.arrayBufferToBase64(arrayBuffer);
                             
-                            requestBody.contents[0].parts.push({
-                                inline_data: {
-                                    mime_type: "application/pdf",
-                                    data: base64Data
-                                }
+                            requestData.files.push({
+                                name: fileObj.name,
+                                mimeType: 'application/pdf',
+                                data: base64Data
                             });
                             
                             console.log(`✅ PDF processed successfully: ${fileObj.name}`);
@@ -171,23 +164,14 @@ IMPORTANT RULES:
                 }
             }
 
-            console.log('Sending request to Gemini API...');
-            const response = await fetch(getGeminiEndpoint(), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API Error Response:', errorText);
-                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-            }
-
-            console.log('✅ Received response from Gemini API');
-            return response.json();
+            console.log('Sending request to Vercel Function...');
+            
+            // 调用我们的安全Vercel Function
+            const response = await callGeminiAPI(JSON.stringify(requestData));
+            
+            console.log('✅ Received response from Vercel Function');
+            return response;
+            
         } catch (error) {
             console.error('API call error:', error);
             throw error;

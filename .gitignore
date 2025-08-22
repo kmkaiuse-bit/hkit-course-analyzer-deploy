@@ -1,9 +1,4 @@
-# API Keys and Credentials
-config/api-config.js
-*.env
-.env*
-
-# Development files
+# Development files only
 debug.html
 backup/
 docs/

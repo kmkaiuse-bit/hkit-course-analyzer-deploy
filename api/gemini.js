@@ -3,7 +3,7 @@
  * 安全地代理对Gemini API的调用，支持PDF文件处理
  */
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // 只允许POST请求
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -91,4 +91,4 @@ export default async function handler(req, res) {
             details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
-}
+};

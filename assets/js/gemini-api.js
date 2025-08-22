@@ -1,21 +1,19 @@
 /**
- * Gemini API Integration - 安全版本
+ * Gemini API Integration - 安全版本  
  * 通过Vercel Functions调用，不暴露API密钥
  */
 
 const GeminiAPI = {
     /**
      * Call Gemini API for course exemption analysis
-     * @param {string} transcriptContent - Student transcript content (for text files)
+     * @param {string} transcriptContent - Student transcript content (for text files)  
      * @param {string} programmeId - Selected programme ID
      * @param {Array} files - Array of file objects (for PDF support)
      * @returns {Promise<Array>} Analysis results
      */
     async analyzeTranscripts(transcriptContent, programmeId, files = []) {
-        // Validate API configuration (always true for Vercel Functions)
-        if (!validateConfig()) {
-            throw new Error('API configuration error');
-        }
+        // No API key validation needed for Vercel Functions
+        console.log('🚀 Starting analysis with Vercel Functions...');
 
         // Get programme template
         const programme = TemplateManager.getProgramme(programmeId);
@@ -43,7 +41,7 @@ const GeminiAPI = {
      * Create analysis prompt
      * @param {string} templateCSV - Programme template in CSV format
      * @param {string} transcriptContent - Student transcript content (for text files)
-     * @param {string} programmeName - Programme name
+     * @param {string} programmeName - Programme name  
      * @param {number} fileCount - Number of files being processed
      * @returns {string} Complete prompt
      */
@@ -121,11 +119,13 @@ IMPORTANT RULES:
     /**
      * Call Gemini API through Vercel Function (安全版本)
      * @param {string} prompt - Analysis prompt
-     * @param {Array} files - Array of file objects
+     * @param {Array} files - Array of file objects  
      * @returns {Promise<Object>} API response
      */
     async callAPI(prompt, files = []) {
         try {
+            console.log('📡 Calling Vercel Function API...');
+            
             // 构建请求数据
             const requestData = {
                 prompt: prompt,
@@ -164,13 +164,23 @@ IMPORTANT RULES:
                 }
             }
 
-            console.log('Sending request to Vercel Function...');
-            
             // 调用我们的安全Vercel Function
-            const response = await callGeminiAPI(JSON.stringify(requestData));
+            const response = await fetch('/api/gemini', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Vercel Function Error:', errorText);
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+            }
             
             console.log('✅ Received response from Vercel Function');
-            return response;
+            return await response.json();
             
         } catch (error) {
             console.error('API call error:', error);

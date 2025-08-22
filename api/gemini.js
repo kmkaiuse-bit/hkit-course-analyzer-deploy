@@ -1,6 +1,6 @@
 /**
  * Vercel Function: Gemini API Proxy
- * 安全地代理对Gemini API的调用
+ * 安全地代理对Gemini API的调用，支持PDF文件处理
  */
 
 export default async function handler(req, res) {
@@ -14,15 +14,19 @@ export default async function handler(req, res) {
         const apiKey = process.env.GEMINI_API_KEY;
         
         if (!apiKey) {
+            console.error('GEMINI_API_KEY not found in environment variables');
             return res.status(500).json({ error: 'API key not configured' });
         }
 
         // 从请求体获取数据
-        const { prompt, model = 'gemini-1.5-pro' } = req.body;
+        const { prompt, model = 'gemini-1.5-pro', files = [] } = req.body;
 
         if (!prompt) {
             return res.status(400).json({ error: 'Prompt is required' });
         }
+
+        console.log(`🚀 Processing request with model: ${model}`);
+        console.log(`📄 Files to process: ${files.length}`);
 
         // 构建Gemini API请求
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -41,6 +45,23 @@ export default async function handler(req, res) {
             }
         };
 
+        // 添加PDF文件到请求中
+        if (files && files.length > 0) {
+            for (const file of files) {
+                if (file.mimeType === 'application/pdf' && file.data) {
+                    console.log(`📎 Adding PDF file: ${file.name}`);
+                    requestBody.contents[0].parts.push({
+                        inline_data: {
+                            mime_type: file.mimeType,
+                            data: file.data
+                        }
+                    });
+                }
+            }
+        }
+
+        console.log('📡 Calling Gemini API...');
+
         // 调用Gemini API
         const response = await fetch(geminiUrl, {
             method: 'POST',
@@ -51,10 +72,13 @@ export default async function handler(req, res) {
         });
 
         if (!response.ok) {
-            throw new Error(`Gemini API error: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Gemini API Error:', errorText);
+            throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('✅ Successfully received response from Gemini API');
 
         // 返回结果给前端
         res.status(200).json(data);
@@ -63,7 +87,8 @@ export default async function handler(req, res) {
         console.error('API Error:', error);
         res.status(500).json({ 
             error: 'Internal server error',
-            message: error.message 
+            message: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 }

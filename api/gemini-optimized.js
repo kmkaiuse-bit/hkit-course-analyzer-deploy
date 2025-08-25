@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     }
 
     // Parse request body
-    const { prompt, model = 'gemini-1.5-flash', temperature = 0.7, maxTokens = 4096, files = [] } = req.body;
+    const { prompt, model = 'gemini-1.5-flash', temperature = 0.7 } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ 
@@ -36,50 +36,27 @@ module.exports = async (req, res) => {
       });
     }
 
-    console.log('Initializing Gemini API...');
+    console.log('Initializing Gemini API with optimized settings...');
     
-    // Initialize Gemini
+    // Initialize Gemini with optimized settings for speed
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Use a faster model for better performance
+    // Use flash model with reduced token limit for faster response
     const geminiModel = genAI.getGenerativeModel({ 
-      model: model,
+      model: 'gemini-1.5-flash', // Always use flash for speed
       generationConfig: {
         temperature: temperature,
-        maxOutputTokens: Math.min(maxTokens, 8192), // Limit to prevent timeouts
+        maxOutputTokens: 4096, // Reduced for faster response
         topP: 0.95,
         topK: 40,
       },
     });
 
-    console.log('Generating content...');
-    
-    // Prepare content for generation (handle files if present)
-    let contentToGenerate;
-    if (files && files.length > 0) {
-      // Handle files with prompt
-      const parts = [{ text: prompt }];
-      
-      // Add file parts
-      files.forEach(file => {
-        if (file.mimeType === 'application/pdf') {
-          parts.push({
-            inlineData: {
-              mimeType: file.mimeType,
-              data: file.data
-            }
-          });
-        }
-      });
-      
-      contentToGenerate = parts;
-    } else {
-      contentToGenerate = prompt;
-    }
+    console.log('Generating content with timeout protection...');
     
     // Generate content with 9 second timeout (leaving 1 second buffer)
     const result = await Promise.race([
-      geminiModel.generateContent(contentToGenerate),
+      geminiModel.generateContent(prompt),
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 9000)
       )
@@ -101,11 +78,19 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('Gemini API Error:', error);
     
-    // Detailed error response
+    // Check if it's a timeout error
+    if (error.message && error.message.includes('timeout')) {
+      return res.status(503).json({
+        error: 'Request timeout',
+        message: 'The analysis is taking too long. Please try with a smaller file or simpler query.',
+        suggestion: 'Try analyzing fewer courses at once'
+      });
+    }
+    
+    // Other errors
     return res.status(500).json({
       error: 'Failed to generate content',
-      message: error.message || 'Unknown error occurred',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message || 'Unknown error occurred'
     });
   }
 };

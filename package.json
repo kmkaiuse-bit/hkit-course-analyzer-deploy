@@ -1,0 +1,15 @@
+{
+  "name": "advanced-standing-tool",
+  "version": "1.0.0",
+  "description": "HKIT Course Analyzer and Advanced Standing Tool",
+  "private": true,
+  "scripts": {
+    "test": "echo \"No tests configured\""
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

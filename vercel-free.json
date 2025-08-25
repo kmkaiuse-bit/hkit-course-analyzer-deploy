@@ -3,8 +3,11 @@
   "outputDirectory": ".",
   "framework": null,
   "functions": {
-    "api/*.js": {
-      "maxDuration": 60
+    "api/gemini.js": {
+      "maxDuration": 10
+    },
+    "api/test.js": {
+      "maxDuration": 10
     }
   },
   "rewrites": [

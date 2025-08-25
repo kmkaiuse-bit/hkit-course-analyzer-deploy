@@ -164,8 +164,8 @@ IMPORTANT RULES:
                 }
             }
 
-            // 调用我们的安全Vercel Function (optimized version)
-            const response = await fetch('/api/gemini-optimized', {
+            // 调用我们的安全Vercel Function
+            const response = await fetch('/api/gemini', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

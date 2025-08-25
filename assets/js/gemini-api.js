@@ -182,7 +182,7 @@ IMPORTANT RULES:
             console.log('✅ Received response from Vercel Function');
             return await response.json();
             
-        } catch (error) {
+        } catch (error) {assets/js/gemini-api.js
             console.error('API call error:', error);
             throw error;
         }
@@ -247,3 +247,4 @@ IMPORTANT RULES:
         }
     }
 };
+}

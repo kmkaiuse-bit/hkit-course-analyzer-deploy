@@ -129,7 +129,7 @@ IMPORTANT RULES:
             // 构建请求数据
             const requestData = {
                 prompt: prompt,
-                model: 'gemini-1.5-pro'
+                model: 'gemini-1.5-flash'  // Changed to flash for speed
             };
 
             // 如果有PDF文件，处理成base64
@@ -164,8 +164,8 @@ IMPORTANT RULES:
                 }
             }
 
-            // 调用我们的安全Vercel Function
-            const response = await fetch('/api/gemini', {
+            // 调用我们的安全Vercel Function (optimized version)
+            const response = await fetch('/api/gemini-optimized', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -195,12 +195,19 @@ IMPORTANT RULES:
      */
     parseResponse(response) {
         try {
-            // Extract text from Gemini response
-            if (!response.candidates || !response.candidates[0] || !response.candidates[0].content) {
+            // Extract text from response (handle both Vercel function and direct Gemini formats)
+            let text;
+            if (response.success && response.data && response.data.text) {
+                // Vercel function format
+                text = response.data.text;
+            } else if (response.candidates && response.candidates[0] && response.candidates[0].content) {
+                // Direct Gemini response format
+                text = response.candidates[0].content.parts[0].text;
+            } else {
                 throw new Error('Invalid API response structure');
             }
-
-            const text = response.candidates[0].content.parts[0].text;
+            
+            // const text = response.candidates[0].content.parts[0].text;
             
             // Clean up response (remove markdown code blocks if present)
             const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

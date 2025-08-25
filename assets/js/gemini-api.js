@@ -130,7 +130,7 @@ IMPORTANT RULES:
             // 构建请求数据
             const requestData = {
                 prompt: prompt,
-                model: 'gemini-2.0-flash'  // Changed to 2.0 flash for speed and accuracy
+                model: 'gemini-2.5-flash'  // Changed to 2.5 flash for speed and accuracy
             };
 
             // 如果有PDF文件，处理成base64

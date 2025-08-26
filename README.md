@@ -1,14 +1,57 @@
-# Advanced Standing Tool
+# 🎓 HKIT Course Analyzer
 
-A web-based tool for analyzing HKIT course transcripts and determining advanced standing eligibility for various university programs.
+Advanced Standing Application Processing System for Hong Kong Institute of Technology
+
+## 🚀 Quick Start
+
+### Production (Vercel)
+- Main app: `src/index.html`
+- Deployment: Auto-deploy from main branch
+- API: Vercel Functions handle Gemini API calls
+
+### Local Development
+```bash
+# Start local server
+python -m http.server 8000
+
+# Open in browser - Choose your version:
+http://localhost:8000/local/demo.html      # Basic version
+http://localhost:8000/local/enhanced.html  # Full features
+```
+
+## 📁 Project Structure
+
+```
+├── src/                # Production source code
+│   ├── index.html     # Main app
+│   ├── assets/        # CSS, JS, images
+│   ├── api/           # Vercel functions
+│   └── config/        # API configurations
+│
+├── local/             # Local development versions
+│   ├── demo.html      # Basic local version
+│   ├── enhanced.html  # Full-featured version
+│   └── standalone/    # Self-contained package
+│
+├── docs/              # Documentation
+│   ├── CLAUDE.md      # AI assistant guide
+│   ├── deployment/    # Deployment guides
+│   └── guides/        # Other documentation
+│
+└── backups/           # Version backups
+    └── working-version/  # Latest stable backup
+```
 
 ## Features
 
-- 📄 PDF transcript parsing
-- 🎓 Course credit analysis
-- 🏫 Multiple university program support
-- 📊 Detailed exemption reports
-- 💾 Export results as CSV
+- 📄 PDF transcript parsing with PDF.js
+- 🤖 AI-powered course matching (Gemini 1.5-flash)
+- 🎓 Multiple programme templates
+- 📊 Advanced exemption analysis (50% max rule)
+- 🌐 Language course special handling
+- 💾 Export to CSV/Excel/PDF
+- ✏️ Edit mode for result modification
+- 👨‍🎓 Student information management
 
 ## Technology Stack
 

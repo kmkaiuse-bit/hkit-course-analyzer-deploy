@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HKIT Course Analyzer - Local Version</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <!-- Local Mode Badge -->
+    <div class="local-mode-badge">
+        🖥️ LOCAL VERSION
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎓 HKIT Course Analyzer</h1>
+            <p>Local Version - Direct AI Analysis</p>
+        </div>
+
+        <!-- File Upload -->
+        <div class="card">
+            <h2>📁 Upload Transcripts</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <p><strong>Drop files here or click to browse</strong></p>
+                <p>Supports: CSV, Excel, PDF</p>
+                <input type="file" id="fileInput" class="file-input" multiple accept=".csv,.xlsx,.xls,.pdf">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose Files
+                </button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+            <h2>⚙️ Analysis Settings</h2>
+            
+            <label><strong>Programme Type:</strong></label>
+            <select id="programmeType">
+                <option value="">Select Programme</option>
+            </select>
+            
+            <div style="margin-top: 15px; padding: 15px; background: #f0f8ff; border-radius: 8px;">
+                <h4>📋 Instructions:</h4>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Upload your transcript files</li>
+                    <li>Select target programme</li>
+                    <li>Click "Analyze" to process</li>
+                    <li>View and export results</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Analysis -->
+        <div class="card">
+            <h2>🔍 Analysis</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-primary" id="analyzeBtn" disabled>
+                    🔍 Analyze Files
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">
+                    🗑️ Clear All
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div id="statusMessage" style="color: #667eea; margin-top: 5px;"></div>
+
+            <!-- Results -->
+            <div id="resultsSection" style="display: none;">
+                <!-- Summary Stats -->
+                <div id="summaryStats"></div>
+                
+                <!-- Export Options -->
+                <div style="margin: 20px 0;">
+                    <button class="btn btn-secondary" onclick="exportCSV()">
+                        📊 Export CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportJSON()">
+                        📄 Export JSON
+                    </button>
+                </div>
+                
+                <!-- View Mode -->
+                <div style="margin: 20px 0;">
+                    <label>
+                        <input type="radio" name="viewMode" value="table" checked>
+                        📋 Table View
+                    </label>
+                    <label style="margin-left: 15px;">
+                        <input type="radio" name="viewMode" value="json">
+                        🔧 JSON View
+                    </label>
+                </div>
+                
+                <!-- Table View -->
+                <div id="tableView"></div>
+                
+                <!-- JSON View -->
+                <div id="jsonView" style="display: none;">
+                    <div class="json-output" id="jsonOutput"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; color: white; opacity: 0.8; margin-top: 40px;">
+            <p>© 2025 HKIT Course Analyzer - Local Version</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config/api-config.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/templates.js"></script>
+    <script src="assets/js/file-handler.js"></script>
+    <script src="assets/js/gemini-api.js"></script>
+    <script src="assets/js/results-display.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

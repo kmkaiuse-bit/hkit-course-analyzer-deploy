@@ -156,9 +156,13 @@ const AdvancedExporter = {
             ws['B6'] = { v: studentName, t: 's' };
             ws['C6'] = { v: programme, t: 's' };
             
+            // Get academic year level from results section dropdown
+            const academicYearSelect = document.getElementById('academicYearLevel');
+            const academicYearLevel = academicYearSelect ? academicYearSelect.value : 'Year 2';
+            
             ws['A7'] = { v: 'Intake Year (HKIT Higher Diploma): ', t: 's' };
             ws['B7'] = { v: `T${currentYear}C`, t: 's' };
-            ws['C7'] = { v: 'Year 2', t: 's' };
+            ws['C7'] = { v: academicYearLevel, t: 's' };
             
             ws['A8'] = { v: 'Application No.: ', t: 's' };
             ws['B8'] = { v: applicationNo, t: 's' };

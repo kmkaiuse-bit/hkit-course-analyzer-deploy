@@ -33,7 +33,9 @@ const GeminiAPI = {
             return this.parseResponse(response);
         } catch (error) {
             console.error('Gemini API error:', error);
-            throw new Error('Failed to analyze transcripts. Please try again.');
+            console.error('Error details:', error.message);
+            console.error('Stack trace:', error.stack);
+            throw new Error(`Failed to analyze transcripts: ${error.message}`);
         }
     },
 
@@ -125,12 +127,196 @@ IMPORTANT RULES:
      */
     async callAPI(prompt, files = []) {
         try {
-            console.log('📡 Calling Vercel Function API...');
+            // Check if we're in local mode
+            const isLocalMode = window.API_CONFIG && window.API_CONFIG.LOCAL_MODE;
+            
+            if (isLocalMode) {
+                console.log('📡 Calling Gemini API directly (Local Mode)...');
+                return await this.callLocalAPI(prompt, files);
+            } else {
+                console.log('📡 Calling Vercel Function API...');
+                return await this.callVercelAPI(prompt, files);
+            }
+            
+        } catch (error) {
+            console.error('API call error:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Call Gemini API directly (Local Mode)
+     */
+    async callLocalAPI(prompt, files = []) {
+        console.log('📍 callLocalAPI called with:', { promptLength: prompt.length, filesCount: files.length });
+        
+        // Check API key availability
+        if (!window.API_CONFIG || !window.API_CONFIG.getApiKey()) {
+            throw new Error('API key not configured. Please enter your Gemini API key first.');
+        }
+        
+        const apiKey = window.API_CONFIG.getApiKey();
+        console.log('📍 Using API key:', apiKey.substring(0, 10) + '...');
+        
+        // Process files if any
+        const processedFiles = await this.processFilesForLocal(files);
+        console.log('📍 Processed files:', processedFiles.length);
+        
+        // Make direct API call with Gemini 1.5 Pro (optimized for speed and reliability)
+        console.log('📍 Using Gemini 1.5 Pro for optimal performance...');
+        return await this.makeDirectGeminiCall(prompt, processedFiles, apiKey);
+    },
+
+    /**
+     * Make direct call to Gemini API
+     */
+    async makeDirectGeminiCall(prompt, files, apiKey) {
+        const modelName = 'gemini-1.5-pro';
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        
+        console.log('📍 Using model:', modelName);
+        
+        // Prepare request body
+        let requestBody;
+        if (files && files.length > 0) {
+            const parts = [{ text: prompt }];
+            files.forEach(file => {
+                if (file.mimeType === 'application/pdf') {
+                    parts.push({
+                        inlineData: {
+                            mimeType: file.mimeType,
+                            data: file.data
+                        }
+                    });
+                }
+            });
+            requestBody = {
+                contents: [{ parts: parts }],
+                generationConfig: {
+                    temperature: 0.3,  // Lower for more consistent academic analysis
+                    maxOutputTokens: 8192,
+                    topP: 0.9,  // Slightly more focused
+                    topK: 40
+                }
+            };
+        } else {
+            requestBody = {
+                contents: [{
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    temperature: 0.3,  // Lower for more consistent academic analysis
+                    maxOutputTokens: 8192,
+                    topP: 0.9,  // Slightly more focused
+                    topK: 40
+                }
+            };
+        }
+
+        console.log('📍 Making direct API call to:', url.split('?')[0]);
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('📍 Received response from Gemini API');
+            console.log('📍 Response structure:', JSON.stringify(data, null, 2));
+            
+            // Extract response text from standard Gemini format
+            let text = null;
+            
+            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+                const candidate = data.candidates[0];
+                console.log('📍 Successfully received response from Gemini 1.5 Pro');
+                
+                if (candidate.content.parts[0] && candidate.content.parts[0].text) {
+                    text = candidate.content.parts[0].text;
+                }
+            }
+            
+            if (text) {
+                console.log('📍 Extracted text length:', text.length);
+                return {
+                    success: true,
+                    data: { text: text }
+                };
+            } else {
+                console.error('📍 Could not find text in response:', data);
+                console.error('📍 Full response keys:', Object.keys(data));
+                if (data.candidates) {
+                    console.error('📍 Candidate keys:', Object.keys(data.candidates[0] || {}));
+                }
+                
+                // Try to extract any text-like content
+                const responseStr = JSON.stringify(data);
+                console.error('📍 Full response as string:', responseStr);
+                
+                throw new Error('Could not extract text from Gemini API response. Check console for details.');
+            }
+        } catch (error) {
+            console.error('Direct Gemini API call failed:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Process files for local API calls
+     */
+    async processFilesForLocal(files) {
+        const processedFiles = [];
+        
+        for (const fileObj of files) {
+            if (fileObj.file.type === 'application/pdf') {
+                try {
+                    console.log(`Processing PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
+                    
+                    // Check file size limit
+                    if (fileObj.file.size > 20 * 1024 * 1024) {
+                        throw new Error(`PDF file too large: ${fileObj.name}. Maximum size is 20MB.`);
+                    }
+                    
+                    const arrayBuffer = await fileObj.file.arrayBuffer();
+                    const base64Data = this.arrayBufferToBase64(arrayBuffer);
+                    
+                    processedFiles.push({
+                        name: fileObj.name,
+                        mimeType: 'application/pdf',
+                        data: base64Data
+                    });
+                    
+                    console.log(`✅ PDF processed successfully: ${fileObj.name}`);
+                } catch (error) {
+                    console.error('Error processing PDF file:', error);
+                    throw new Error(`Failed to process PDF file: ${fileObj.name} - ${error.message}`);
+                }
+            }
+        }
+        
+        return processedFiles;
+    },
+
+    /**
+     * Call Gemini API through Vercel Function (Production Mode)
+     */
+    async callVercelAPI(prompt, files = []) {
+        try {
             
             // 构建请求数据
             const requestData = {
                 prompt: prompt,
-                model: 'gemini-1.5-flash'  // Changed to 1.5 flash for speed
+                model: 'gemini-1.5-pro'  // Optimized for speed and reliability
+            };
 
             // 如果有PDF文件，处理成base64
             if (files.length > 0) {
@@ -195,6 +381,7 @@ IMPORTANT RULES:
      */
     parseResponse(response) {
         try {
+            console.log('📍 Parsing response:', response);
             // Extract text from response (handle both Vercel function and direct Gemini formats)
             let text;
             if (response.success && response.data && response.data.text) {
@@ -247,4 +434,6 @@ IMPORTANT RULES:
         }
     }
 };
-}
+
+// Export GeminiAPI to global scope
+window.GeminiAPI = GeminiAPI;

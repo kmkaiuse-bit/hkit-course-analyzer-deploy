@@ -1,0 +1,19 @@
+{
+  "name": "hkit-course-analyzer-local",
+  "version": "1.0.0",
+  "description": "HKIT Course Analyzer - Local Version",
+  "main": "index.html",
+  "scripts": {
+    "start": "python scripts/start-server.py",
+    "serve": "python -m http.server 8000"
+  },
+  "keywords": ["hkit", "course", "analyzer", "education", "local"],
+  "author": "HKIT Course Analyzer Team",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0",
+    "python": ">=3.6.0"
+  }
+}

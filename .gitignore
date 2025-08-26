@@ -1,11 +1,33 @@
-# Development files only
-debug.html
-backup/
-docs/
-*.md
-!README.md
+cat > .gitignore << EOF
+  # Environment files
+  .env
+  .env.local
+  .env.*.local
 
-# OS generated files
+cat > .gitignore << EOF
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# API keys and secrets
+config/api-config-local.js
+**/api-key*.txt
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+out/
+
+# OS files
 .DS_Store
 .DS_Store?
 ._*
@@ -14,15 +36,28 @@ docs/
 ehthumbs.db
 Thumbs.db
 
+# Logs
+*.log
+logs/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Backup files
+backup-working-version/
+backups/
+*.backup
+*.bak
+
 # IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Logs
-*.log
-npm-debug.log*
+*~
 
 # Runtime data
 pids
@@ -30,11 +65,29 @@ pids
 *.seed
 *.pid.lock
 
-# Analysis output files
-assets/images/*.csv
-assets/images/*.xlsx
-assets/images/*.json
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
 
-# Temporary files
-*.tmp
-*.temp
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Additional sensitive files
+.claude/
+*.docx
+~.docx
+**/*api-config-local.js
+**/*.csv
+
+# Additional sensitive files
+.claude/
+*.docx
+~.docx
+**/*api-config-local.js
+**/*.csv

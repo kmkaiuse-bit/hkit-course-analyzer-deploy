@@ -170,8 +170,16 @@ const ExportManager = {
             template += 'Hong Kong Institute of Technology,,,,,,\n';
             template += `${this.escapeCSVValue(programme.fullName)},,,,,,\n`;
             template += ',,,,,,\n';
+            // Get intake year from UI
+            const intakeYearInput = document.getElementById('intakeYear');
+            const intakeYear = intakeYearInput ? intakeYearInput.value : new Date().getFullYear();
+            
+            // Get academic year level from results section dropdown
+            const academicYearSelect = document.getElementById('academicYearLevel');
+            const academicYearLevel = academicYearSelect ? academicYearSelect.value : 'Year 2';
+            
             template += `Name of Student: ,,${this.escapeCSVValue(programme.name)},,,,\n`;
-            template += 'Intake Year (HKIT Degree): ,,,,,,\n';
+            template += `Intake Year (HKIT Degree): ,,T${intakeYear}C,,${academicYearLevel},,\n`;
             template += 'Application No.: ,,,,,,\n';
             template += ',,,,,,\n';
             template += 'Total subjects require to study in Higher Diploma:,,,,,,\n';

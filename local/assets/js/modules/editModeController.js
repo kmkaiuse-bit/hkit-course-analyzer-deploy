@@ -214,7 +214,8 @@ const EditModeController = {
         }
         
         if (header === 'Exemption Granted') {
-            const isExempt = value === true || value === 'true';
+            // Check for TRUE (case insensitive), default to false for empty/undefined
+            const isExempt = value === true || value === 'true' || value === 'TRUE';
             return `
                 <select class="editable-select px-2 py-1 border border-gray-300 rounded text-xs w-full max-w-full" data-row="${rowIndex}" data-header="${header}">
                     <option value="true" ${isExempt ? 'selected' : ''}>✅ 豁免</option>
@@ -284,7 +285,7 @@ const EditModeController = {
         }
         
         if (header === 'Exemption Granted') {
-            const isExempt = value === true || value === 'true';
+            const isExempt = value === true || value === 'true' || value === 'TRUE';
             return `<span class="px-2 py-1 rounded text-xs ${isExempt ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${isExempt ? '✅ 豁免' : '❌ 不豁免'}</span>`;
         }
         
@@ -346,6 +347,10 @@ const EditModeController = {
                 // 處理特殊欄位
                 if (header === 'Exemption Granted') {
                     value = value === 'true';
+                } else if (header === 'Exemption Granted / study plan') {
+                    // 自動同步 Exemption Granted 欄位
+                    this.currentData[rowIndex]['Exemption Granted'] = (value === 'Exempted') ? 'TRUE' : 'FALSE';
+                    console.log(`🔄 自動更新: 第${rowIndex}行, Exemption Granted = ${this.currentData[rowIndex]['Exemption Granted']}`);
                 }
                 
                 this.currentData[rowIndex][header] = value;

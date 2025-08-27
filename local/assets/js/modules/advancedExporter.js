@@ -139,7 +139,7 @@ const AdvancedExporter = {
             // 學生資訊
             const studentName = studentInfo.name || '未填寫';
             const applicationNo = studentInfo.applicationNumber || '未填寫';
-            const programme = studentInfo.appliedProgramme ? 
+            const appliedProgramme = studentInfo.appliedProgramme ? 
                 studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' : '未填寫';
             
             // Get intake year from UI, fallback to current year
@@ -150,14 +150,15 @@ const AdvancedExporter = {
             // 標題區域
             ws['A1'] = { v: 'APPLICATION FOR ADVANCED STANDING', t: 's' };
             
-            // 學校資訊
+            // 學校資訊 
+            const programme = this.getCurrentProgramme();
             ws['A3'] = { v: 'Hong Kong Institute of Technology', t: 's' };
-            ws['A4'] = { v: 'Higher Diploma of Science and Technology', t: 's' };
+            ws['A4'] = { v: programme.fullName || programme.name, t: 's' };
             
             // 學生資訊 - 表格格式
             ws['A6'] = { v: 'Name of Student: ', t: 's' };
             ws['B6'] = { v: studentName, t: 's' };
-            ws['C6'] = { v: programme, t: 's' };
+            ws['C6'] = { v: programme.name || programme.fullName, t: 's' };
             
             // Get academic year level from results section dropdown
             const academicYearSelect = document.getElementById('academicYearLevel');
@@ -171,7 +172,9 @@ const AdvancedExporter = {
             ws['B8'] = { v: applicationNo, t: 's' };
             
             // 說明文字
-            ws['A10'] = { v: 'Total subjects require to study in Higher Diploma:', t: 's' };
+            // 確定學程類型文字
+            const programmeTypeText = programme.category === 'diploma' ? 'Higher Diploma' : "Bachelor's Degree";
+            ws['A10'] = { v: `Total subjects require to study in ${programmeTypeText}:`, t: 's' };
             
             // 表格標題
             ws['A12'] = { v: 'HKIT Subject Code', t: 's' };
@@ -200,11 +203,18 @@ const AdvancedExporter = {
             
             // 底部資訊
             const lastDataRow = currentRow + currentData.length;
+            // Calculate total exempted courses
+            const exemptedCourses = currentData.filter(r => {
+                const exemption = r['Exemption Granted / study plan'];
+                return exemption === 'Exempted';
+            });
+            
             ws[`A${lastDataRow + 2}`] = { v: 'Total Units of Advanced Standing Approved:', t: 's' };
+            ws[`C${lastDataRow + 2}`] = { v: `${exemptedCourses.length} courses`, t: 's' };
             ws[`A${lastDataRow + 4}`] = { v: 'Intake Level Approved:', t: 's' };
             ws[`A${lastDataRow + 5}`] = { v: '*delete as appropriate', t: 's' };
             ws[`A${lastDataRow + 7}`] = { v: 'Signature:', t: 's' };
-            ws[`A${lastDataRow + 8}`] = { v: 'Programme Leader (Higher Diploma of Science and Technology)', t: 's' };
+            ws[`A${lastDataRow + 8}`] = { v: `Programme Leader (${programme.fullName || programme.name})`, t: 's' };
             
             // 設定工作表範圍
             const range = XLSX.utils.encode_range({
@@ -270,6 +280,7 @@ const AdvancedExporter = {
             }
 
             const studentInfo = this.getStudentInfo();
+            const programme = this.getCurrentProgramme();
             
             // 創建新的窗口用於PDF打印
             const printWindow = window.open('', '_blank', 'width=210mm,height=297mm');
@@ -277,8 +288,9 @@ const AdvancedExporter = {
             // 學生資訊
             const studentName = studentInfo.name || '未填寫';
             const applicationNo = studentInfo.applicationNumber || '未填寫';
-            const programme = studentInfo.appliedProgramme ? 
-                studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' : '未填寫';
+            const appliedProgrammePdf = (studentInfo.appliedProgramme && studentInfo.appliedProgramme.trim()) ? 
+                studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' : 
+                (programme.name || '未填寫');
             
             // Get intake year from UI, fallback to current year
             const intakeYearInput = document.getElementById('intakeYear');
@@ -294,7 +306,8 @@ const AdvancedExporter = {
             ).length;
             
             // 生成HTML內容 - 完全按照學校格式要求
-            const htmlContent = this.generatePdfHtmlContent(studentName, applicationNo, programme, currentYear, academicYearLevel, currentData);
+            console.log('PDF debug:', { studentName, applicationNo, appliedProgrammePdf, programme, currentYear, academicYearLevel });
+            const htmlContent = this.generatePdfHtmlContent(studentName, applicationNo, appliedProgrammePdf, programme, currentYear, academicYearLevel, currentData);
             
             printWindow.document.write(htmlContent);
             printWindow.document.close();
@@ -317,7 +330,7 @@ const AdvancedExporter = {
     /**
      * 生成 PDF HTML 內容
      */
-    generatePdfHtmlContent(studentName, applicationNo, programme, currentYear, academicYearLevel, currentData) {
+    generatePdfHtmlContent(studentName, applicationNo, appliedProgrammePdf, programme, currentYear, academicYearLevel, currentData) {
         return `
         <!DOCTYPE html>
         <html>
@@ -452,7 +465,7 @@ const AdvancedExporter = {
             <div class="header-section">
                 <div class="main-title">APPLICATION FOR ADVANCED STANDING</div>
                 <div class="school-info">Hong Kong Institute of Technology</div>
-                <div class="school-info">Higher Diploma of Science and Technology</div>
+                <div class="school-info">${programme.fullName || programme.name}</div>
             </div>
             
             <div class="student-info-section">
@@ -460,7 +473,7 @@ const AdvancedExporter = {
                     <tr>
                         <td class="student-info-label">Name of Student:</td>
                         <td>${studentName}</td>
-                        <td>${programme}</td>
+                        <td>${appliedProgrammePdf}</td>
                     </tr>
                     <tr>
                         <td class="student-info-label">Intake Year (HKIT Higher Diploma):</td>
@@ -475,7 +488,7 @@ const AdvancedExporter = {
                 </table>
             </div>
             
-            <div class="total-subjects-line">Total subjects require to study in Higher Diploma:</div>
+            <div class="total-subjects-line">Total subjects require to study in ${programme.category === 'diploma' ? 'Higher Diploma' : "Bachelor's Degree"}:</div>
             
             <table class="course-table">
                 <thead>
@@ -507,7 +520,13 @@ const AdvancedExporter = {
             
             <div class="approval-section">
                 <div style="margin-bottom: 10px;">
-                    <strong>Total Units of Advanced Standing Approved:</strong> _______________
+                    <strong>Total Units of Advanced Standing Approved:</strong> ${(() => {
+                        const exemptedCourses = currentData.filter(r => {
+                            const exemption = r['Exemption Granted / study plan'];
+                            return exemption === 'Exempted';
+                        });
+                        return `${exemptedCourses.length} courses`;
+                    })()}
                 </div>
                 
                 <div style="margin-bottom: 10px;">
@@ -524,7 +543,7 @@ const AdvancedExporter = {
             </div>
             
             <div class="programme-leader">
-                Programme Leader (Higher Diploma of Science and Technology)
+                Programme Leader (${programme.fullName || programme.name})
             </div>
             
             <div class="no-print" style="margin-top: 30px; text-align: center; padding: 20px; border-top: 2px solid #ddd;">
@@ -556,6 +575,16 @@ const AdvancedExporter = {
         }
         
         return null;
+    },
+
+    /**
+     * 獲取當前學程資訊
+     */
+    getCurrentProgramme() {
+        if (typeof ResultsDisplay !== 'undefined' && ResultsDisplay.currentProgramme) {
+            return ResultsDisplay.currentProgramme;
+        }
+        return { name: 'Unknown Programme', fullName: 'Unknown Programme', category: 'degree' };
     },
 
     /**

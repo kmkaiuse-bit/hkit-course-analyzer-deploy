@@ -307,6 +307,10 @@ const EditModeController = {
                 // 處理特殊欄位
                 if (header === 'Exemption Granted') {
                     value = value === 'true';
+                } else if (header === 'Exemption Granted / study plan') {
+                    // 自動同步 Exemption Granted 欄位
+                    this.currentData[rowIndex]['Exemption Granted'] = (value === 'Exempted') ? 'TRUE' : 'FALSE';
+                    console.log(`🔄 自動更新: 第${rowIndex}行, Exemption Granted = ${this.currentData[rowIndex]['Exemption Granted']}`);
                 }
                 
                 this.currentData[rowIndex][header] = value;

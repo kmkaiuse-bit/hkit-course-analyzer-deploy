@@ -188,6 +188,7 @@ const ResultsDisplay = {
         if (header === 'Exemption Granted' || header === 'Exemption Granted / study plan') {
             // 處理豁免狀態
             if (header === 'Exemption Granted') {
+                // Only TRUE means exempted, everything else (including empty) is not exempted
                 const isExempt = value === true || value === 'true' || value === 'TRUE';
                 return `<span class="exemption-badge ${isExempt ? 'exemption-true' : 'exemption-false'}">
                     ${isExempt ? '✅ 豁免' : '❌ 不豁免'}

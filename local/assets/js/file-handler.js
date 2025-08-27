@@ -613,6 +613,11 @@ const FileHandler = {
             const pdf = await loadingTask.promise;
             console.log('PDF loaded, pages:', pdf.numPages);
             
+            // Check if PDF has pages
+            if (!pdf.numPages || pdf.numPages === 0) {
+                throw new Error('The document has no pages or is corrupted');
+            }
+            
             let pdfHTML = '<div class="pdf-viewer">';
             
             // Render each page

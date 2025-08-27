@@ -120,7 +120,17 @@ const ExportManager = {
                 throw new Error('Invalid or empty results data');
             }
 
+            // Get student and programme information
+            const studentInfo = (typeof StudentInfoManager !== 'undefined') ? 
+                StudentInfoManager.getStudentInfo() : { name: '', applicationNumber: '', appliedProgramme: '' };
+            const programme = (typeof ResultsDisplay !== 'undefined' && ResultsDisplay.currentProgramme) ? 
+                ResultsDisplay.currentProgramme : { name: 'Unknown Programme', fullName: 'Unknown Programme' };
+
             const headers = [
+                'Student Name',
+                'Application Number',
+                'Programme Applied',
+                'Programme Full Name',
                 'HKIT Subject Code',
                 'HKIT Subject Name',
                 'Exemption Granted / study plan',
@@ -138,7 +148,23 @@ const ExportManager = {
                 }
 
                 const row = headers.map(header => {
-                    const value = result[header] || '';
+                    let value = '';
+                    switch(header) {
+                        case 'Student Name':
+                            value = studentInfo.name || 'Not Provided';
+                            break;
+                        case 'Application Number':
+                            value = studentInfo.applicationNumber || '';
+                            break;
+                        case 'Programme Applied':
+                            value = studentInfo.appliedProgramme || programme.name;
+                            break;
+                        case 'Programme Full Name':
+                            value = programme.fullName || programme.name;
+                            break;
+                        default:
+                            value = result[header] || '';
+                    }
                     return this.escapeCSVValue(value);
                 });
                 csv += row.join(',') + '\n';
@@ -168,7 +194,7 @@ const ExportManager = {
             let template = 'APPLICATION FOR ADVANCED STANDING,,,,,,\n';
             template += ',,,,,,\n';
             template += 'Hong Kong Institute of Technology,,,,,,\n';
-            template += `${this.escapeCSVValue(programme.fullName)},,,,,,\n`;
+            template += `${this.escapeCSVValue(programme.fullName || programme.name)},,,,,,\n`;
             template += ',,,,,,\n';
             // Get intake year from UI
             const intakeYearInput = document.getElementById('intakeYear');
@@ -178,11 +204,19 @@ const ExportManager = {
             const academicYearSelect = document.getElementById('academicYearLevel');
             const academicYearLevel = academicYearSelect ? academicYearSelect.value : 'Year 2';
             
-            template += `Name of Student: ,,${this.escapeCSVValue(programme.name)},,,,\n`;
+            // Get student information
+            const studentInfo = (typeof StudentInfoManager !== 'undefined') ? 
+                StudentInfoManager.getStudentInfo() : { name: '', applicationNumber: '', appliedProgramme: '' };
+            const studentName = studentInfo.name || 'Not Provided';
+            
+            template += `Name of Student: ,,${this.escapeCSVValue(studentName)},,,,\n`;
             template += `Intake Year (HKIT Degree): ,,T${intakeYear}C,,${academicYearLevel},,\n`;
-            template += 'Application No.: ,,,,,,\n';
+            template += `Application No.: ,,${this.escapeCSVValue(studentInfo.applicationNumber || '')},,,,\n`;
             template += ',,,,,,\n';
-            template += 'Total subjects require to study in Higher Diploma:,,,,,,\n';
+            // Determine programme type text
+            const programmeTypeText = programme.category === 'diploma' ? 
+                'Higher Diploma' : "Bachelor's Degree";
+            template += `Total subjects require to study in ${programmeTypeText}:,,,,,,\n`;
             template += ',,,,,,\n';
             template += 'HKIT Subject Code,HKIT Subject Name,Exemption Granted / study plan,Subject Name of Previous Studies,,,\n';
             template += ',,,,,,\n';
@@ -209,13 +243,19 @@ const ExportManager = {
             template += ',,,,,,\n';
             template += ',,,,,,\n';
             template += ',,,,,,\n';
-            template += 'Total Units of Advanced Standing Approved:,,,,,,\n';
+            // Calculate total exempted courses
+            const exemptedCourses = results.filter(r => {
+                const exemption = r['Exemption Granted / study plan'];
+                return exemption === 'Exempted';
+            });
+            
+            template += `Total Units of Advanced Standing Approved:,,${exemptedCourses.length} courses,,,\n`;
             template += ',,,,,,\n';
             template += 'Intake Level Approved:,,,,,,\n';
             template += '*delete as appropriate,,,,,,\n';
             template += ',,,,,,\n';
             template += 'Signature:,,,,,,\n';
-            template += `Programme Leader (${this.escapeCSVValue(programme.fullName)}),,,,,,\n`;
+            template += `Programme Leader (${this.escapeCSVValue(programme.fullName || programme.name)}),,,,,,\n`;
 
             return template;
         } catch (error) {
@@ -311,8 +351,11 @@ const ExportManager = {
             report += `Exemptions Granted: ${summary.exempted || 0} (${exemptionRate}%)\n`;
             report += `Courses Required: ${summary.required || 0} (${requiredRate}%)\n\n`;
             
-            // Exempted courses
-            const exempted = results.filter(r => r['Exemption Granted'] === 'TRUE');
+            // Exempted courses - check for TRUE (case insensitive)
+            const exempted = results.filter(r => {
+                const value = r['Exemption Granted'];
+                return value === true || value === 'true' || value === 'TRUE';
+            });
             if (exempted.length > 0) {
                 report += 'EXEMPTED COURSES:\n';
                 report += '-----------------\n';
@@ -323,8 +366,11 @@ const ExportManager = {
                 });
             }
             
-            // Required courses
-            const required = results.filter(r => r['Exemption Granted'] === 'FALSE');
+            // Required courses - anything not TRUE is considered FALSE/required
+            const required = results.filter(r => {
+                const value = r['Exemption Granted'];
+                return !(value === true || value === 'true' || value === 'TRUE');
+            });
             if (required.length > 0) {
                 report += 'COURSES REQUIRED TO STUDY:\n';
                 report += '--------------------------\n';

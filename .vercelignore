@@ -1,0 +1,10 @@
+tests/
+coverage/
+*.test.js
+*.spec.js
+node_modules/.cache
+.env.local
+claude_record/
+sessions/
+backups/
+temp/

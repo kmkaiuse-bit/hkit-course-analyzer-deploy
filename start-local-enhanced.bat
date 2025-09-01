@@ -16,11 +16,11 @@ timeout /t 2 /nobreak >nul
 
 REM Open browser to the local enhanced version
 echo Opening browser to local enhanced mode...
-start http://localhost:8000/local-enhanced.html
+start http://localhost:8000/local/enhanced.html
 
 echo.
 echo ========================================
-echo Server is running at: http://localhost:8000/local-enhanced.html
+echo Server is running at: http://localhost:8000/local/enhanced.html
 echo.
 echo Press Ctrl+C in the server window to stop
 echo ========================================

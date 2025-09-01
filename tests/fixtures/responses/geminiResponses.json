@@ -1,0 +1,93 @@
+{
+  "successfulAnalysis": {
+    "success": true,
+    "data": {
+      "text": "[{\"HKIT Subject Code\": \"HD101\", \"HKIT Subject Name\": \"Introduction to Computing\", \"Exemption Granted / study plan\": \"Exempted\", \"Subject Name of Previous Studies\": \"Computer Programming I\", \"Exemption Granted\": \"TRUE\", \"Remarks\": \"Course content matches programming fundamentals\"}, {\"HKIT Subject Code\": \"HD102\", \"HKIT Subject Name\": \"Database Systems\", \"Exemption Granted / study plan\": \"\", \"Subject Name of Previous Studies\": \"\", \"Exemption Granted\": \"FALSE\", \"Remarks\": \"No equivalent course found in transcript\"}, {\"HKIT Subject Code\": \"HD401\", \"HKIT Subject Name\": \"English Communication\", \"Exemption Granted / study plan\": \"Exempted\", \"Subject Name of Previous Studies\": \"Academic English\", \"Exemption Granted\": \"TRUE\", \"Remarks\": \"Language course exemption granted per special rule\"}]"
+    }
+  },
+  "timeoutError": {
+    "error": "Failed to generate content",
+    "message": "Request timeout - please try again with shorter input"
+  },
+  "partialResponse": {
+    "success": true,
+    "data": {
+      "text": "[{\"HKIT Subject Code\": \"HD101\", \"HKIT Subject Name\": \"Introduction to Computing\", \"Exemption Granted / study plan\": \"Exempted\", \"Subject Name of Previous Studies\": \"Computer Programming I\", \"Exemption Granted\": \"TRUE\", \"Remarks\": \"Partial analysis - continue with job ID\"}]"
+    },
+    "partial": true,
+    "jobId": "job_1234567890_abc123def",
+    "continuationToken": "chunk_1_of_3"
+  },
+  "invalidJsonError": {
+    "success": true,
+    "data": {
+      "text": "This is not valid JSON response from Gemini"
+    }
+  },
+  "emptyResponse": {
+    "success": true,
+    "data": {
+      "text": "[]"
+    }
+  },
+  "chunkProcessingStatus": {
+    "jobId": "job_1234567890_abc123def",
+    "status": "processing",
+    "progress": {
+      "chunksCompleted": 1,
+      "totalChunks": 3,
+      "percentage": 33.33
+    },
+    "results": [
+      {
+        "chunkIndex": 0,
+        "completed": true,
+        "results": [
+          {
+            "HKIT Subject Code": "HD101",
+            "HKIT Subject Name": "Introduction to Computing", 
+            "Exemption Granted / study plan": "Exempted",
+            "Subject Name of Previous Studies": "Computer Programming I",
+            "Exemption Granted": "TRUE",
+            "Remarks": "Course content matches programming fundamentals"
+          }
+        ]
+      }
+    ]
+  },
+  "completedJobStatus": {
+    "jobId": "job_1234567890_abc123def",
+    "status": "completed",
+    "progress": {
+      "chunksCompleted": 3,
+      "totalChunks": 3,
+      "percentage": 100
+    },
+    "results": [
+      {
+        "HKIT Subject Code": "HD101",
+        "HKIT Subject Name": "Introduction to Computing",
+        "Exemption Granted / study plan": "Exempted",
+        "Subject Name of Previous Studies": "Computer Programming I",
+        "Exemption Granted": "TRUE", 
+        "Remarks": "Course content matches programming fundamentals"
+      },
+      {
+        "HKIT Subject Code": "HD102",
+        "HKIT Subject Name": "Database Systems",
+        "Exemption Granted / study plan": "",
+        "Subject Name of Previous Studies": "",
+        "Exemption Granted": "FALSE",
+        "Remarks": "No equivalent course found in transcript"
+      },
+      {
+        "HKIT Subject Code": "HD401",
+        "HKIT Subject Name": "English Communication",
+        "Exemption Granted / study plan": "Exempted", 
+        "Subject Name of Previous Studies": "Academic English",
+        "Exemption Granted": "TRUE",
+        "Remarks": "Language course exemption granted per special rule"
+      }
+    ]
+  }
+}

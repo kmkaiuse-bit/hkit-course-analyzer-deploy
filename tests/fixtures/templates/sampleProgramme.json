@@ -1,0 +1,74 @@
+{
+  "computing-bsc": {
+    "id": "computing-bsc",
+    "name": "Bachelor of Science in Computing",
+    "courses": [
+      {
+        "code": "HD101",
+        "name": "Introduction to Computing",
+        "credits": 3,
+        "description": "Fundamentals of computer programming and problem solving"
+      },
+      {
+        "code": "HD102", 
+        "name": "Database Systems",
+        "credits": 3,
+        "description": "Database design, SQL, and data management"
+      },
+      {
+        "code": "HD103",
+        "name": "Data Structures and Algorithms",
+        "credits": 3,
+        "description": "Advanced programming concepts and algorithmic thinking"
+      },
+      {
+        "code": "HD401",
+        "name": "English Communication",
+        "credits": 3,
+        "description": "Academic and professional English skills"
+      },
+      {
+        "code": "HD402",
+        "name": "Business English",
+        "credits": 3,
+        "description": "Business communication and presentation skills"
+      },
+      {
+        "code": "HD405",
+        "name": "Chinese Communication",
+        "credits": 3,
+        "description": "Professional Chinese language skills"
+      }
+    ]
+  },
+  "business-ba": {
+    "id": "business-ba", 
+    "name": "Bachelor of Arts in Business Administration",
+    "courses": [
+      {
+        "code": "BU101",
+        "name": "Introduction to Business",
+        "credits": 3,
+        "description": "Fundamentals of business operations and management"
+      },
+      {
+        "code": "BU201",
+        "name": "Financial Accounting",
+        "credits": 3,
+        "description": "Basic accounting principles and financial statements"
+      },
+      {
+        "code": "BU301",
+        "name": "Marketing Management",
+        "credits": 3,
+        "description": "Marketing strategies and consumer behavior"
+      },
+      {
+        "code": "HD401",
+        "name": "English Communication",
+        "credits": 3,
+        "description": "Academic and professional English skills"
+      }
+    ]
+  }
+}

@@ -205,82 +205,6 @@
                 max-width: 260px;
             }
         }
-        
-        /* Edit Mode Text Overflow Improvements */
-        .editable-input, .editable-select {
-            padding: 6px 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 12px;
-            background: white;
-            transition: all 0.2s ease;
-            
-            /* Text overflow handling */
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .editable-input:focus, .editable-select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-            
-            /* Show full text on focus */
-            white-space: normal;
-            overflow: visible;
-            z-index: 10;
-            position: relative;
-            min-height: 32px;
-        }
-
-        /* Improved cell padding for edit mode */
-        .editable-results-table td {
-            padding: 8px 6px !important;
-            vertical-align: top;
-            position: relative;
-        }
-
-        /* Better field sizing based on content type */
-        .editable-input.long-field {
-            max-width: 200px;
-            min-width: 150px;
-        }
-
-        .editable-input.medium-field {
-            max-width: 150px;
-            min-width: 120px;
-        }
-
-        .editable-input.short-field {
-            max-width: 100px;
-            min-width: 80px;
-        }
-        
-        /* Enhanced dropdown styling */
-        .editable-select {
-            max-width: 120px;
-            min-width: 100px;
-        }
-        
-        /* Tooltip styling for overflow text */
-        .editable-input[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1f2937;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            white-space: nowrap;
-            z-index: 1000;
-            pointer-events: none;
-            max-width: 300px;
-            word-break: break-all;
-        }
     </style>
 </head>
 <body>
@@ -495,8 +419,8 @@
                     <button class="btn btn-secondary" id="cancelBtn" style="display: none;">
                         ❌ Cancel Edit
                     </button>
-                    <button class="btn btn-secondary" id="resetBtn" style="display: none;" onclick="resetToTrueOriginal()">
-                        🔄 Reset to AI Original
+                    <button class="btn btn-secondary" id="resetBtn" style="display: none;">
+                        🔄 Reset Original
                     </button>
                     
                     <!-- Study Plan Button -->
@@ -627,8 +551,8 @@
             <button class="floating-btn floating-btn-secondary" id="floatingCancelBtn" style="display: none;">
                 ❌ Cancel
             </button>
-            <button class="floating-btn floating-btn-secondary" id="floatingResetBtn" style="display: none;" onclick="resetToTrueOriginal()">
-                🔄 Reset AI
+            <button class="floating-btn floating-btn-secondary" id="floatingResetBtn" style="display: none;">
+                🔄 Reset
             </button>
             <button class="floating-btn floating-btn-primary" id="floatingStudyPlanBtn" style="display: none;">
                 📅 Study Plan
@@ -742,129 +666,39 @@
         }
         
         /**
-         * Clear all data with confirmation (comprehensive reset)
+         * Clear all results with confirmation
          */
         function clearAllWithConfirmation() {
-            if (confirm('Are you sure you want to clear ALL data? This will reset:\n\n• Analysis results\n• Uploaded files\n• Student information\n• Programme selection\n• All settings\n\nThis action cannot be undone.')) {
+            if (confirm('Are you sure you want to clear all results?')) {
                 try {
-                    // 1. Clear file uploads and file list
-                    if (window.FileHandler && FileHandler.clearAllFiles) {
-                        FileHandler.clearAllFiles();
-                    }
-                    const fileList = document.getElementById('fileList');
-                    if (fileList) fileList.innerHTML = '';
-                    
-                    const fileInput = document.getElementById('fileInput');
-                    if (fileInput) fileInput.value = '';
-                    
-                    // 2. Clear and hide student information
-                    const studentInfoInputs = ['studentName', 'applicationNumber', 'appliedProgramme'];
-                    studentInfoInputs.forEach(id => {
-                        const element = document.getElementById(id);
-                        if (element) element.value = '';
-                    });
-                    
-                    const studentInfoCard = document.getElementById('studentInfoCard');
-                    if (studentInfoCard) studentInfoCard.style.display = 'none';
-                    
-                    const studentInfoDisplay = document.getElementById('studentInfoDisplay');
-                    if (studentInfoDisplay) studentInfoDisplay.style.display = 'none';
-                    
-                    if (window.StudentInfoManager && StudentInfoManager.clearStudentInfo) {
-                        StudentInfoManager.clearStudentInfo();
+                    // Clear results display
+                    const resultsContainer = document.getElementById('results');
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = '';
+                        resultsContainer.style.display = 'none';
                     }
                     
-                    // 3. Reset form inputs and settings
-                    const programmeType = document.getElementById('programmeType');
-                    if (programmeType) programmeType.value = '';
-                    
-                    const analysisMode = document.getElementById('analysisMode');
-                    if (analysisMode) analysisMode.value = 'unified';
-                    
-                    const academicYearLevel = document.getElementById('academicYearLevel');
-                    if (academicYearLevel) academicYearLevel.value = 'Year 2';
-                    
-                    const multiFileMode = document.getElementById('multiFileMode');
-                    if (multiFileMode) multiFileMode.checked = true;
-                    
-                    // 4. Clear and hide transcript display
-                    const transcriptDisplay = document.getElementById('transcriptDisplay');
-                    if (transcriptDisplay) transcriptDisplay.style.display = 'none';
-                    
-                    const transcriptContent = document.getElementById('transcriptContent');
-                    if (transcriptContent) transcriptContent.innerHTML = '';
-                    
-                    // 5. Clear template info
-                    const templateInfo = document.getElementById('templateInfo');
-                    if (templateInfo) templateInfo.innerHTML = '';
-                    
-                    // 6. Clear and hide results section
+                    // Hide results section
                     const resultsSection = document.getElementById('resultsSection');
-                    if (resultsSection) resultsSection.style.display = 'none';
+                    if (resultsSection) {
+                        resultsSection.style.display = 'none';
+                    }
                     
-                    const tableView = document.getElementById('tableView');
-                    if (tableView) tableView.innerHTML = '';
-                    
-                    const jsonOutput = document.getElementById('jsonOutput');
-                    if (jsonOutput) jsonOutput.innerHTML = '';
-                    
-                    const summaryStats = document.getElementById('summaryStats');
-                    if (summaryStats) summaryStats.innerHTML = '';
-                    
-                    // 7. Hide all export buttons (main and floating)
-                    const exportButtons = [
-                        'downloadBtn', 'downloadExcelBtn', 'downloadPdfBtn',
-                        'floatingDownloadBtn', 'floatingDownloadExcelBtn', 'floatingDownloadPdfBtn'
-                    ];
-                    exportButtons.forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.style.display = 'none';
-                    });
-                    
-                    // 8. Hide edit mode buttons
-                    const editButtons = ['editBtn', 'saveBtn', 'cancelBtn', 'resetBtn', 'generateStudyPlanBtn'];
-                    editButtons.forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.style.display = 'none';
-                    });
-                    
-                    const floatingEditButtons = [
-                        'floatingEditBtn', 'floatingSaveBtn', 'floatingCancelBtn', 
-                        'floatingResetBtn', 'floatingStudyPlanBtn'
-                    ];
-                    floatingEditButtons.forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.style.display = 'none';
-                    });
-                    
-                    // 9. Reset analyze button states
-                    const analyzeBtn = document.getElementById('analyzeBtn');
-                    if (analyzeBtn) analyzeBtn.disabled = true;
-                    
-                    const floatingAnalyzeBtn = document.getElementById('floatingAnalyzeBtn');
-                    if (floatingAnalyzeBtn) floatingAnalyzeBtn.disabled = true;
-                    
-                    // 10. Clear global state
+                    // Clear global state
                     if (window.ResultsDisplay) {
                         ResultsDisplay.currentResults = [];
-                        ResultsDisplay.currentProgramme = null;
                     }
                     
-                    // 11. Exit edit mode if active
+                    // Exit edit mode if active
                     if (window.EditModeController && EditModeController.isEditMode) {
                         EditModeController.exitEditMode();
                     }
                     
-                    // 12. Reset view mode radio buttons
-                    const tableViewRadio = document.querySelector('input[name="viewMode"][value="table"]');
-                    if (tableViewRadio) tableViewRadio.checked = true;
-                    
-                    console.log('✅ All sections cleared successfully');
-                    alert('All data has been cleared successfully!');
+                    console.log('✅ All results cleared successfully');
                     
                 } catch (error) {
-                    console.error('Error during comprehensive clear:', error);
-                    alert('Error occurred while clearing data. Some sections may not have been cleared properly.');
+                    console.error('Error during clear:', error);
+                    alert('Error occurred while clearing results. Please refresh the page.');
                 }
             }
         }
@@ -1096,7 +930,7 @@
             
             document.getElementById('floatingResetBtn')?.addEventListener('click', function() {
                 if (typeof EditModeController !== 'undefined') {
-                    EditModeController.resetToTrueOriginal();
+                    EditModeController.resetToOriginal();
                 }
             });
             

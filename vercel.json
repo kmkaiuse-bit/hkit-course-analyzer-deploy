@@ -3,8 +3,17 @@
   "outputDirectory": ".",
   "framework": null,
   "functions": {
+    "api/gemini.js": {
+      "maxDuration": 10
+    },
+    "api/gemini-chunked.js": {
+      "maxDuration": 10
+    },
+    "api/gemini-status.js": {
+      "maxDuration": 5
+    },
     "api/*.js": {
-      "maxDuration": 60
+      "maxDuration": 10
     }
   },
   "rewrites": [
@@ -28,8 +37,18 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "Content-Type"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "regions": [
+    "hkg1"
   ]
 }

@@ -111,15 +111,22 @@ const ResultsDisplay = {
         if (!summaryElement || !this.currentResults) return;
 
         const total = this.currentResults.length;
-        const exempted = this.currentResults.filter(r => r['Exemption Granted'] === 'TRUE').length;
+        // Fix: Check for both boolean true and string 'TRUE'
+        const exempted = this.currentResults.filter(r => {
+            const exemptionValue = r['Exemption Granted'];
+            return exemptionValue === true || 
+                   exemptionValue === 'true' || 
+                   exemptionValue === 'TRUE';
+        }).length;
+        
         const required = total - exempted;
-        const exemptionRate = Math.round((exempted / total) * 100);
+        const exemptionRate = total > 0 ? Math.round((exempted / total) * 100) : 0;
 
         summaryElement.innerHTML = `
             <div class="summary-grid">
                 <div class="summary-item">
                     <h4>📊 Analysis Summary</h4>
-                    <p><strong>Programme:</strong> ${this.currentProgramme.name}</p>
+                    <p><strong>Programme:</strong> ${this.currentProgramme?.name || 'N/A'}</p>
                     <p><strong>Total Courses:</strong> ${total}</p>
                     <p><strong>Exemptions Granted:</strong> ${exempted} (${exemptionRate}%)</p>
                     <p><strong>Courses Required:</strong> ${required}</p>

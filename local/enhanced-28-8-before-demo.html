@@ -67,220 +67,6 @@
             border-radius: 4px;
             margin: 20px 0;
         }
-        
-        /* Floating Controls Styles */
-        .floating-controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            padding: 16px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
-            border: 1px solid rgba(255,255,255,0.8);
-            backdrop-filter: blur(10px);
-            max-width: 280px;
-            z-index: 999;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        
-        .floating-controls.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .floating-buttons-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        
-        .floating-btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-            min-height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-        
-        .floating-btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .floating-btn-primary:hover {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        
-        .floating-btn-secondary {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-        
-        .floating-btn-secondary:hover {
-            background: #cbd5e0;
-            transform: translateY(-1px);
-        }
-        
-        .floating-btn-danger {
-            background: #fc8181;
-            color: white;
-        }
-        
-        .floating-btn-danger:hover {
-            background: #f56565;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(248, 113, 113, 0.4);
-        }
-        
-        .floating-btn-export {
-            background: #48bb78;
-            color: white;
-            font-size: 11px;
-        }
-        
-        .floating-btn-export:hover {
-            background: #38a169;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
-        }
-        
-        .floating-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-        
-        .floating-export-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
-        }
-        
-        /* Mobile responsiveness for floating controls */
-        @media (max-width: 480px) {
-            .floating-controls {
-                bottom: 10px;
-                right: 10px;
-                left: 10px;
-                max-width: none;
-                padding: 12px;
-            }
-            
-            .floating-buttons-grid {
-                grid-template-columns: 1fr;
-                gap: 6px;
-            }
-            
-            .floating-btn {
-                font-size: 11px;
-                padding: 6px 10px;
-                min-height: 32px;
-            }
-            
-            .floating-export-section {
-                grid-template-columns: 1fr;
-                gap: 4px;
-            }
-        }
-        
-        @media (max-width: 768px) and (min-width: 481px) {
-            .floating-controls {
-                bottom: 15px;
-                right: 15px;
-                max-width: 260px;
-            }
-        }
-        
-        /* Edit Mode Text Overflow Improvements */
-        .editable-input, .editable-select {
-            padding: 6px 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 12px;
-            background: white;
-            transition: all 0.2s ease;
-            
-            /* Text overflow handling */
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .editable-input:focus, .editable-select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-            
-            /* Show full text on focus */
-            white-space: normal;
-            overflow: visible;
-            z-index: 10;
-            position: relative;
-            min-height: 32px;
-        }
-
-        /* Improved cell padding for edit mode */
-        .editable-results-table td {
-            padding: 8px 6px !important;
-            vertical-align: top;
-            position: relative;
-        }
-
-        /* Better field sizing based on content type */
-        .editable-input.long-field {
-            max-width: 200px;
-            min-width: 150px;
-        }
-
-        .editable-input.medium-field {
-            max-width: 150px;
-            min-width: 120px;
-        }
-
-        .editable-input.short-field {
-            max-width: 100px;
-            min-width: 80px;
-        }
-        
-        /* Enhanced dropdown styling */
-        .editable-select {
-            max-width: 120px;
-            min-width: 100px;
-        }
-        
-        /* Tooltip styling for overflow text */
-        .editable-input[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1f2937;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            white-space: nowrap;
-            z-index: 1000;
-            pointer-events: none;
-            max-width: 300px;
-            word-break: break-all;
-        }
     </style>
 </head>
 <body>
@@ -495,8 +281,8 @@
                     <button class="btn btn-secondary" id="cancelBtn" style="display: none;">
                         ❌ Cancel Edit
                     </button>
-                    <button class="btn btn-secondary" id="resetBtn" style="display: none;" onclick="resetToTrueOriginal()">
-                        🔄 Reset to AI Original
+                    <button class="btn btn-secondary" id="resetBtn" style="display: none;">
+                        🔄 Reset Original
                     </button>
                     
                     <!-- Study Plan Button -->
@@ -606,47 +392,6 @@
         </div>
     </div>
 
-    <!-- Floating Control Buttons -->
-    <div id="floatingControls" class="floating-controls" style="display: none;">
-        <div class="floating-controls-header">
-            <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #4a5568; font-weight: 600;">📋 Quick Actions</h4>
-        </div>
-        <div class="floating-buttons-grid">
-            <button class="floating-btn floating-btn-primary" id="floatingAnalyzeBtn" disabled>
-                🔍 Analyze
-            </button>
-            <button class="floating-btn floating-btn-danger" id="floatingClearBtn" onclick="clearAllWithConfirmation()">
-                ⚠️ Clear
-            </button>
-            <button class="floating-btn floating-btn-secondary" id="floatingEditBtn" style="display: none;">
-                ✏️ Edit
-            </button>
-            <button class="floating-btn floating-btn-primary" id="floatingSaveBtn" style="display: none;">
-                💾 Save
-            </button>
-            <button class="floating-btn floating-btn-secondary" id="floatingCancelBtn" style="display: none;">
-                ❌ Cancel
-            </button>
-            <button class="floating-btn floating-btn-secondary" id="floatingResetBtn" style="display: none;" onclick="resetToTrueOriginal()">
-                🔄 Reset AI
-            </button>
-            <button class="floating-btn floating-btn-primary" id="floatingStudyPlanBtn" style="display: none;">
-                📅 Study Plan
-            </button>
-        </div>
-        <div class="floating-export-section" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
-            <button class="floating-btn floating-btn-export" id="floatingDownloadBtn" style="display: none;" onclick="downloadIntegratedResults()">
-                📄 CSV
-            </button>
-            <button class="floating-btn floating-btn-export" id="floatingDownloadExcelBtn" style="display: none;" onclick="downloadExcelApplication()">
-                📉 Excel
-            </button>
-            <button class="floating-btn floating-btn-export" id="floatingDownloadPdfBtn" style="display: none;" onclick="generatePdfApplication()">
-                📄 PDF
-            </button>
-        </div>
-    </div>
-
     <!-- API Key Management Script -->
     <script>
         // API Key Management for Local Version
@@ -742,129 +487,39 @@
         }
         
         /**
-         * Clear all data with confirmation (comprehensive reset)
+         * Clear all results with confirmation
          */
         function clearAllWithConfirmation() {
-            if (confirm('Are you sure you want to clear ALL data? This will reset:\n\n• Analysis results\n• Uploaded files\n• Student information\n• Programme selection\n• All settings\n\nThis action cannot be undone.')) {
+            if (confirm('Are you sure you want to clear all results?')) {
                 try {
-                    // 1. Clear file uploads and file list
-                    if (window.FileHandler && FileHandler.clearAllFiles) {
-                        FileHandler.clearAllFiles();
-                    }
-                    const fileList = document.getElementById('fileList');
-                    if (fileList) fileList.innerHTML = '';
-                    
-                    const fileInput = document.getElementById('fileInput');
-                    if (fileInput) fileInput.value = '';
-                    
-                    // 2. Clear and hide student information
-                    const studentInfoInputs = ['studentName', 'applicationNumber', 'appliedProgramme'];
-                    studentInfoInputs.forEach(id => {
-                        const element = document.getElementById(id);
-                        if (element) element.value = '';
-                    });
-                    
-                    const studentInfoCard = document.getElementById('studentInfoCard');
-                    if (studentInfoCard) studentInfoCard.style.display = 'none';
-                    
-                    const studentInfoDisplay = document.getElementById('studentInfoDisplay');
-                    if (studentInfoDisplay) studentInfoDisplay.style.display = 'none';
-                    
-                    if (window.StudentInfoManager && StudentInfoManager.clearStudentInfo) {
-                        StudentInfoManager.clearStudentInfo();
+                    // Clear results display
+                    const resultsContainer = document.getElementById('results');
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = '';
+                        resultsContainer.style.display = 'none';
                     }
                     
-                    // 3. Reset form inputs and settings
-                    const programmeType = document.getElementById('programmeType');
-                    if (programmeType) programmeType.value = '';
-                    
-                    const analysisMode = document.getElementById('analysisMode');
-                    if (analysisMode) analysisMode.value = 'unified';
-                    
-                    const academicYearLevel = document.getElementById('academicYearLevel');
-                    if (academicYearLevel) academicYearLevel.value = 'Year 2';
-                    
-                    const multiFileMode = document.getElementById('multiFileMode');
-                    if (multiFileMode) multiFileMode.checked = true;
-                    
-                    // 4. Clear and hide transcript display
-                    const transcriptDisplay = document.getElementById('transcriptDisplay');
-                    if (transcriptDisplay) transcriptDisplay.style.display = 'none';
-                    
-                    const transcriptContent = document.getElementById('transcriptContent');
-                    if (transcriptContent) transcriptContent.innerHTML = '';
-                    
-                    // 5. Clear template info
-                    const templateInfo = document.getElementById('templateInfo');
-                    if (templateInfo) templateInfo.innerHTML = '';
-                    
-                    // 6. Clear and hide results section
+                    // Hide results section
                     const resultsSection = document.getElementById('resultsSection');
-                    if (resultsSection) resultsSection.style.display = 'none';
+                    if (resultsSection) {
+                        resultsSection.style.display = 'none';
+                    }
                     
-                    const tableView = document.getElementById('tableView');
-                    if (tableView) tableView.innerHTML = '';
-                    
-                    const jsonOutput = document.getElementById('jsonOutput');
-                    if (jsonOutput) jsonOutput.innerHTML = '';
-                    
-                    const summaryStats = document.getElementById('summaryStats');
-                    if (summaryStats) summaryStats.innerHTML = '';
-                    
-                    // 7. Hide all export buttons (main and floating)
-                    const exportButtons = [
-                        'downloadBtn', 'downloadExcelBtn', 'downloadPdfBtn',
-                        'floatingDownloadBtn', 'floatingDownloadExcelBtn', 'floatingDownloadPdfBtn'
-                    ];
-                    exportButtons.forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.style.display = 'none';
-                    });
-                    
-                    // 8. Hide edit mode buttons
-                    const editButtons = ['editBtn', 'saveBtn', 'cancelBtn', 'resetBtn', 'generateStudyPlanBtn'];
-                    editButtons.forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.style.display = 'none';
-                    });
-                    
-                    const floatingEditButtons = [
-                        'floatingEditBtn', 'floatingSaveBtn', 'floatingCancelBtn', 
-                        'floatingResetBtn', 'floatingStudyPlanBtn'
-                    ];
-                    floatingEditButtons.forEach(id => {
-                        const btn = document.getElementById(id);
-                        if (btn) btn.style.display = 'none';
-                    });
-                    
-                    // 9. Reset analyze button states
-                    const analyzeBtn = document.getElementById('analyzeBtn');
-                    if (analyzeBtn) analyzeBtn.disabled = true;
-                    
-                    const floatingAnalyzeBtn = document.getElementById('floatingAnalyzeBtn');
-                    if (floatingAnalyzeBtn) floatingAnalyzeBtn.disabled = true;
-                    
-                    // 10. Clear global state
+                    // Clear global state
                     if (window.ResultsDisplay) {
                         ResultsDisplay.currentResults = [];
-                        ResultsDisplay.currentProgramme = null;
                     }
                     
-                    // 11. Exit edit mode if active
+                    // Exit edit mode if active
                     if (window.EditModeController && EditModeController.isEditMode) {
                         EditModeController.exitEditMode();
                     }
                     
-                    // 12. Reset view mode radio buttons
-                    const tableViewRadio = document.querySelector('input[name="viewMode"][value="table"]');
-                    if (tableViewRadio) tableViewRadio.checked = true;
-                    
-                    console.log('✅ All sections cleared successfully');
-                    alert('All data has been cleared successfully!');
+                    console.log('✅ All results cleared successfully');
                     
                 } catch (error) {
-                    console.error('Error during comprehensive clear:', error);
-                    alert('Error occurred while clearing data. Some sections may not have been cleared properly.');
+                    console.error('Error during clear:', error);
+                    alert('Error occurred while clearing results. Please refresh the page.');
                 }
             }
         }
@@ -935,175 +590,7 @@
                 window.API_CONFIG.LOCAL_MODE = true;
                 window.API_CONFIG.getApiKey = () => currentApiKey;
             }
-            
-            // Initialize floating controls
-            initFloatingControls();
         });
-
-        /**
-         * Initialize floating controls and scroll detection
-         */
-        function initFloatingControls() {
-            const floatingControls = document.getElementById('floatingControls');
-            const analysisSection = document.querySelector('.analysis-section');
-            let isFloatingVisible = false;
-            
-            // Scroll detection
-            function handleScroll() {
-                if (!analysisSection) return;
-                
-                const analysisRect = analysisSection.getBoundingClientRect();
-                const shouldShow = analysisRect.top < -100; // Show when analysis section is 100px above viewport
-                
-                if (shouldShow && !isFloatingVisible) {
-                    floatingControls.style.display = 'block';
-                    setTimeout(() => floatingControls.classList.add('show'), 10);
-                    isFloatingVisible = true;
-                } else if (!shouldShow && isFloatingVisible) {
-                    floatingControls.classList.remove('show');
-                    setTimeout(() => floatingControls.style.display = 'none', 300);
-                    isFloatingVisible = false;
-                }
-            }
-            
-            // Add scroll event listener with throttling
-            let scrollTimeout;
-            window.addEventListener('scroll', function() {
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(handleScroll, 16); // ~60fps
-            });
-            
-            // Synchronize floating buttons with main controls
-            syncFloatingButtons();
-            
-            // Add click event listeners for floating buttons
-            setupFloatingButtonEvents();
-        }
-        
-        /**
-         * Synchronize floating button states with main controls
-         */
-        function syncFloatingButtons() {
-            // Main control elements
-            const mainAnalyzeBtn = document.getElementById('analyzeBtn');
-            const mainEditBtn = document.getElementById('editBtn');
-            const mainSaveBtn = document.getElementById('saveBtn');
-            const mainCancelBtn = document.getElementById('cancelBtn');
-            const mainResetBtn = document.getElementById('resetBtn');
-            const mainStudyPlanBtn = document.getElementById('generateStudyPlanBtn');
-            const mainDownloadBtn = document.getElementById('downloadBtn');
-            const mainDownloadExcelBtn = document.getElementById('downloadExcelBtn');
-            const mainDownloadPdfBtn = document.getElementById('downloadPdfBtn');
-            
-            // Floating control elements
-            const floatingAnalyzeBtn = document.getElementById('floatingAnalyzeBtn');
-            const floatingEditBtn = document.getElementById('floatingEditBtn');
-            const floatingSaveBtn = document.getElementById('floatingSaveBtn');
-            const floatingCancelBtn = document.getElementById('floatingCancelBtn');
-            const floatingResetBtn = document.getElementById('floatingResetBtn');
-            const floatingStudyPlanBtn = document.getElementById('floatingStudyPlanBtn');
-            const floatingDownloadBtn = document.getElementById('floatingDownloadBtn');
-            const floatingDownloadExcelBtn = document.getElementById('floatingDownloadExcelBtn');
-            const floatingDownloadPdfBtn = document.getElementById('floatingDownloadPdfBtn');
-            
-            // Sync function
-            function syncButtons() {
-                // Analyze button
-                if (mainAnalyzeBtn && floatingAnalyzeBtn) {
-                    floatingAnalyzeBtn.disabled = mainAnalyzeBtn.disabled;
-                }
-                
-                // Edit mode buttons
-                if (mainEditBtn && floatingEditBtn) {
-                    floatingEditBtn.style.display = mainEditBtn.style.display;
-                }
-                if (mainSaveBtn && floatingSaveBtn) {
-                    floatingSaveBtn.style.display = mainSaveBtn.style.display;
-                }
-                if (mainCancelBtn && floatingCancelBtn) {
-                    floatingCancelBtn.style.display = mainCancelBtn.style.display;
-                }
-                if (mainResetBtn && floatingResetBtn) {
-                    floatingResetBtn.style.display = mainResetBtn.style.display;
-                }
-                if (mainStudyPlanBtn && floatingStudyPlanBtn) {
-                    floatingStudyPlanBtn.style.display = mainStudyPlanBtn.style.display;
-                }
-                
-                // Export buttons
-                if (mainDownloadBtn && floatingDownloadBtn) {
-                    floatingDownloadBtn.style.display = mainDownloadBtn.style.display;
-                }
-                if (mainDownloadExcelBtn && floatingDownloadExcelBtn) {
-                    floatingDownloadExcelBtn.style.display = mainDownloadExcelBtn.style.display;
-                }
-                if (mainDownloadPdfBtn && floatingDownloadPdfBtn) {
-                    floatingDownloadPdfBtn.style.display = mainDownloadPdfBtn.style.display;
-                }
-            }
-            
-            // Initial sync
-            syncButtons();
-            
-            // Observe changes in main controls
-            const observer = new MutationObserver(syncButtons);
-            const controlsSection = document.querySelector('.controls');
-            const exportOptions = document.querySelector('.export-options');
-            
-            if (controlsSection) {
-                observer.observe(controlsSection, { 
-                    attributes: true, 
-                    childList: true, 
-                    subtree: true 
-                });
-            }
-            if (exportOptions) {
-                observer.observe(exportOptions, { 
-                    attributes: true, 
-                    childList: true, 
-                    subtree: true 
-                });
-            }
-        }
-        
-        /**
-         * Setup click event listeners for floating buttons
-         */
-        function setupFloatingButtonEvents() {
-            // Analyze button
-            document.getElementById('floatingAnalyzeBtn')?.addEventListener('click', function() {
-                document.getElementById('analyzeBtn')?.click();
-            });
-            
-            // Edit mode buttons
-            document.getElementById('floatingEditBtn')?.addEventListener('click', function() {
-                if (typeof EditModeController !== 'undefined') {
-                    EditModeController.enterEditMode();
-                }
-            });
-            
-            document.getElementById('floatingSaveBtn')?.addEventListener('click', function() {
-                if (typeof EditModeController !== 'undefined') {
-                    EditModeController.saveChanges();
-                }
-            });
-            
-            document.getElementById('floatingCancelBtn')?.addEventListener('click', function() {
-                if (typeof EditModeController !== 'undefined') {
-                    EditModeController.cancelEdit();
-                }
-            });
-            
-            document.getElementById('floatingResetBtn')?.addEventListener('click', function() {
-                if (typeof EditModeController !== 'undefined') {
-                    EditModeController.resetToTrueOriginal();
-                }
-            });
-            
-            document.getElementById('floatingStudyPlanBtn')?.addEventListener('click', function() {
-                document.getElementById('generateStudyPlanBtn')?.click();
-            });
-        }
     </script>
 
     <!-- JavaScript Files (Same as production but with local API config) -->

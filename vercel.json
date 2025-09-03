@@ -16,12 +16,6 @@
       "maxDuration": 10
     }
   },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",

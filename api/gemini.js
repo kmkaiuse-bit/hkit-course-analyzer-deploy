@@ -30,13 +30,23 @@ module.exports = async (req, res) => {
     // Parse request body
     const { prompt, model = 'gemini-1.5-flash', temperature = 0.7, maxTokens = 4096, files = [] } = req.body;
 
+    // Debug logging
+    console.log('📍 Request received:', {
+      hasPrompt: !!prompt,
+      promptLength: prompt?.length || 0,
+      model: model,
+      filesCount: files?.length || 0,
+      bodyKeys: Object.keys(req.body || {})
+    });
+
     if (!prompt) {
+      console.error('❌ Missing prompt in request body');
       return res.status(400).json({ 
         error: 'Missing required field: prompt' 
       });
     }
 
-    console.log('Initializing Gemini API...');
+    console.log('✅ Initializing Gemini API with model:', model);
     
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -100,12 +110,17 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     console.error('Gemini API Error:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     
-    // Detailed error response
+    // More detailed error response for debugging
     return res.status(500).json({
       error: 'Failed to generate content',
       message: error.message || 'Unknown error occurred',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      errorType: error.name || 'Unknown',
+      details: error.stack ? error.stack.substring(0, 500) : undefined,
+      timestamp: new Date().toISOString()
     });
   }
 };

@@ -27,8 +27,8 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Parse request body
-    const { prompt, model = 'gemini-1.5-flash', temperature = 0.7, maxTokens = 4096, files = [] } = req.body;
+    // Parse request body - use flash by default for speed in Vercel
+    const { prompt, model = 'gemini-1.5-flash', temperature = 0.3, maxTokens = 4096, files = [] } = req.body;
 
     // Debug logging
     console.log('📍 Request received:', {
@@ -87,11 +87,11 @@ module.exports = async (req, res) => {
       contentToGenerate = prompt;
     }
     
-    // Generate content with 9 second timeout (leaving 1 second buffer)
+    // Generate content with 9.5 second timeout (leaving 0.5 second buffer)
     const result = await Promise.race([
       geminiModel.generateContent(contentToGenerate),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 9000)
+        setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 9500)
       )
     ]);
 

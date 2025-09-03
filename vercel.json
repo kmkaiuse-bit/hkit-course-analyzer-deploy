@@ -40,10 +40,10 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "DEPLOYMENT_REGION": "us-east"
   },
   "regions": [
-    "iad1",
-    "sfo1"
+    "iad1"
   ]
 }

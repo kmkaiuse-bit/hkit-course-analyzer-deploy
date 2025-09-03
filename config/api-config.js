@@ -1,17 +1,48 @@
 /**
- * API Configuration - 安全版本
- * 通过Vercel Functions调用API，不暴露密钥
+ * API Configuration - Enhanced Version
+ * Supports both Vercel Functions and Local Mode
  */
 
 const API_CONFIG = {
-    // Vercel Function 端点
+    // Default to production mode (can be overridden by LOCAL_MODE flag)
+    LOCAL_MODE: false,
+    
+    // Vercel Function endpoints
     functions: {
-        gemini: '/api/gemini', // 我们的安全代理端点
+        gemini: '/api/gemini',
+        geminiChunked: '/api/gemini-chunked',
+        geminiStatus: '/api/gemini-status'
     },
 
+    // Direct Gemini API settings for local mode
+    gemini: {
+        baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
+        model: 'gemini-1.5-pro',
+        timeout: 60000
+    },
+    
     // Request Settings
     timeout: 30000,
-    retries: 2
+    retries: 2,
+    
+    // Get API key from localStorage or window override (for local mode)
+    getApiKey: () => {
+        if (window.API_CONFIG && window.API_CONFIG.getApiKey) {
+            return window.API_CONFIG.getApiKey();
+        }
+        return localStorage.getItem('gemini_api_key') || '';
+    },
+    
+    // Validate configuration
+    validate: function() {
+        if (this.LOCAL_MODE) {
+            const apiKey = this.getApiKey();
+            if (!apiKey || !apiKey.startsWith('AIza')) {
+                throw new Error('Gemini API key is not properly configured. Please enter your API key.');
+            }
+        }
+        return true;
+    }
 };
 
 /**

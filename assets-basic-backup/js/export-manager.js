@@ -275,17 +275,12 @@ const ExportManager = {
             const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
             const programmeName = ResultsDisplay.currentProgramme?.id || 'unknown';
             
-            // Get intake year from UI
-            const intakeYearInput = document.getElementById('intakeYear');
-            const intakeYear = intakeYearInput ? intakeYearInput.value : new Date().getFullYear();
-            
             // Sanitize filename components
             const safePrefix = prefix.replace(/[^a-zA-Z0-9_-]/g, '_');
             const safeProgramme = programmeName.replace(/[^a-zA-Z0-9_-]/g, '_');
             const safeExtension = extension.replace(/[^a-zA-Z0-9]/g, '');
-            const safeIntakeYear = intakeYear.toString().replace(/[^0-9]/g, '');
             
-            return `${safePrefix}_${safeProgramme}_${safeIntakeYear}_${timestamp}.${safeExtension}`;
+            return `${safePrefix}_${safeProgramme}_${timestamp}.${safeExtension}`;
         } catch (error) {
             console.error('Filename generation error:', error);
             return `hkit_export_${Date.now()}.${extension}`;

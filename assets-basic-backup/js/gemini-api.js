@@ -64,12 +64,14 @@ TASK:
 Analyze the ${fileTypeText} and determine exemption eligibility for each course in the template based on the student's academic history.
 
 EXEMPTION CRITERIA:
-- Skills-Based Matching: Focus on transferable competencies (critical thinking, problem-solving, communication, leadership, analysis) rather than course titles
-- Language Exemptions: Grant HD401/HD402/HC401/BA50084E for ANY completed English courses; HD405 for ANY Chinese courses
-- Content Examples: "Critical Thinking" → "Employability Skills", "Economics" → "Analysis of Real World Issues", "Communication" → "Presentation Skills"
-- Max 50% total exemptions per programme
-- Grade: Pass (50%+) or D+ equivalent
-- Prioritize practical skills alignment over exact name matching
+- Course content similarity :Base the analysis on the direct content overlap between the completed courses and the target courses.
+- Special Language Rule: Automatically grant HD401/HD402 exemptions for ANY completed English language course from our institution (including courses with different codes like ENG, BUS, COMM, LANG, etc. and various names such as English, Business English, Academic English, English Communication, Professional Writing). Similarly, grant HD405 exemption for ANY completed Chinese language course from our institution (including courses with different codes like CHI, LANG, COMM, etc. and various names such as Chinese, Putonghua, Mandarin, Chinese Communication, Practical Chinese).
+- total percentange number of Exemptions Granted must not be more than 50% of the total number of subjects in the course
+- Pass or higher (50+ points) or Grade D or above or equivalent
+- If a previously completed course served the same educational function as HD401, HD402, or HD405 (language skill development), grant the exemption regardless of its original programme or subject code.
+ -Possibility Assessment: If an exemption is determined to be "possible" or "highly possible," it is to be treated as granted.
+- Sufficient credit hours
+- Prerequisite requirements met
 
 OUTPUT FORMAT (JSON array only, no other text):
 [
@@ -366,7 +368,7 @@ IMPORTANT RULES:
             console.log('✅ Received response from Vercel Function');
             return await response.json();
             
-        } catch (error) {
+        } catch (error) {assets/js/gemini-api.js
             console.error('API call error:', error);
             throw error;
         }

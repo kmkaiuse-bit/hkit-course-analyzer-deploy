@@ -292,13 +292,6 @@ const StudentInfoManager = {
         if (displayCard) displayCard.style.display = 'none';
         
         console.log('🔄 學生資訊已重置');
-    },
-
-    /**
-     * Clear student info (alias for resetStudentInfo)
-     */
-    clearStudentInfo() {
-        this.resetStudentInfo();
     }
 };
 

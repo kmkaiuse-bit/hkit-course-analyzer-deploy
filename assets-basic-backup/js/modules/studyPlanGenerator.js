@@ -61,8 +61,8 @@ const StudyPlanGenerator = {
         const intakeTerm = prompt(
             `請輸入入學 Term (例如：T${currentYear}C 或 T${currentYear}A)\n\n` +
             '格式說明：\n' +
-            `• T${currentYear}A = ${currentYear}年上學期\n` +
-            `• T${currentYear}C = ${currentYear}年下學期`,
+            `• T${currentYear}A = ${currentYear}年上學期 (2月)\n` +
+            `• T${currentYear}C = ${currentYear}年下學期 (9月)`,
             defaultTerm
         );
         

@@ -366,7 +366,7 @@ IMPORTANT RULES:
             console.log('✅ Received response from Vercel Function');
             return await response.json();
             
-        } catch (error) {assets/js/gemini-api.js
+        } catch (error) {
             console.error('API call error:', error);
             throw error;
         }

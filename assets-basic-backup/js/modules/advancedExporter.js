@@ -141,10 +141,7 @@ const AdvancedExporter = {
             const applicationNo = studentInfo.applicationNumber || '未填寫';
             const appliedProgramme = studentInfo.appliedProgramme ? 
                 studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' : '未填寫';
-            
-            // Get intake year from UI, fallback to current year
-            const intakeYearInput = document.getElementById('intakeYear');
-            const currentYear = intakeYearInput ? parseInt(intakeYearInput.value) : new Date().getFullYear();
+            const currentYear = new Date().getFullYear();
             
             // 設定儲存格內容
             // 標題區域
@@ -291,10 +288,7 @@ const AdvancedExporter = {
             const appliedProgrammePdf = (studentInfo.appliedProgramme && studentInfo.appliedProgramme.trim()) ? 
                 studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' : 
                 (programme.name || '未填寫');
-            
-            // Get intake year from UI, fallback to current year
-            const intakeYearInput = document.getElementById('intakeYear');
-            const currentYear = intakeYearInput ? parseInt(intakeYearInput.value) : new Date().getFullYear();
+            const currentYear = new Date().getFullYear();
             
             // Get academic year level from results section dropdown
             const academicYearSelect = document.getElementById('academicYearLevel');
@@ -306,7 +300,6 @@ const AdvancedExporter = {
             ).length;
             
             // 生成HTML內容 - 完全按照學校格式要求
-            console.log('PDF debug:', { studentName, applicationNo, appliedProgrammePdf, programme, currentYear, academicYearLevel });
             const htmlContent = this.generatePdfHtmlContent(studentName, applicationNo, appliedProgrammePdf, programme, currentYear, academicYearLevel, currentData);
             
             printWindow.document.write(htmlContent);
@@ -478,7 +471,7 @@ const AdvancedExporter = {
                     <tr>
                         <td class="student-info-label">Intake Year (HKIT Higher Diploma):</td>
                         <td>T${currentYear}C</td>
-                        <td>${academicYearLevel}</td>
+                        <td>Year 2</td>
                     </tr>
                     <tr>
                         <td class="student-info-label">Application No.:</td>

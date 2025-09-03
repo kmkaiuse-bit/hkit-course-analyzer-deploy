@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HKIT Course Exemption Analyzer - Enhanced</title>
-    <meta name="description" content="Advanced Standing Application Processing System for Hong Kong Institute of Technology - Enhanced Version">
+    <title>HKIT Course Exemption Analyzer - Local Enhanced</title>
+    <meta name="description" content="Advanced Standing Application Processing System for Hong Kong Institute of Technology - Local Enhanced Version">
     <link rel="stylesheet" href="assets/css/styles.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -284,21 +284,21 @@
     </style>
 </head>
 <body>
-    <!-- Enhanced Mode Badge -->
+    <!-- Local Mode Badge -->
     <div class="local-mode-badge">
-        🚀 ENHANCED MODE
+        🖥️ LOCAL ENHANCED MODE
     </div>
 
     <div class="container">
         <!-- Header Section -->
         <div class="header">
             <h1>🎓 HKIT Course Exemption Analyzer</h1>
-            <p>Advanced Standing Application Processing System - Enhanced Version</p>
+            <p>Advanced Standing Application Processing System - Local Enhanced Version</p>
         </div>
 
         <div class="demo-notice">
-            <strong>📌 Enhanced Mode:</strong> This version includes the full programme database and advanced features. 
-            Choose between secure server processing or local browser processing. No timeout limitations!
+            <strong>📌 Local Enhanced Mode:</strong> This version includes the full programme database and runs entirely in your browser. 
+            Your API key is stored locally and never sent to any server. No timeout limitations!
         </div>
 
         <!-- API Key Configuration Section -->
@@ -1106,8 +1106,8 @@
         }
     </script>
 
-    <!-- JavaScript Files -->
-    <script src="config/api-config.js"></script>
+    <!-- JavaScript Files (Same as production but with local API config) -->
+    <script src="config/api-config-local.js"></script>
     <script src="assets/js/modules/studentInfoManager.js"></script>
     <script src="assets/js/modules/editModeController.js"></script>
     <script src="assets/js/modules/studyPlanGenerator.js"></script>

@@ -16,20 +16,6 @@
       "maxDuration": 10
     }
   },
-  "routes": [
-    {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/config/(.*)",
-      "dest": "/config/$1"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",

@@ -19,7 +19,6 @@
 ## 💼 **Business Value Delivered**
 
 ### **Time Savings**
-- **Before**: 2-3 hours manual analysis per transcript
 - **After**: 5-10 minutes with AI assistance
 - **Impact**: 90% time reduction for Advanced Standing processing
 

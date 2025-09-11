@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>📊 TDD Dashboard - Subject Extraction</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            min-height: 100vh;
+        }
+        .dashboard { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .progress-bar { background: rgba(255,255,255,0.2); border-radius: 10px; height: 20px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #28a745, #20c997); height: 100%; transition: width 0.3s ease; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
+        .stat-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.2); }
+        .stat-number { font-size: 48px; font-weight: bold; margin: 10px 0; }
+        .stat-label { font-size: 14px; opacity: 0.8; }
+        .test-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 30px 0; }
+        .test-group { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; border: 1px solid rgba(255,255,255,0.2); }
+        .test-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .test-item:last-child { border-bottom: none; }
+        .test-status { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .passed { background: #28a745; color: white; }
+        .failed { background: #dc3545; color: white; }
+        .pending { background: #ffc107; color: black; }
+        .actions { display: flex; gap: 15px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
+        .btn { padding: 12px 24px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; transition: transform 0.2s; text-decoration: none; display: inline-block; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .implementation-status { background: rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; margin: 20px 0; }
+        .phase { margin: 15px 0; padding: 15px; border-radius: 10px; border-left: 4px solid; }
+        .phase-todo { background: rgba(255,193,7,0.1); border-color: #ffc107; }
+        .phase-progress { background: rgba(0,123,255,0.1); border-color: #007bff; }
+        .phase-done { background: rgba(40,167,69,0.1); border-color: #28a745; }
+        .timeline { position: relative; margin: 30px 0; }
+        .timeline-item { display: flex; align-items: center; margin: 15px 0; }
+        .timeline-dot { width: 20px; height: 20px; border-radius: 50%; margin-right: 15px; }
+        .dot-done { background: #28a745; }
+        .dot-current { background: #ffc107; }
+        .dot-pending { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>📊 TDD Dashboard: Two-Stage Subject Extraction</h1>
+            <p>Test-Driven Development Progress Tracker</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="overallProgress" style="width: 0%"></div>
+            </div>
+            <div id="progressText">0% Complete - Ready to start TDD cycle</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="passedTests" style="color: #28a745;">0</div>
+                <div class="stat-label">Tests Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedTests" style="color: #dc3545;">8</div>
+                <div class="stat-label">Tests Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingTests" style="color: #ffc107;">0</div>
+                <div class="stat-label">Tests Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="subjectCount" style="color: #17a2b8;">6-7</div>
+                <div class="stat-label">Subjects in Dropdown</div>
+            </div>
+        </div>
+
+        <div class="test-groups">
+            <div class="test-group">
+                <h3>📚 Subject Extraction Tests</h3>
+                <div class="test-item">
+                    <span>Extract ALL subjects from transcript</span>
+                    <span class="test-status failed" id="test1-1">FAILED</span>
+                </div>
+                <div class="test-item">
+                    <span>Return simple string array</span>
+                    <span class="test-status failed" id="test1-2">FAILED</span>
+                </div>
+                <div class="test-item">
+                    <span>Populate dropdown with 20+ subjects</span>
+                    <span class="test-status failed" id="test1-3">FAILED</span>
+                </div>
+            </div>
+
+            <div class="test-group">
+                <h3>🔄 Two-Stage Process Tests</h3>
+                <div class="test-item">
+                    <span>Stage 1 before Stage 2</span>
+                    <span class="test-status failed" id="test2-1">FAILED</span>
+                </div>
+                <div class="test-item">
+                    <span>Dropdown populated before analysis</span>
+                    <span class="test-status failed" id="test2-2">FAILED</span>
+                </div>
+                <div class="test-item">
+                    <span>Independent stage operation</span>
+                    <span class="test-status failed" id="test2-3">FAILED</span>
+                </div>
+            </div>
+
+            <div class="test-group">
+                <h3>🎯 Pattern Matching Tests</h3>
+                <div class="test-item">
+                    <span>Handle various transcript formats</span>
+                    <span class="test-status failed" id="test3-1">FAILED</span>
+                </div>
+                <div class="test-item">
+                    <span>Filter false positives</span>
+                    <span class="test-status failed" id="test3-2">FAILED</span>
+                </div>
+            </div>
+
+            <div class="test-group">
+                <h3>🔗 Integration Tests</h3>
+                <div class="test-item">
+                    <span>File upload triggers Stage 1</span>
+                    <span class="test-status failed" id="test4-1">FAILED</span>
+                </div>
+                <div class="test-item">
+                    <span>No duplicate subjects</span>
+                    <span class="test-status failed" id="test4-2">FAILED</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="openTestSuite()">🧪 Run Test Suite</button>
+            <button class="btn btn-success" onclick="nextImplementationStep()">⚡ Next TDD Step</button>
+            <button class="btn btn-warning" onclick="openRollback()">🔄 Rollback</button>
+            <button class="btn btn-danger" onclick="openApp()">🚀 Test Live App</button>
+        </div>
+
+        <div class="implementation-status">
+            <h3>🔧 TDD Implementation Phases</h3>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-done"></div>
+                    <div>✅ Phase 0: Created backup & test suite</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-current"></div>
+                    <div>⚡ Phase 1: Implement extractSubjectsOnly() - Make first tests pass</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-pending"></div>
+                    <div>⏳ Phase 2: Implement analyzeExemptions() - Separate analysis</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-pending"></div>
+                    <div>⏳ Phase 3: Two-stage integration - Connect the processes</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot dot-pending"></div>
+                    <div>⏳ Phase 4: File upload integration - Complete the flow</div>
+                </div>
+            </div>
+
+            <div class="phase phase-progress">
+                <h4>🎯 Current Phase: Implement extractSubjectsOnly()</h4>
+                <p><strong>Goal:</strong> Make Test 1.1 pass (extract 10+ subjects from transcript)</p>
+                <p><strong>Location:</strong> gemini-api.js - Add new function</p>
+                <p><strong>Success criteria:</strong> Function returns array of subject names</p>
+                <code>async extractSubjectsOnly(transcriptText) { /* Implementation needed */ }</code>
+            </div>
+
+            <div class="phase phase-todo">
+                <h4>📋 Next Steps</h4>
+                <ul>
+                    <li>Add extractSubjectsOnly() method to GeminiAPI</li>
+                    <li>Create dedicated extraction prompt (no analysis)</li>
+                    <li>Run tests to see first green results</li>
+                    <li>Refactor and improve until more tests pass</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="implementation-status">
+            <h3>📈 Expected Progress</h3>
+            <p><strong>Target:</strong> Transform from 6-7 subjects to 20+ subjects in dropdown</p>
+            <p><strong>Current bottleneck:</strong> Gemini only extracts subjects it maps to HKIT courses</p>
+            <p><strong>Solution:</strong> Two separate API calls - extraction first, then analysis</p>
+        </div>
+    </div>
+
+    <script>
+        // Test results tracking
+        let currentResults = {
+            passed: 0,
+            failed: 8,
+            pending: 0,
+            subjectCount: '6-7'
+        };
+
+        function updateDashboard() {
+            // Update stats
+            document.getElementById('passedTests').textContent = currentResults.passed;
+            document.getElementById('failedTests').textContent = currentResults.failed;
+            document.getElementById('pendingTests').textContent = currentResults.pending;
+            document.getElementById('subjectCount').textContent = currentResults.subjectCount;
+
+            // Update progress bar
+            const total = currentResults.passed + currentResults.failed + currentResults.pending;
+            const progress = total > 0 ? (currentResults.passed / total) * 100 : 0;
+            document.getElementById('overallProgress').style.width = progress + '%';
+            document.getElementById('progressText').textContent = 
+                Math.round(progress) + '% Complete - ' + getPhaseDescription(progress);
+        }
+
+        function getPhaseDescription(progress) {
+            if (progress === 0) return 'Ready to implement extractSubjectsOnly()';
+            if (progress < 25) return 'Implementing Stage 1: Subject extraction';
+            if (progress < 50) return 'Implementing Stage 2: Analysis separation';
+            if (progress < 75) return 'Implementing integration and pattern matching';
+            if (progress < 100) return 'Final testing and refinement';
+            return 'All tests passing! 🎉';
+        }
+
+        function openTestSuite() {
+            window.open('test-subject-extraction.html', '_blank');
+        }
+
+        function openRollback() {
+            window.open('rollback.html', '_blank');
+        }
+
+        function openApp() {
+            window.open('enhanced.html', '_blank');
+        }
+
+        function nextImplementationStep() {
+            const phase = getCurrentPhase();
+            let message = '';
+            
+            switch (phase) {
+                case 1:
+                    message = `🎯 Phase 1: Implement extractSubjectsOnly()
+                    
+1. Open: gemini-api.js
+2. Add new method after existing methods
+3. Create extraction-only prompt (no analysis)
+4. Test with sample transcript
+5. Run test suite to see progress`;
+                    break;
+                case 2:
+                    message = `🎯 Phase 2: Separate analysis from extraction
+                    
+1. Modify existing analyzeExemptions() method
+2. Remove subject extraction responsibility  
+3. Focus only on exemption mapping
+4. Test two-stage process`;
+                    break;
+                case 3:
+                    message = `🎯 Phase 3: Integration
+                    
+1. Update file upload handler
+2. Call Stage 1 before Stage 2
+3. Ensure dropdown populates first
+4. Test complete flow`;
+                    break;
+                default:
+                    message = 'Check test results and continue with failing tests';
+            }
+            
+            alert(message);
+        }
+
+        function getCurrentPhase() {
+            if (currentResults.passed === 0) return 1;
+            if (currentResults.passed < 3) return 1;
+            if (currentResults.passed < 6) return 2;
+            return 3;
+        }
+
+        // Simulate test result updates (would be real in actual implementation)
+        function simulateProgress() {
+            // This would connect to actual test results
+            setTimeout(() => {
+                // Example: First test passes
+                currentResults.passed = 1;
+                currentResults.failed = 7;
+                currentResults.subjectCount = '15';
+                updateDashboard();
+                document.getElementById('test1-1').textContent = 'PASSED';
+                document.getElementById('test1-1').className = 'test-status passed';
+            }, 3000);
+        }
+
+        // Initialize dashboard
+        updateDashboard();
+        
+        // Auto-refresh every 10 seconds to show progress
+        setInterval(() => {
+            // In real implementation, this would fetch actual test results
+            updateDashboard();
+        }, 10000);
+
+        console.log('📊 TDD Dashboard loaded');
+        console.log('🎯 Ready to start implementing extractSubjectsOnly()');
+    </script>
+</body>
+</html>

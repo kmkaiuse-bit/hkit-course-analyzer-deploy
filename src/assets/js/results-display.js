@@ -16,6 +16,18 @@ const ResultsDisplay = {
         this.currentResults = results;
         this.currentProgramme = TemplateManager.getProgramme(programmeId);
 
+        // 收集科目名稱到 SubjectCollector
+        if (typeof SubjectCollector !== 'undefined') {
+            SubjectCollector.collectFromResults(results);
+        }
+
+        // 記錄分析結果到 StorageManager 以進行學習
+        if (typeof StorageManager !== 'undefined') {
+            const studentInfo = (typeof StudentInfoManager !== 'undefined') ? 
+                StudentInfoManager.getStudentInfo() : {};
+            StorageManager.recordAnalysisResults(results, studentInfo);
+        }
+
         // 設置編輯模式數據
         if (typeof EditModeController !== 'undefined' && EditModeController.setCurrentData) {
             EditModeController.setCurrentData(results);
@@ -131,7 +143,7 @@ const ResultsDisplay = {
     /**
      * Display results in table format
      */
-    displayTable() {
+    async displayTable() {
         const tableContainer = document.getElementById('tableView');
         if (!tableContainer || !this.currentResults) return;
 
@@ -139,8 +151,11 @@ const ResultsDisplay = {
         const studentInfo = (typeof StudentInfoManager !== 'undefined') ? 
             StudentInfoManager.getStudentInfo() : { name: '', applicationNumber: '', appliedProgramme: '' };
 
+        // 獲取信心指標
+        const enrichedResults = await this.enrichWithConfidenceData(this.currentResults);
+
         // 整合學生資訊到每一行數據
-        const dataWithStudentInfo = this.currentResults.map(row => ({
+        const dataWithStudentInfo = enrichedResults.map(row => ({
             'Student Name': studentInfo.name || '未填寫',
             'Application Number': studentInfo.applicationNumber || '未填寫',
             'Applied Programme': studentInfo.appliedProgramme || '未填寫',
@@ -154,17 +169,26 @@ const ResultsDisplay = {
                 <table class="w-full table-auto results-table">
                     <thead>
                         <tr class="bg-gray-50 border-b">
-                            ${headers.map(h => `<th class="px-4 py-3 text-left text-sm font-medium text-gray-700 ${this.getHeaderClass(h)}">${h}</th>`).join('')}
+                            ${headers.map(h => `<th class="px-4 py-3 text-left text-sm font-medium text-gray-700 ${this.getHeaderClass(h)}">${this.getHeaderText(h)}</th>`).join('')}
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         ${dataWithStudentInfo.map(result => `
                             <tr class="hover:bg-gray-50">
-                                ${headers.map(h => `<td class="px-4 py-3 text-sm ${this.getCellClass(h)}">${this.formatCell(h, result[h])}</td>`).join('')}
+                                ${headers.map(h => `<td class="px-4 py-3 text-sm ${this.getCellClass(h)}">${this.formatCell(h, result[h], result)}</td>`).join('')}
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- Confidence Legend -->
+            <div class="confidence-legend" style="margin-top: 15px; padding: 10px; background: #f7fafc; border-radius: 8px; font-size: 0.8rem;">
+                <strong>信心指標說明:</strong>
+                <span class="confidence-indicator high" style="background: #48bb78; color: white; padding: 2px 6px; border-radius: 4px; margin: 0 4px;">高</span>
+                <span class="confidence-indicator medium" style="background: #ed8936; color: white; padding: 2px 6px; border-radius: 4px; margin: 0 4px;">中</span>
+                <span class="confidence-indicator low" style="background: #e53e3e; color: white; padding: 2px 6px; border-radius: 4px; margin: 0 4px;">低</span>
+                <span class="confidence-indicator none" style="background: #a0aec0; color: white; padding: 2px 6px; border-radius: 4px; margin: 0 4px;">新</span>
             </div>
         `;
 
@@ -172,10 +196,67 @@ const ResultsDisplay = {
     },
 
     /**
+     * Enrich results with confidence data from historical patterns
+     */
+    async enrichWithConfidenceData(results) {
+        if (typeof StorageManager === 'undefined') {
+            return results; // Return original if StorageManager not available
+        }
+
+        const enrichedResults = [];
+        
+        for (const result of results) {
+            const previousSubject = result['Subject Name of Previous Studies'];
+            const hkitSubject = result['HKIT Subject Code'];
+            
+            let confidenceScore = null;
+            let historicalCount = 0;
+            
+            if (previousSubject && hkitSubject) {
+                try {
+                    const pattern = await StorageManager.getExemptionPattern(previousSubject, hkitSubject);
+                    if (pattern) {
+                        confidenceScore = pattern.confidence;
+                        historicalCount = pattern.count || 0;
+                    }
+                } catch (error) {
+                    console.warn('Failed to get confidence data:', error);
+                }
+            }
+            
+            enrichedResults.push({
+                ...result,
+                'Confidence Score': confidenceScore,
+                'Historical Count': historicalCount
+            });
+        }
+        
+        return enrichedResults;
+    },
+
+    /**
+     * Get header text with icons for new columns
+     */
+    getHeaderText(header) {
+        if (header === 'Confidence Score') {
+            return '🎯 信心指標';
+        } else if (header === 'Historical Count') {
+            return '📊 歷史次數';
+        }
+        return header;
+    },
+
+    /**
      * 格式化儲存格內容
      */
-    formatCell(header, value) {
-        if (value === null || value === undefined || value === '') return '-';
+    formatCell(header, value, fullRowData = null) {
+        if (value === null || value === undefined || value === '') {
+            // Handle new confidence columns differently
+            if (header === 'Confidence Score' || header === 'Historical Count') {
+                return '<span class="text-gray-400 text-xs">-</span>';
+            }
+            return '-';
+        }
         
         // 學生資訊欄位特殊樣式
         if (this.isStudentInfoField(header)) {
@@ -185,13 +266,29 @@ const ResultsDisplay = {
             return `<span class="text-blue-700 font-medium">${value}</span>`;
         }
         
+        // 信心指標顯示
+        if (header === 'Confidence Score') {
+            return this.formatConfidenceScore(value);
+        }
+        
+        // 歷史次數顯示
+        if (header === 'Historical Count') {
+            return this.formatHistoricalCount(value);
+        }
+        
         if (header === 'Exemption Granted' || header === 'Exemption Granted / study plan') {
             // 處理豁免狀態
             if (header === 'Exemption Granted') {
                 const isExempt = value === true || value === 'true' || value === 'TRUE';
-                return `<span class="exemption-badge ${isExempt ? 'exemption-true' : 'exemption-false'}">
-                    ${isExempt ? '✅ 豁免' : '❌ 不豁免'}
-                </span>`;
+                const confidenceScore = fullRowData ? fullRowData['Confidence Score'] : null;
+                const confidenceClass = this.getConfidenceClass(confidenceScore);
+                
+                return `<div class="flex items-center space-x-2">
+                    <span class="exemption-badge ${isExempt ? 'exemption-true' : 'exemption-false'}">
+                        ${isExempt ? '✅ 豁免' : '❌ 不豁免'}
+                    </span>
+                    ${confidenceScore !== null ? `<span class="confidence-dot ${confidenceClass}" title="信心指標: ${(confidenceScore * 100).toFixed(0)}%"></span>` : ''}
+                </div>`;
             } else {
                 // study plan 欄位
                 return value === 'Exempted' ? 
@@ -201,6 +298,54 @@ const ResultsDisplay = {
         }
         
         return String(value);
+    },
+
+    /**
+     * 格式化信心指標分數
+     */
+    formatConfidenceScore(score) {
+        if (score === null || score === undefined) {
+            return '<span class="confidence-indicator none">新</span>';
+        }
+        
+        const percentage = Math.round(score * 100);
+        const level = this.getConfidenceLevel(score);
+        const className = this.getConfidenceClass(score);
+        
+        return `<span class="confidence-indicator ${className}" title="${percentage}% 信心度">${level}</span>`;
+    },
+
+    /**
+     * 格式化歷史次數
+     */
+    formatHistoricalCount(count) {
+        if (!count || count === 0) {
+            return '<span class="text-gray-400 text-xs">0</span>';
+        }
+        
+        const countText = count > 99 ? '99+' : count.toString();
+        return `<span class="historical-count text-xs font-medium text-blue-600" title="歷史出現 ${count} 次">${countText}</span>`;
+    },
+
+    /**
+     * 獲取信心指標等級
+     */
+    getConfidenceLevel(score) {
+        if (score >= 0.8) return '高';
+        if (score >= 0.6) return '中';
+        if (score >= 0.3) return '低';
+        return '新';
+    },
+
+    /**
+     * 獲取信心指標樣式類別
+     */
+    getConfidenceClass(score) {
+        if (score === null || score === undefined) return 'none';
+        if (score >= 0.8) return 'high';
+        if (score >= 0.6) return 'medium';
+        if (score >= 0.3) return 'low';
+        return 'none';
     },
 
     /**
@@ -228,6 +373,12 @@ const ResultsDisplay = {
         }
         if (header === 'HKIT Subject Name') {
             return 'min-w-0 max-w-sm';
+        }
+        if (header === 'Confidence Score') {
+            return 'min-w-0 max-w-20 text-center';
+        }
+        if (header === 'Historical Count') {
+            return 'min-w-0 max-w-16 text-center';
         }
         return 'min-w-0';
     },

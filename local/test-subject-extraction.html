@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>🧪 TDD Test Suite - Subject Extraction</title>
+    <style>
+        body { font-family: 'Courier New', monospace; margin: 20px; background: #1a1a1a; color: #e0e0e0; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #444; border-radius: 8px; background: #2a2a2a; }
+        .test-passed { border-color: #28a745; background: #1a2f1a; }
+        .test-failed { border-color: #dc3545; background: #2f1a1a; }
+        .test-pending { border-color: #ffc107; background: #2f2a1a; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 14px; }
+        .passed { background: #28a745; color: white; }
+        .failed { background: #dc3545; color: white; }
+        .pending { background: #ffc107; color: black; }
+        .code-block { background: #333; padding: 15px; border-radius: 5px; margin: 10px 0; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .run-btn { background: #17a2b8; color: white; }
+        .rollback-btn { background: #dc3545; color: white; }
+        h1 { color: #4fc3f7; }
+        h2 { color: #81c784; }
+        h3 { color: #ffb74d; }
+        .stats { display: flex; gap: 20px; margin: 15px 0; }
+        .stat-box { padding: 10px 15px; border-radius: 5px; text-align: center; min-width: 100px; }
+        .stat-passed { background: #28a745; }
+        .stat-failed { background: #dc3545; }
+        .stat-pending { background: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 TDD Test Suite: Subject Extraction</h1>
+        <p>Test-Driven Development for Two-Stage Subject Extraction System</p>
+
+        <div class="stats">
+            <div class="stat-box stat-passed">
+                <div>✅ PASSED</div>
+                <div id="passedCount">0</div>
+            </div>
+            <div class="stat-box stat-failed">
+                <div>❌ FAILED</div>
+                <div id="failedCount">8</div>
+            </div>
+            <div class="stat-box stat-pending">
+                <div>⏳ PENDING</div>
+                <div id="pendingCount">0</div>
+            </div>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <button class="run-btn" onclick="runAllTests()">🚀 Run All Tests</button>
+            <button class="run-btn" onclick="debugStage1()">🔍 Debug Stage 1</button>
+            <button class="run-btn" onclick="checkAPIConfig()">🔑 Check API</button>
+            <button class="run-btn" onclick="testRealTranscript()">📋 Test Real Transcript</button>
+            <button class="rollback-btn" onclick="openRollback()">🔄 Rollback</button>
+        </div>
+
+        <!-- TEST SUITE 1: Subject Extraction Tests -->
+        <div class="test-section test-failed" id="test1">
+            <h2>📚 Test Suite 1: Subject Extraction</h2>
+            
+            <h3>Test 1.1: Extract ALL subjects from transcript</h3>
+            <div class="test-result failed" id="result1-1">
+                ❌ FAILING - Function extractSubjectsOnly() not yet implemented
+            </div>
+            <div class="code-block">
+                <strong>Expected:</strong> subjects.length > 20<br>
+                <strong>Actual:</strong> Function doesn't exist<br>
+                <strong>Sample subjects to find:</strong><br>
+                - "English and Communication: Workplace Interaction"<br>
+                - "Tourism Management" (currently missing!)<br>
+                - "Hotel Operations" (currently missing!)<br>
+                - "Information Technology Essentials"<br>
+                - "Database Management Systems"
+            </div>
+
+            <h3>Test 1.2: Extraction should be independent of analysis</h3>
+            <div class="test-result failed" id="result1-2">
+                ❌ FAILING - extractSubjectsOnly() should return simple string array
+            </div>
+            <div class="code-block">
+                <strong>Expected:</strong> Return ["Subject 1", "Subject 2", ...]<br>
+                <strong>Not:</strong> Return exemption objects with properties
+            </div>
+
+            <h3>Test 1.3: Should populate dropdown with ALL subjects</h3>
+            <div class="test-result failed" id="result1-3">
+                ❌ FAILING - Dropdown still only shows 6-7 subjects instead of 20+
+            </div>
+        </div>
+
+        <!-- TEST SUITE 2: Two-Stage Process Tests -->
+        <div class="test-section test-failed" id="test2">
+            <h2>🔄 Test Suite 2: Two-Stage Process</h2>
+            
+            <h3>Test 2.1: Stage 1 must complete before Stage 2</h3>
+            <div class="test-result failed" id="result2-1">
+                ❌ FAILING - No separation between extraction and analysis
+            </div>
+            <div class="code-block">
+                <strong>Expected call order:</strong><br>
+                1. extractSubjectsOnly(transcript) → populate dropdown<br>
+                2. analyzeExemptions(template, transcript) → create results table
+            </div>
+
+            <h3>Test 2.2: Dropdown populated before analysis</h3>
+            <div class="test-result failed" id="result2-2">
+                ❌ FAILING - Dropdown empty during analysis phase
+            </div>
+
+            <h3>Test 2.3: Both stages should work independently</h3>
+            <div class="test-result failed" id="result2-3">
+                ❌ FAILING - Analysis still tries to extract subjects
+            </div>
+        </div>
+
+        <!-- TEST SUITE 3: Pattern Matching Tests -->
+        <div class="test-section test-failed" id="test3">
+            <h2>🎯 Test Suite 3: Pattern Matching</h2>
+            
+            <h3>Test 3.1: Handle various transcript formats</h3>
+            <div class="test-result failed" id="result3-1">
+                ❌ FAILING - Pattern matching not comprehensive enough
+            </div>
+            <div class="code-block">
+                <strong>Test patterns:</strong><br>
+                ✓ "Computer Programming I&nbsp;&nbsp;&nbsp;&nbsp;A+" → "Computer Programming I"<br>
+                ✓ "CS101 - Database Systems" → "Database Systems"<br>
+                ✓ "1. Business Communication" → "Business Communication"<br>
+                ✓ "Tourism and Hospitality Management" → "Tourism and Hospitality Management"
+            </div>
+
+            <h3>Test 3.2: Filter out false positives</h3>
+            <div class="test-result failed" id="result3-2">
+                ❌ FAILING - Should reject "Student Name", "Page 1", etc.
+            </div>
+        </div>
+
+        <!-- TEST SUITE 4: Integration Tests -->
+        <div class="test-section test-failed" id="test4">
+            <h2>🔗 Test Suite 4: Integration</h2>
+            
+            <h3>Test 4.1: File upload should trigger Stage 1</h3>
+            <div class="test-result failed" id="result4-1">
+                ❌ FAILING - No hook into file upload process
+            </div>
+
+            <h3>Test 4.2: No duplicate subjects in dropdown</h3>
+            <div class="test-result failed" id="result4-2">
+                ❌ FAILING - SubjectCollector.addBulkSubjects() not implemented
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Implementation Requirements</h2>
+            <div class="code-block">
+                <strong>Phase 1: Make these functions exist (so tests can run):</strong><br>
+                • GeminiAPI.extractSubjectsOnly(transcriptText)<br>
+                • GeminiAPI.analyzeExemptions(template, transcript)<br>
+                • SubjectCollector.addBulkSubjects(subjectArray)<br>
+                <br>
+                <strong>Phase 2: Make them work correctly</strong><br>
+                • extractSubjectsOnly() returns 20+ subjects<br>
+                • Dropdown shows all subjects<br>
+                • Two-stage process works independently<br>
+                <br>
+                <strong>Phase 3: Integration</strong><br>
+                • File upload calls Stage 1 first<br>
+                • No duplicates or false positives<br>
+                • Maintains existing functionality
+            </div>
+        </div>
+
+        <div id="testOutput" class="test-section" style="display: none;">
+            <h2>🔍 Test Execution Output</h2>
+            <div id="console" class="code-block" style="height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load the modules for testing
+        // Note: These may fail initially since functions don't exist yet
+        
+        let testResults = {
+            passed: 0,
+            failed: 8,
+            pending: 0
+        };
+
+        function updateStats() {
+            document.getElementById('passedCount').textContent = testResults.passed;
+            document.getElementById('failedCount').textContent = testResults.failed;
+            document.getElementById('pendingCount').textContent = testResults.pending;
+        }
+
+        function logTest(message) {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            console.innerHTML += `[${timestamp}] ${message}<br>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        async function runAllTests() {
+            document.getElementById('testOutput').style.display = 'block';
+            document.getElementById('console').innerHTML = '';
+            
+            logTest('🧪 Starting TDD Test Suite...');
+            logTest('Current implementation status: BEFORE implementation');
+            
+            // Reset counters
+            testResults = { passed: 0, failed: 0, pending: 0 };
+
+            // Test Suite 1: Subject Extraction
+            await testSubjectExtraction();
+            
+            // Test Suite 2: Two-Stage Process  
+            await testTwoStageProcess();
+            
+            // Test Suite 3: Pattern Matching
+            await testPatternMatching();
+            
+            // Test Suite 4: Integration
+            await testIntegration();
+            
+            logTest(`\\n📊 Final Results: ${testResults.passed} passed, ${testResults.failed} failed, ${testResults.pending} pending`);
+            updateStats();
+        }
+
+        async function testSubjectExtraction() {
+            logTest('\\n📚 Testing Subject Extraction...');
+            
+            // Test 1.1: Extract ALL subjects
+            try {
+                if (typeof GeminiAPI !== 'undefined' && GeminiAPI.extractSubjectsOnly) {
+                    logTest('✓ extractSubjectsOnly function exists');
+                    
+                    const sampleTranscript = \`
+                    English and Communication: Workplace Interaction    A+
+                    English and Communication: Workplace Correspondence    B+
+                    Tourism Management    A
+                    Hotel Operations    B
+                    Information Technology Essentials - Services    A
+                    Database Management Systems    B+
+                    Computer Programming I    A
+                    Web Development Fundamentals    A-
+                    Business Communication    B
+                    Law and Ethics for the Hospitality Industry    C+
+                    \`;
+                    
+                    const subjects = await GeminiAPI.extractSubjectsOnly(sampleTranscript);
+                    
+                    if (Array.isArray(subjects) && subjects.length >= 10) {
+                        logTest(\`✅ Test 1.1 PASSED: Extracted \${subjects.length} subjects\`);
+                        testResults.passed++;
+                        document.getElementById('result1-1').innerHTML = '✅ PASSED - extractSubjectsOnly() working';
+                        document.getElementById('result1-1').className = 'test-result passed';
+                    } else {
+                        logTest(\`❌ Test 1.1 FAILED: Only extracted \${subjects ? subjects.length : 0} subjects, expected 10+\`);
+                        testResults.failed++;
+                    }
+                } else {
+                    logTest('❌ Test 1.1 FAILED: extractSubjectsOnly function not found');
+                    testResults.failed++;
+                }
+            } catch (error) {
+                logTest(\`❌ Test 1.1 ERROR: \${error.message}\`);
+                testResults.failed++;
+            }
+            
+            // Test 1.2: Simple array return
+            try {
+                if (typeof GeminiAPI !== 'undefined' && GeminiAPI.extractSubjectsOnly) {
+                    const subjects = await GeminiAPI.extractSubjectsOnly('Test Course    A');
+                    if (Array.isArray(subjects) && typeof subjects[0] === 'string') {
+                        logTest('✅ Test 1.2 PASSED: Returns simple string array');
+                        testResults.passed++;
+                        testResults.failed--;
+                        document.getElementById('result1-2').innerHTML = '✅ PASSED - Returns simple array';
+                        document.getElementById('result1-2').className = 'test-result passed';
+                    } else {
+                        logTest('❌ Test 1.2 FAILED: Does not return simple string array');
+                    }
+                } else {
+                    logTest('❌ Test 1.2 FAILED: Function not implemented');
+                }
+            } catch (error) {
+                logTest(\`❌ Test 1.2 ERROR: \${error.message}\`);
+            }
+
+            // Test 1.3: Dropdown population
+            try {
+                if (typeof SubjectCollector !== 'undefined' && SubjectCollector.getAllSubjects) {
+                    const currentSubjects = SubjectCollector.getAllSubjects();
+                    if (currentSubjects.length >= 20) {
+                        logTest(\`✅ Test 1.3 PASSED: Dropdown has \${currentSubjects.length} subjects\`);
+                        testResults.passed++;
+                        testResults.failed--;
+                        document.getElementById('result1-3').innerHTML = \`✅ PASSED - Dropdown has \${currentSubjects.length} subjects\`;
+                        document.getElementById('result1-3').className = 'test-result passed';
+                    } else {
+                        logTest(\`❌ Test 1.3 FAILED: Dropdown only has \${currentSubjects.length} subjects, need 20+\`);
+                    }
+                } else {
+                    logTest('❌ Test 1.3 FAILED: SubjectCollector not available');
+                }
+            } catch (error) {
+                logTest(\`❌ Test 1.3 ERROR: \${error.message}\`);
+            }
+        }
+
+        async function testTwoStageProcess() {
+            logTest('\\n🔄 Testing Two-Stage Process...');
+            
+            // These tests will initially fail - that's expected in TDD!
+            logTest('❌ Test 2.1 FAILED: Two-stage process not yet implemented');
+            logTest('❌ Test 2.2 FAILED: Stage separation not implemented');  
+            logTest('❌ Test 2.3 FAILED: Independent stages not implemented');
+            
+            testResults.failed += 3;
+        }
+
+        async function testPatternMatching() {
+            logTest('\\n🎯 Testing Pattern Matching...');
+            
+            // Test existing patterns
+            if (typeof SubjectCollector !== 'undefined' && SubjectCollector.extractFromTranscript) {
+                const testPatterns = [
+                    'Computer Programming I    A+',
+                    'CS101 - Database Systems',
+                    '1. Business Communication',
+                    'Tourism and Hospitality Management'
+                ];
+                
+                let patternsWorking = 0;
+                testPatterns.forEach(pattern => {
+                    SubjectCollector.clearAllSubjects();
+                    SubjectCollector.extractFromTranscript(pattern);
+                    const extracted = SubjectCollector.getAllSubjects();
+                    if (extracted.length > 0) {
+                        patternsWorking++;
+                        logTest(\`✓ Pattern "\${pattern}" → extracted: \${extracted[0]}\`);
+                    } else {
+                        logTest(\`✗ Pattern "\${pattern}" → no extraction\`);
+                    }
+                });
+                
+                if (patternsWorking >= 3) {
+                    logTest(\`✅ Test 3.1 PASSED: \${patternsWorking}/4 patterns working\`);
+                    testResults.passed++;
+                    testResults.failed--;
+                    document.getElementById('result3-1').innerHTML = \`✅ PASSED - \${patternsWorking}/4 patterns work\`;
+                    document.getElementById('result3-1').className = 'test-result passed';
+                } else {
+                    logTest(\`❌ Test 3.1 FAILED: Only \${patternsWorking}/4 patterns working\`);
+                }
+            } else {
+                logTest('❌ Test 3.1 FAILED: extractFromTranscript not available');
+                testResults.failed++;
+            }
+            
+            logTest('❌ Test 3.2 FAILED: False positive filtering not fully tested');
+            testResults.failed++;
+        }
+
+        async function testIntegration() {
+            logTest('\\n🔗 Testing Integration...');
+            
+            logTest('❌ Test 4.1 FAILED: File upload integration not implemented');
+            logTest('❌ Test 4.2 FAILED: Bulk subject addition not implemented');
+            
+            testResults.failed += 2;
+        }
+
+        function runSingleTest() {
+            const testNumber = prompt('Which test to run? (1.1, 1.2, 1.3, etc.)');
+            logTest(\`Running single test: \${testNumber}\`);
+            // Implementation depends on test number
+        }
+
+        function openRollback() {
+            window.open('rollback.html', '_blank');
+        }
+
+        // Initialize
+        updateStats();
+        logTest = function(msg) {
+            console.log(msg);
+        };
+
+        // Debug functions
+        async function checkAPIConfig() {
+            document.getElementById('testOutput').style.display = 'block';
+            document.getElementById('console').innerHTML = '';
+            
+            logTest('🔑 CHECKING API Configuration...');
+            
+            // Check if API_CONFIG exists
+            if (typeof window.API_CONFIG === 'undefined') {
+                logTest('❌ window.API_CONFIG not found - this means no API key is configured');
+                logTest('💡 Solution: You need to set up an API key in the main app first');
+                logTest('📋 Go to enhanced.html and configure your Gemini API key');
+                return;
+            }
+            
+            // Check if getApiKey method exists and works
+            try {
+                const apiKey = window.API_CONFIG.getApiKey();
+                if (!apiKey) {
+                    logTest('❌ API key is empty or not set');
+                    logTest('💡 Solution: Configure your Gemini API key in enhanced.html');
+                } else {
+                    logTest(`✅ API key configured (${apiKey.substring(0, 10)}...)`);
+                    
+                    // Check LOCAL_MODE
+                    if (window.API_CONFIG.LOCAL_MODE) {
+                        logTest('✅ LOCAL_MODE enabled - will use direct API calls');
+                    } else {
+                        logTest('📡 LOCAL_MODE disabled - will use Vercel Functions');
+                    }
+                }
+            } catch (error) {
+                logTest('❌ Error checking API config:', error.message);
+            }
+        }
+
+        async function debugStage1() {
+            document.getElementById('testOutput').style.display = 'block';
+            document.getElementById('console').innerHTML = '';
+            
+            logTest('🔍 DEBUGGING Stage 1...');
+            
+            // Check if modules loaded
+            if (typeof GeminiAPI === 'undefined') {
+                logTest('❌ GeminiAPI not loaded');
+                return;
+            }
+            if (!GeminiAPI.extractSubjectsOnly) {
+                logTest('❌ extractSubjectsOnly function not found');
+                return;
+            }
+            
+            logTest('✅ Function exists, testing with simple data...');
+            
+            const testData = `Computer Programming I    A+
+Database Systems    B
+Tourism Management    A`;
+            
+            try {
+                const result = await GeminiAPI.extractSubjectsOnly(testData);
+                logTest(`🎯 Result: ${result.length} subjects extracted`);
+                result.forEach((subject, i) => {
+                    logTest(`   ${i+1}. ${subject}`);
+                });
+                
+                if (result.length === 0) {
+                    logTest('🔧 Trying fallback parsing...');
+                    if (typeof SubjectCollector !== 'undefined') {
+                        const fallback = SubjectCollector.extractFromTranscript(testData);
+                        const subjects = SubjectCollector.getAllSubjects();
+                        logTest(`🔄 Fallback found ${subjects.length} subjects`);
+                        subjects.forEach((subject, i) => {
+                            logTest(`   ${i+1}. ${subject}`);
+                        });
+                    }
+                }
+                
+            } catch (error) {
+                logTest(`❌ Error: ${error.message}`);
+            }
+        }
+
+        async function testRealTranscript() {
+            logTest('📋 Testing with Tourism & MICE transcript (38 subjects)...');
+            // This will be implemented when Stage 1 works
+            logTest('⏳ Coming soon - fix Stage 1 first');
+        }
+
+        function openRollback() {
+            window.open('rollback.html', '_blank');
+        }
+
+        // Show current status
+        console.log('🧪 TDD Test Suite Loaded');
+        console.log('📊 Current Status: All tests failing (expected - TDD approach)');
+        console.log('🎯 Next Step: Debug why extractSubjectsOnly() returns 0 subjects');
+    </script>
+
+    <!-- Load existing modules -->
+    <script src="assets/js/modules/subjectCollector.js" onerror="console.log('SubjectCollector not loaded')"></script>
+    <script src="assets/js/gemini-api.js" onerror="console.log('GeminiAPI not loaded')"></script>
+</body>
+</html>

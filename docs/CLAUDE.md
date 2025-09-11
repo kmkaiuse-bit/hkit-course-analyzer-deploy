@@ -5,6 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 HKIT Course Analyzer - A web application for analyzing HKIT course transcripts and determining advanced standing eligibility for university programs. The app uses Google Gemini AI to analyze PDF transcripts and match courses for exemptions.
 
+**Recent Updates (September 2025):**
+- ✅ Enhanced UI/UX with loading states and visual polish
+- ✅ Improved API key validation and testing
+- ✅ Centralized error handling with user-friendly messages
+- ✅ Cache management system for dropdown issues
+- ✅ Complete folder reorganization for better maintainability
+- 📋 **Planned**: Learning database system for AI accuracy improvement
+
 ## Tech Stack
 - Frontend: Vanilla JavaScript, HTML5, CSS3
 - PDF Processing: PDF.js
@@ -35,6 +43,12 @@ Key modules initialized in sequence:
 3. EditModeController - Result editing features
 4. StudyPlanGenerator - Study plan creation
 5. AdvancedExporter - CSV/print export
+6. **New Modules (Enhanced):**
+   - NotificationManager - Toast notifications and user feedback
+   - ErrorHandler - Centralized error handling with user-friendly messages
+   - DebugMonitor - Real-time monitoring and debugging tools
+   - DataManager - Enhanced data management with cache clearing
+   - SubjectCollector - Improved subject extraction with cache management
 
 ## Development Commands
 
@@ -96,6 +110,13 @@ http-server -p 8000
 - ✅ Edit mode controllers for result modification
 - ✅ Study plan generation
 - ✅ No timeout restrictions for large PDF processing
+- ✅ **Enhanced Features (September 2025):**
+  - Enhanced API key testing with "Test API Key" button
+  - Real-time toast notifications for user feedback
+  - Cache management system with "Clear Cache" functionality
+  - Centralized error handling with bilingual error messages
+  - Debug monitoring panel for advanced users
+  - Visual loading states and improved animations
 
 ### Local Versions Comparison
 | Feature | `local-demo.html` | `local-enhanced.html` |
@@ -141,6 +162,34 @@ http-server -p 8000
 - "GeminiAPI is not defined" → Script loading order issue
 - "Maximum call stack size exceeded" → API configuration conflicts
 - Timeout errors → Use local-enhanced.html for large files
+- Cache-related dropdown issues → Use DataManager.clearCache() or Settings → Clear Cache
+- User complaints about confusing errors → ErrorHandler provides bilingual error messages
+
+## Enhanced Features & Modules (September 2025)
+
+### **New User Experience Features**
+- **Toast Notifications**: Real-time feedback with color-coded messages
+- **Loading States**: Professional loading spinners and progress indicators
+- **Enhanced API Key Management**: "Test API Key" button with response time tracking
+- **Cache Management**: One-click cache clearing to fix dropdown issues
+- **Error Handling**: User-friendly error messages in English/Chinese
+- **Visual Polish**: Smooth animations, hover effects, improved typography
+
+### **New Development Tools**
+- **Debug Monitor**: Real-time activity logging and database statistics
+- **Error Analytics**: Centralized error logging with pattern detection
+- **Cache Information**: Detailed cache status and storage usage
+- **Data Management**: Enhanced import/export with user feedback
+
+### **Enhanced Module Functions**
+```javascript
+// Key new functions available
+NotificationManager.show(message, type, duration);
+ErrorHandler.handleError(error, context);
+DataManager.clearCache();  // Fix dropdown issues
+SubjectCollector.clearCache();  // Reset subject cache
+DebugMonitor.togglePanel();  // Show/hide debug tools
+```
 
 ## Important Notes
 - PDF files are converted to base64 and sent to Gemini API
@@ -149,15 +198,76 @@ http-server -p 8000
 - API key is never exposed to frontend in production
 - Maximum output tokens limited to 8192 to prevent timeouts
 - Local enhanced version has no timeout restrictions but exposes API key to client
+- **Cache Issues**: If dropdown shows old subjects, use "Clear Cache" in Settings → Data Management
+
+## Project Structure (Updated September 2025)
+
+The project has been completely reorganized for better maintainability:
+
+```
+hkit-course-analyzer/
+├── 📁 docs/                    # All documentation (26+ files)
+│   ├── 📁 project/            # General project documentation
+│   ├── 📁 development/        # Technical development logs & PRDs
+│   ├── 📁 deployment/         # Deployment guides (Vercel SOP)
+│   ├── 📁 demo/              # Demo & presentation materials
+│   └── 📁 testing/           # Testing procedures & checklists
+├── 📁 archive/                 # Archived files (old backups, legacy docs)
+│   ├── 📁 2025-09-11/        # Recent cleanup archive
+│   └── 📁 backups/           # Previous backup system
+├── 📁 src/                     # Source code (production)
+├── 📁 local/                   # Local development version
+├── 📁 api/                     # Vercel Functions
+├── 📁 config/                  # Configuration files
+├── 📁 assets/                  # CSS, JS, and static files
+└── 📁 sessions/               # Development session logs
+```
+
+## Key Locations
+
+### **Documentation**
+- **Project docs**: `docs/project/` - README, integration guides
+- **Development**: `docs/development/` - PRDs, problem tracking, enhancement logs
+- **Learning Database PRD**: `docs/development/PRD_LEARNING_DATABASE.md`
+
+### **Core Files**
+- **Main App**: `local/enhanced.html` (recommended for development)
+- **Production**: `index.html` (Vercel deployment)
+- **API Config**: `config/api-config-local.js` (local), `api/gemini.js` (production)
 
 ## Current Development Status
-- ✅ **Working**: `local-enhanced.html` with full programme database integration
-- ✅ **Fixed**: GeminiAPI integration, stack overflow errors, API mode detection
-- ✅ **Backup**: Complete working version saved in `backup-working-version/`
-- 🔄 **In Progress**: Language course exemption rule enhancements
-- 📋 **Planned**: Multiple transcript support, AI suggested column in edit mode
+
+### **✅ Recently Completed (September 2025)**
+- **UI/UX Enhancements**: Loading states, animations, visual polish
+- **API Key Management**: Enhanced validation, testing, error handling
+- **Error System**: Centralized error handling with user-friendly messages
+- **Cache Management**: Fixed dropdown issues with cache clearing
+- **Project Organization**: Complete folder restructure for maintainability
+- **Notification System**: Toast notifications for better user feedback
+
+### **🔄 In Progress**
+- Learning database system design and planning
+- AI accuracy improvement through historical pattern learning
+
+### **📋 Planned Features**
+- **Learning Database**: HKIT-centric exemption pattern storage
+- **AI Enhancement**: Use historical decisions to improve accuracy
+- **Batch Processing**: Multiple transcript support
+- **Analytics**: Learning effectiveness monitoring
 
 ## Backup & Recovery
-- **Working backup location**: `backup-working-version/`
-- **Restore command**: `cp -r backup-working-version/* ./`
-- **Direct backup usage**: Open `backup-working-version/local-enhanced.html`
+
+### **Current Backups**
+- **Enhanced Version Backup**: `local/backup-2025-09-11/`
+- **Legacy Backups**: `archive/backups/`
+- **Complete Archive**: `archive/` folder contains all old files
+
+### **Recovery Commands**
+```bash
+# Restore from recent backup
+cp -r local/backup-2025-09-11/* local/
+
+# Access archived files
+ls archive/2025-09-11/  # Recent cleanup archive
+ls archive/backups/     # Legacy backups
+```

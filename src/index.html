@@ -9,6 +9,90 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="debug-override.js"></script>
+    
+    <!-- Enhanced UI Styles -->
+    <style>
+        /* Confidence Indicators */
+        .confidence-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 32px;
+        }
+        .confidence-indicator.high { background: #48bb78; color: white; }
+        .confidence-indicator.medium { background: #ed8936; color: white; }
+        .confidence-indicator.low { background: #e53e3e; color: white; }
+        .confidence-indicator.none { background: #a0aec0; color: white; }
+        
+        /* Confidence Dots */
+        .confidence-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 4px;
+        }
+        .confidence-dot.high { background: #48bb78; }
+        .confidence-dot.medium { background: #ed8936; }
+        .confidence-dot.low { background: #e53e3e; }
+        .confidence-dot.none { background: #a0aec0; }
+        
+        /* Subject Dropdown Container */
+        .subject-dropdown-container {
+            position: relative;
+        }
+        
+        /* Autocomplete Suggestions */
+        .autocomplete-suggestions {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .suggestion-item:hover {
+            background-color: #f7fafc !important;
+        }
+        
+        /* Data Management Buttons */
+        .btn-sm {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-sm:hover {
+            background: #3182ce;
+        }
+        
+        /* Exemption Badges */
+        .exemption-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .exemption-badge.exemption-true {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .exemption-badge.exemption-false {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        /* Historical Count */
+        .historical-count {
+            background: #bee3f8;
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -285,6 +369,9 @@
 
     <!-- JavaScript Files -->
     <script src="config/api-config.js"></script>
+    <script src="assets/js/modules/subjectCollector.js"></script>
+    <script src="assets/js/modules/storageManager.js"></script>
+    <script src="assets/js/modules/dataManager.js"></script>
     <script src="assets/js/modules/studentInfoManager.js"></script>
     <script src="assets/js/modules/editModeController.js"></script>
     <script src="assets/js/modules/studyPlanGenerator.js"></script>

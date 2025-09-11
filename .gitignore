@@ -1,10 +1,3 @@
-cat > .gitignore << EOF
-  # Environment files
-  .env
-  .env.local
-  .env.*.local
-
-cat > .gitignore << EOF
 # Environment files
 .env
 .env.local
@@ -46,9 +39,10 @@ tmp/
 *.tmp
 *.temp
 
-# Backup files
+# Backup and archive files
 backup-working-version/
 backups/
+archive/
 *.backup
 *.bak
 
@@ -85,9 +79,7 @@ jspm_packages/
 **/*api-config-local.js
 **/*.csv
 
-# Additional sensitive files
-.claude/
-*.docx
-~.docx
-**/*api-config-local.js
-**/*.csv
+# Playwright test outputs
+.playwright-mcp/
+test-results/
+playwright-report/

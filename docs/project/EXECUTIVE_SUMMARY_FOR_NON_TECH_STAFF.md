@@ -20,7 +20,6 @@
 
 ### **Time Savings**
 - **After**: 5-10 minutes with AI assistance
-- **Impact**: 90% time reduction for Advanced Standing processing
 
 ### **Quality Improvements**
 - **Consistency**: Standardized analysis process eliminates human variation

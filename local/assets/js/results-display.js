@@ -71,6 +71,9 @@ const ResultsDisplay = {
         
         // 顯示編輯按鈕
         this.showEditButton();
+        
+        // 顯示保存到數據庫按鈕
+        this.showSaveToDbButton();
     },
 
     /**
@@ -107,6 +110,17 @@ const ResultsDisplay = {
         if (typeof AdvancedExporter !== 'undefined' && AdvancedExporter.showExportButtons) {
             AdvancedExporter.showExportButtons();
         }
+    },
+
+    /**
+     * 顯示保存到數據庫按鈕
+     */
+    showSaveToDbButton() {
+        const saveToDbBtn = document.getElementById('saveToDbBtn');
+        const floatingSaveToDbBtn = document.getElementById('floatingSaveToDbBtn');
+        
+        if (saveToDbBtn) saveToDbBtn.style.display = 'inline-block';
+        if (floatingSaveToDbBtn) floatingSaveToDbBtn.style.display = 'block';
     },
 
     /**

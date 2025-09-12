@@ -285,6 +285,18 @@ const StorageManager = {
     async recordAnalysisResults(results, studentInfo = {}) {
         if (!Array.isArray(results)) return;
 
+        // Use learning client if available (PostgreSQL), otherwise fallback to local storage
+        if (typeof window !== 'undefined' && window.learningClient) {
+            try {
+                await window.learningClient.recordAnalysisResults(results, studentInfo);
+                console.log('✅ Saved analysis results to PostgreSQL learning database');
+                return;
+            } catch (error) {
+                console.warn('Learning client failed, falling back to local storage:', error);
+            }
+        }
+
+        // Fallback to local IndexedDB storage
         const recordPromises = results.map(result => {
             const previousSubject = result['Subject Name of Previous Studies'];
             const hkitSubject = result['HKIT Subject Code'];

@@ -288,14 +288,24 @@ const EditModeController = {
             SubjectCollector.getAllSubjects() : [];
         
         // Create options for dropdown
-        let options = '<option value="">-- 選擇科目或輸入新科目 --</option>';
-        if (displayValue && !availableSubjects.includes(displayValue)) {
+        let options = '';
+        
+        // If we have a current value, always make it the first selected option
+        if (displayValue && displayValue.trim() !== '') {
             options += `<option value="${displayValue.replace(/"/g, '&quot;')}" selected>✨ ${displayValue}</option>`;
+            // Add separator if we have other subjects
+            if (availableSubjects.length > 0) {
+                options += '<option value="">-- 選擇其他科目 --</option>';
+            }
+        } else {
+            options += '<option value="" selected>-- 選擇科目或輸入新科目 --</option>';
         }
         
+        // Add available subjects (excluding current value to avoid duplicates)
         availableSubjects.forEach(subject => {
-            const selected = subject === displayValue ? 'selected' : '';
-            options += `<option value="${subject.replace(/"/g, '&quot;')}" ${selected}>${subject}</option>`;
+            if (subject !== displayValue) {
+                options += `<option value="${subject.replace(/"/g, '&quot;')}">${subject}</option>`;
+            }
         });
         
         options += '<option value="__CUSTOM__">💭 輸入自定義科目...</option>';
@@ -682,6 +692,12 @@ const EditModeController = {
                     // 確保同步性：在保存時再次確認 Exemption Granted 欄位是否正確同步
                     const isExempted = (value === 'Exempted');
                     this.currentData[rowIndex]['Exemption Granted'] = isExempted;
+                } else if (header === 'Subject Name of Previous Studies') {
+                    // 特殊處理：如果下拉選單選的是空值，保留原始值
+                    if (!value || value.trim() === '') {
+                        console.log(`🔒 保留原始科目名稱: 第${rowIndex}行`);
+                        return; // 跳過更新，保留現有值
+                    }
                 }
                 
                 this.currentData[rowIndex][header] = value;

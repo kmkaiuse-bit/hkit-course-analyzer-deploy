@@ -1,7 +1,18 @@
 /**
  * Gemini API Integration - 安全版本  
  * 通过Vercel Functions调用，不暴露API密钥
+ * Enhanced with Learning Database System
  */
+
+// Learning Engine Integration (with fallback if not available)
+let LearningEngine = null;
+try {
+    if (typeof require !== 'undefined') {
+        LearningEngine = require('./db/learning-engine');
+    }
+} catch (error) {
+    console.log('🧠 Learning engine not available:', error.message);
+}
 
 const GeminiAPI = {
     /**
@@ -12,8 +23,7 @@ const GeminiAPI = {
      * @returns {Promise<Array>} Analysis results
      */
     async analyzeTranscripts(transcriptContent, programmeId, files = []) {
-        // No API key validation needed for Vercel Functions
-        console.log('🚀 Starting analysis with Vercel Functions...');
+        console.log('🚀 Starting smart pattern analysis...');
 
         // Get programme template
         const programme = TemplateManager.getProgramme(programmeId);
@@ -21,22 +31,132 @@ const GeminiAPI = {
             throw new Error('Invalid programme selected');
         }
 
-        // Generate template CSV for prompt
-        const templateCSV = TemplateManager.generateTemplateCSV(programmeId);
-        
-        // Create prompt
-        const prompt = this.createPrompt(templateCSV, transcriptContent, programme.name, files.length);
+        // Extract subjects from transcript
+        const extractedSubjects = this.extractSubjectsFromTranscript(transcriptContent, files);
+        console.log('📝 Extracted subjects:', extractedSubjects);
 
-        // Call API with appropriate content
-        try {
-            const response = await this.callAPI(prompt, files);
-            return this.parseResponse(response);
-        } catch (error) {
-            console.error('Gemini API error:', error);
-            console.error('Error details:', error.message);
-            console.error('Stack trace:', error.stack);
-            throw new Error(`Failed to analyze transcripts: ${error.message}`);
+        // SMART PATTERN MATCHING: Check for existing patterns
+        let smartResult = null;
+        let learningPatterns = {};
+        
+        if (typeof window !== 'undefined' && window.learningClient && window.SmartPatternMatcher) {
+            try {
+                // Get learning patterns from database
+                learningPatterns = await window.learningClient.getRelevantPatterns(extractedSubjects, 0.3);
+                
+                // Process with smart pattern matcher
+                smartResult = await window.SmartPatternMatcher.processWithPatterns(
+                    extractedSubjects, 
+                    learningPatterns, 
+                    programme
+                );
+                
+                console.log(`🧠 Smart Pattern Results: ${smartResult.stats.autoApplied} auto-applied, ${smartResult.stats.pendingAnalysis} need AI analysis`);
+                
+            } catch (error) {
+                console.warn('Smart pattern matching failed:', error.message);
+                smartResult = null;
+            }
         }
+
+        let aiResults = [];
+        
+        // Only call AI for courses that need analysis
+        if (!smartResult || smartResult.pendingForAI.length > 0) {
+            try {
+                let prompt;
+                
+                if (smartResult && window.SmartPatternMatcher) {
+                    // Use optimized prompt with smart results
+                    const templateCSV = TemplateManager.generateTemplateCSV(programmeId);
+                    prompt = window.SmartPatternMatcher.generateOptimizedPrompt(
+                        templateCSV, 
+                        transcriptContent, 
+                        programme.name, 
+                        smartResult
+                    );
+                    console.log('🎯 Using optimized AI prompt with pre-applied patterns');
+                } else {
+                    // Fallback to traditional prompt
+                    const templateCSV = TemplateManager.generateTemplateCSV(programmeId);
+                    prompt = this.createPrompt(templateCSV, transcriptContent, programme.name, files.length);
+                    console.log('⚠️ Using traditional AI prompt (smart matching unavailable)');
+                }
+
+                // Call Gemini API
+                const response = await this.callAPI(prompt, files);
+                aiResults = this.parseResponse(response);
+                
+            } catch (error) {
+                console.error('Gemini API error:', error);
+                throw new Error(`Failed to analyze transcripts: ${error.message}`);
+            }
+        } else {
+            console.log('✨ All courses auto-applied via smart patterns - no AI analysis needed!');
+        }
+
+        // Merge results
+        let finalResults;
+        if (smartResult && window.SmartPatternMatcher) {
+            finalResults = window.SmartPatternMatcher.mergeResults(smartResult, aiResults);
+        } else {
+            finalResults = aiResults;
+        }
+
+        // LEARNING RECORDING: Record results for future learning (if not using smart matcher)
+        if (!smartResult && typeof window !== 'undefined' && window.learningClient && finalResults) {
+            try {
+                await window.learningClient.recordAnalysisResults(finalResults, programme.code);
+                console.log('📊 Recorded analysis results for learning');
+            } catch (error) {
+                console.warn('Learning recording failed:', error.message);
+            }
+        }
+        
+        console.log(`✅ Analysis complete: ${finalResults.length} total results`);
+        return finalResults;
+    },
+
+    /**
+     * Extract subject names from transcript content
+     * Simple extraction - can be improved with better parsing
+     */
+    extractSubjectsFromTranscript(transcriptContent, files = []) {
+        if (!transcriptContent || transcriptContent.trim() === '') {
+            return [];
+        }
+
+        // Simple regex patterns to find course/subject names
+        const patterns = [
+            // Common course patterns
+            /([A-Za-z][A-Za-z\s]+(?:Programming|Development|Management|Design|Analysis|Systems|Science|Studies|English|Chinese|Business|Mathematics|Statistics|Database|Web|Network|Security))/gi,
+            // Course codes with names
+            /[A-Z]{2,4}\s*\d{3,4}[A-Z]?\s*[-:]?\s*([A-Za-z][A-Za-z\s]{10,40})/gi,
+            // Line-based course extraction (common in transcripts)
+            /^([A-Za-z][A-Za-z\s&]{5,50})\s*[A-F]?\+?$/gm,
+        ];
+
+        const subjects = new Set();
+        
+        patterns.forEach(pattern => {
+            const matches = transcriptContent.match(pattern);
+            if (matches) {
+                matches.forEach(match => {
+                    // Clean up the match
+                    let subject = match.replace(/[A-Z]{2,4}\s*\d{3,4}[A-Z]?\s*[-:]?\s*/, '').trim();
+                    subject = subject.replace(/\s*[A-F]\+?$/, '').trim();
+                    
+                    // Filter out short or invalid matches
+                    if (subject.length >= 8 && subject.length <= 60) {
+                        subjects.add(subject);
+                    }
+                });
+            }
+        });
+
+        const result = Array.from(subjects);
+        console.log(`📝 Extracted ${result.length} subjects from transcript:`, result.slice(0, 5));
+        return result;
     },
 
     /**
@@ -257,6 +377,17 @@ VERIFICATION: Count the courses in the transcript above. Your JSON array MUST co
             } else {
                 // Fallback if SubjectCollector not available
                 finalSubjects = cleanedSubjects;
+            }
+            
+            // LEARNING CONTEXT: Gather learning patterns for these subjects (non-blocking)
+            if (LearningEngine && finalSubjects.length > 0) {
+                try {
+                    // Extract programme context if available (would need programmeId parameter)
+                    LearningEngine.gatherLearningContext(finalSubjects, null)
+                        .catch(error => console.warn('Learning context gathering failed:', error));
+                } catch (error) {
+                    console.warn('Learning context initialization failed:', error);
+                }
             }
             
             return finalSubjects;

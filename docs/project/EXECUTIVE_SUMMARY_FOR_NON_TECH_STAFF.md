@@ -6,7 +6,7 @@
 
 ## 🎯 **What Was Built**
 
-**HKIT Course Analyzer** is a web application that **automates student transcript analysis** for Advanced Standing applications. Instead of manually reviewing each transcript (which takes 2-3 hours), staff can now upload a PDF and get AI-powered exemption recommendations in **under 10 minutes**.
+**HKIT Course Analyzer** is a web application that **automates student transcript analysis** for Advanced Standing applications. Instead of manually reviewing each transcript , staff can now upload a PDF and get AI-powered exemption recommendations in **under 10 minutes**.
 
 ### **How It Works:**
 1. **Upload**: Staff upload student transcripts (PDF, Excel, or CSV)
@@ -19,9 +19,7 @@
 ## 💼 **Business Value Delivered**
 
 ### **Time Savings**
-- **Before**: 2-3 hours manual analysis per transcript
 - **After**: 5-10 minutes with AI assistance
-- **Impact**: 90% time reduction for Advanced Standing processing
 
 ### **Quality Improvements**
 - **Consistency**: Standardized analysis process eliminates human variation

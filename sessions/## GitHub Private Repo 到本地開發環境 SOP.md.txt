@@ -1,0 +1,355 @@
+## GitHub Private Repo 到本地開發環境 SOP (v1.1)
+
+### Task 將公司 GitHub 私有倉庫安全地複製到本地進行開發
+### Context 跨電腦通用流程，適用於個人帳號被加入公司組織的情況
+
+---
+
+## 前置準備檢查清單
+
+### ✅ 環境需求
+- [ ] 已安裝 Git
+- [ ] 已安裝 VS Code
+- [ ] （推薦）已安裝 Claude Code 擴充功能
+- [ ] 確認網路可正常存取 GitHub
+
+### ✅ 權限確認
+- [ ] 個人 GitHub 帳號已被加入公司組織
+- [ ] 能在瀏覽器正常存取目標 repo
+- [ ] 沒有待接受的組織邀請
+
+---
+
+## Step 1 建立 GitHub Personal Access Token
+
+### 1.1 生成 Token
+1. 登入 GitHub → 右上角頭像 → Settings
+2. 左側選擇 Developer settings
+3. 選擇 Personal access tokens → Tokens (classic)
+4. 點擊 Generate new token (classic)
+5. 設定：
+   - Note `Company Repo Access - [電腦名稱] - [日期]`
+   - Expiration 選擇適當期限（建議 90 天）
+   - Scopes 勾選 `repo` （完整 repository 權限）
+6. 點擊 Generate token
+7. ⚠️ 重要 立即複製並安全保存 token（只會顯示一次）
+
+### 1.2 安全保存 Token
+```
+建議保存位置：
+- 密碼管理器（1Password、Bitwarden 等）
+- 或安全的筆記應用
+- 格式：ghp_xxxxxxxxxxxxxxxxxxxx
+
+⚠️ 離職清單：記錄每個 Token 的名稱和電腦，便於一鍵刪除
+```
+
+---
+
+## Step 2 Clone 專案到本地
+
+### 2.1 選擇工作目錄
+```powershell
+# 開啟 PowerShell 或 CMD
+# 切換到您偏好的開發目錄
+cd CUsers[您的用戶名]
+# 或
+cd DProjects
+```
+
+### 2.2 執行 Clone
+```powershell
+# 使用 Token 進行 Clone
+git clone https[YOUR_TOKEN]@github.comfummy-phfummy.git
+
+# 進入專案目錄
+cd fummy
+
+# 進入特定子專案目錄
+cd n8nfummy-ops-clean-main
+```
+
+### 2.3 設定專案專用 Git 配置
+```powershell
+# 設定此專案的 Git 配置（不影響全域設定）
+git config user.name 您在公司的顯示名稱
+git config user.email 您的公司email
+
+# 驗證設定
+git config user.name
+git config user.email
+```
+
+---
+
+## Step 3 VS Code 環境設定
+
+### 3.1 開啟專案
+```powershell
+# 在專案目錄中開啟 VS Code
+code .
+```
+
+### 3.2 使用 Claude Code 分析（如已安裝）
+1. 按 `Ctrl+Shift+P`
+2. 輸入 Claude
+3. 執行：
+```
+@workspace 請分析這個專案結構，告訴我：
+1. 專案類型和主要技術棧
+2. 如何安裝依賴
+3. 如何啟動開發服務
+4. 重要的配置檔案位置
+```
+
+### 3.3 安裝依賴
+```powershell
+# 檢查是否有 package.json
+ls package.json
+
+# 安裝依賴（根據專案類型選擇）
+npm install
+# 或
+yarn install
+# 或
+pnpm install
+```
+
+---
+
+## Step 4 安全性設定
+
+### 4.1 環境變數處理
+```powershell
+# 檢查是否需要 .env 檔案
+ls .env.example
+
+# 如果有範例檔案，複製並修改
+cp .env.example .env
+```
+
+### 4.2 Git 安全配置
+```powershell
+# 確保敏感檔案不會被提交
+git status
+git log --oneline -5
+
+# 檢查 .gitignore 是否包含敏感檔案
+cat .gitignore
+```
+
+---
+
+## Step 5 常見問題排除
+
+### 5.1 Clone 失敗
+錯誤 `remote Repository not found`
+解決
+- 檢查 Token 權限
+- 確認組織邀請已接受
+- 嘗試在瀏覽器重新登入 GitHub
+
+### 5.2 權限問題
+錯誤 `Permission denied`
+解決
+```powershell
+# 重新設定 Git 認證
+git config --global credential.helper manager
+git push origin main  # 會提示重新輸入認證
+```
+
+### 5.3 多帳號衝突
+問題 混用個人和公司帳號
+解決
+```powershell
+# 查看當前 remote 設定
+git remote -v
+
+# 更新 remote URL 包含正確認證
+git remote set-url origin https[TOKEN]@github.comfummy-phfummy.git
+```
+
+---
+
+## Step 6 日常開發工作流程
+
+### 6.1 開始工作
+```powershell
+# 拉取最新變更
+git pull origin main
+
+# 建立功能分支
+git checkout -b featureyour-feature-name
+```
+
+### 6.2 提交工作
+```powershell
+# 檢查變更
+git status
+git diff
+
+# 提交變更
+git add .
+git commit -m feat your commit message
+
+# 推送到遠端
+git push origin featureyour-feature-name
+```
+
+---
+
+## 🚨 Step 7 離職一鍵清除程序
+
+### 7.1 準備工作（平時就要做）
+```
+📋 建立離職清除清單：
+□ 記錄所有使用公司 Token 的電腦
+□ 記錄所有本地專案路徑
+□ 記錄相關環境變數和配置檔案
+□ 備份個人開發的非機密程式碼片段
+```
+
+### 7.2 立即執行清除腳本
+
+#### Windows PowerShell 一鍵清除腳本
+```powershell
+# ===== 公司資料離職清除腳本 =====
+# 警告：此操作不可逆，請謹慎執行
+
+Write-Host 🚨 開始執行公司資料清除程序... -ForegroundColor Red
+
+# 1. 刪除所有公司相關的本地專案
+$companyProjects = @(
+    CUsers$envUSERNAMEfummy,
+    CUsers$envUSERNAMEfummy-ops-clean-main,
+    DProjectsfummy
+    # 在此添加其他公司專案路徑
+)
+
+foreach ($path in $companyProjects) {
+    if (Test-Path $path) {
+        Write-Host 刪除專案 $path -ForegroundColor Yellow
+        Remove-Item $path -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
+# 2. 清除 Git 認證快取中的公司相關認證
+Write-Host 清除 Git 認證快取... -ForegroundColor Yellow
+git config --global --unset credential.helper
+cmdkey list  Select-String githttpsgithub.comfummy-ph  ForEach-Object {
+    $target = ($_ -split s+)[1]
+    cmdkey delete$target
+}
+
+# 3. 清除可能的環境變數
+Write-Host 清除環境變數... -ForegroundColor Yellow
+[Environment]SetEnvironmentVariable(FUMMY_TOKEN, $null, User)
+[Environment]SetEnvironmentVariable(COMPANY_API_KEY, $null, User)
+# 根據實際使用添加其他變數
+
+# 4. 清除 VS Code 工作區記錄
+$vscodeSettings = $envAPPDATACodeUserworkspaceStorage
+if (Test-Path $vscodeSettings) {
+    Get-ChildItem $vscodeSettings  Where-Object { 
+        $_.Name -like fummy 
+    }  Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+# 5. 清除瀏覽器記錄的 GitHub 登入（Chrome）
+$chromeProfile = $envLOCALAPPDATAGoogleChromeUser DataDefault
+if (Test-Path $chromeProfileLogin Data) {
+    Write-Host ⚠️  請手動清除瀏覽器中的 GitHub 登入記錄 -ForegroundColor Yellow
+}
+
+Write-Host ✅ 本地清除完成！請繼續執行線上清除... -ForegroundColor Green
+Write-Host 🔗 開啟 GitHub Token 管理頁面... -ForegroundColor Cyan
+Start-Process httpsgithub.comsettingstokens
+```
+
+### 7.3 GitHub 線上清除
+
+#### 自動開啟清除頁面
+```powershell
+# 開啟需要手動處理的頁面
+Start-Process httpsgithub.comsettingstokens              # Personal Access Tokens
+Start-Process httpsgithub.comsettingsapplications        # Authorized OAuth Apps  
+Start-Process httpsgithub.comsettingsssh                # SSH Keys
+```
+
+#### 手動清除步驟
+1. 刪除 Personal Access Tokens
+   - 找到所有公司相關的 Token（以電腦名稱和日期識別）
+   - 點擊 Delete 刪除每個 Token
+
+2. 撤銷應用程式授權
+   - 檢查 Authorized OAuth Apps
+   - 撤銷任何公司相關的應用程式授權
+
+3. 移除 SSH Keys
+   - 刪除任何用於公司專案的 SSH Key
+
+4. 退出組織（如果可以）
+   - 前往組織設定頁面
+   - 離開 `fummy-ph` 組織
+
+### 7.4 驗證清除完成
+```powershell
+# 驗證腳本
+Write-Host 🔍 驗證清除結果... -ForegroundColor Cyan
+
+# 檢查是否還有公司專案殘留
+Get-ChildItem CUsers$envUSERNAME -Recurse -Name fummy -ErrorAction SilentlyContinue
+
+# 檢查 Git 配置
+git config --list  Select-String fummy
+
+# 檢查環境變數
+Get-ChildItem Env  Where-Object { $_.Name -like FUMMY -or $_.Value -like fummy }
+
+Write-Host ✅ 離職清除程序完成！ -ForegroundColor Green
+Write-Host ⚠️  建議重啟電腦確保所有快取清除 -ForegroundColor Yellow
+```
+
+---
+
+## 安全注意事項
+
+### ⚠️ 重要提醒
+1. Token 保密 絕不在程式碼中硬編碼 Token
+2. 定期更新 Token 到期前重新生成
+3. 權限最小化 只給予必要的 repo 權限
+4. 多電腦管理 每台電腦使用不同的 Token 便於管理
+5. 離職準備 平時就要記錄所有相關路徑和認證，便於快速清除
+
+### 📋 檢查清單模板
+複製此清單到每台新電腦：
+```
+□ Git 已安裝且版本  2.0
+□ VS Code 已安裝  
+□ Claude Code 擴充功能已安裝
+□ GitHub Token 已生成並安全保存
+□ 專案已成功 Clone
+□ 專案層級 Git 配置已設定
+□ 依賴已安裝且無錯誤
+□ 開發服務可正常啟動
+□ .env 檔案已配置（如需要）
+□ 離職清除腳本已準備並測試
+```
+
+### 🗂️ 離職準備清單
+在職期間持續維護：
+```
+□ 記錄所有使用公司 Token 的設備
+□ 記錄所有本地專案路徑  
+□ 定期備份個人開發的程式碼片段
+□ 記錄相關環境變數名稱
+□ 準備並測試離職清除腳本
+□ 了解公司的資料銷毀政策
+```
+
+---
+
+版本 v1.1  
+最後更新 2025-09-11  
+適用於 WindowsmacOSLinux + Git + VS Code  
+新增 離職一鍵清除程序

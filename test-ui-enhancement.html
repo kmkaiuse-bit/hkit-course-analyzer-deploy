@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Status Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .learning-status-badge {
+            position: fixed;
+            top: 50px;
+            right: 10px;
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            color: #0c4a6e;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .learning-status-badge:hover {
+            background: #e0f2fe;
+            transform: translateY(-1px);
+        }
+        .learning-status-badge.connected {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            color: #14532d;
+        }
+        .learning-status-badge.error {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .learning-tooltip {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1001;
+            margin-top: 4px;
+        }
+        .learning-status-badge:hover .learning-tooltip {
+            display: block;
+        }
+        .test-section {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Learning Status Badge -->
+    <div id="learning-status-badge" class="learning-status-badge">
+        🧠 Learning: Initializing...
+        <div class="learning-tooltip">
+            <div id="learning-tooltip-content">
+                Learning system initializing...
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h1>🧪 Learning Status Indicator Test</h1>
+        <p>This tests the learning system status indicator that will appear in the main application.</p>
+        
+        <h3>Test Controls:</h3>
+        <button class="test-button" onclick="testConnectedStatus()">Test Connected Status</button>
+        <button class="test-button" onclick="testErrorStatus()">Test Error Status</button>
+        <button class="test-button" onclick="testLoadingStatus()">Test Loading Status</button>
+        <button class="test-button" onclick="testAutoUpdate()">Test Auto Update</button>
+        
+        <h3>Features to Test:</h3>
+        <ul>
+            <li><strong>Status Badge:</strong> Fixed position in top-right corner</li>
+            <li><strong>Color Coding:</strong> Blue (initializing), Green (connected), Red (error)</li>
+            <li><strong>Hover Effects:</strong> Tooltip appears on hover</li>
+            <li><strong>Dynamic Updates:</strong> Status changes every 30 seconds</li>
+            <li><strong>Pattern Counts:</strong> Shows number of learning patterns</li>
+        </ul>
+        
+        <h3>Expected Behavior:</h3>
+        <ol>
+            <li>Badge starts as "Learning: Initializing..." (blue)</li>
+            <li>After 1 second, changes to "Learning: X patterns" (green)</li>
+            <li>Hover over badge to see detailed tooltip</li>
+            <li>Status updates automatically every 30 seconds</li>
+        </ol>
+    </div>
+
+    <script>
+        let learningStatusInterval = null;
+        
+        function updateLearningStatus(status, message, tooltipContent = '') {
+            const badge = document.getElementById('learning-status-badge');
+            const tooltip = document.getElementById('learning-tooltip-content');
+            
+            if (!badge) return;
+            
+            // Remove all status classes
+            badge.classList.remove('connected', 'error');
+            
+            // Add appropriate class
+            if (status === 'connected') {
+                badge.classList.add('connected');
+            } else if (status === 'error') {
+                badge.classList.add('error');
+            }
+            
+            // Update text
+            badge.childNodes[0].textContent = message;
+            
+            // Update tooltip
+            if (tooltip) {
+                tooltip.innerHTML = tooltipContent || message;
+            }
+        }
+        
+        async function checkLearningSystemStatus() {
+            try {
+                // Simulate real status check
+                const mockStatus = {
+                    connected: true,
+                    totalPatterns: Math.floor(Math.random() * 50) + 10,
+                    avgConfidence: Math.floor(Math.random() * 40) + 60,
+                    timestamp: new Date().toISOString()
+                };
+                
+                if (mockStatus.connected) {
+                    const tooltip = `
+                        Total Patterns: ${mockStatus.totalPatterns}<br>
+                        Avg Confidence: ${mockStatus.avgConfidence}%<br>
+                        Status: Connected<br>
+                        <small>Last check: ${new Date().toLocaleTimeString()}</small>
+                    `;
+                    updateLearningStatus('connected', `🧠 Learning: ${mockStatus.totalPatterns} patterns`, tooltip);
+                } else {
+                    updateLearningStatus('error', '🧠 Learning: Disconnected', 'Learning database not available');
+                }
+                
+            } catch (error) {
+                console.warn('Learning status check failed:', error);
+                updateLearningStatus('error', '🧠 Learning: Error', 'Failed to check learning system status');
+            }
+        }
+        
+        function initializeLearningStatus() {
+            console.log('🧠 Initializing learning status...');
+            
+            // Initial status check after 1 second
+            setTimeout(() => {
+                checkLearningSystemStatus();
+            }, 1000);
+            
+            // Periodic status checks every 30 seconds
+            learningStatusInterval = setInterval(checkLearningSystemStatus, 30000);
+        }
+        
+        // Test functions for buttons
+        function testConnectedStatus() {
+            const patterns = Math.floor(Math.random() * 100) + 20;
+            const confidence = Math.floor(Math.random() * 30) + 70;
+            const tooltip = `
+                Total Patterns: ${patterns}<br>
+                Avg Confidence: ${confidence}%<br>
+                Status: Connected<br>
+                <small>Test mode active</small>
+            `;
+            updateLearningStatus('connected', `🧠 Learning: ${patterns} patterns`, tooltip);
+        }
+        
+        function testErrorStatus() {
+            updateLearningStatus('error', '🧠 Learning: Connection Failed', 'Database connection error - check PostgreSQL service');
+        }
+        
+        function testLoadingStatus() {
+            updateLearningStatus('', '🧠 Learning: Analyzing...', 'Processing exemption patterns and recording decisions...');
+        }
+        
+        function testAutoUpdate() {
+            let countdown = 5;
+            const interval = setInterval(() => {
+                updateLearningStatus('', `🧠 Learning: Auto-update in ${countdown}s`, `Testing automatic status refresh in ${countdown} seconds...`);
+                countdown--;
+                if (countdown < 0) {
+                    clearInterval(interval);
+                    checkLearningSystemStatus();
+                }
+            }, 1000);
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeLearningStatus();
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (learningStatusInterval) {
+                clearInterval(learningStatusInterval);
+            }
+        });
+    </script>
+</body>
+</html>

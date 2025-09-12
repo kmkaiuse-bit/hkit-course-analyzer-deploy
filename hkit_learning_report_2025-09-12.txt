@@ -1,0 +1,22 @@
+HKIT Learning Database Report
+Generated: 12/9/2025, 11:38:25 am
+
+SUMMARY STATISTICS:
+- Total Patterns: 11
+- Average Confidence: 0.38%
+- Total Observations: 73
+- Total Exemptions: 59
+- Unique HKIT Subjects: 9
+- Unique Programmes: 4
+- Date Range: Fri Sep 12 2025 00:00:00 GMT+0800 (Hong Kong Standard Time) to Fri Sep 12 2025 00:00:00 GMT+0800 (Hong Kong Standard Time)
+
+EXEMPTION RATE: 81%
+
+FILES GENERATED:
+- hkit_learning_patterns_2025-09-12.csv (Full pattern data in CSV format)
+- hkit_learning_report_2025-09-12.txt (This report)
+
+SHARING INSTRUCTIONS:
+1. Open hkit_learning_patterns_2025-09-12.csv in Excel or Google Sheets
+2. Share this report with colleagues
+3. Use pgAdmin for interactive database viewing

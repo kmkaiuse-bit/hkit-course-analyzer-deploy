@@ -301,14 +301,14 @@
             Choose between secure server processing or local browser processing. No timeout limitations!
         </div>
 
-        <!-- API Key Configuration Section -->
-        <div class="api-key-section">
+        <!-- API Key Configuration Section - HIDDEN for Vercel (key is server-side) -->
+        <div class="api-key-section" style="display: none;">
             <h3>🔑 Step 1: Configure Gemini API Key</h3>
             <p>Enter your Google Gemini API key to enable the analysis features:</p>
-            <input 
-                type="password" 
-                id="api-key-input" 
-                class="api-key-input" 
+            <input
+                type="password"
+                id="api-key-input"
+                class="api-key-input"
                 placeholder="Enter your Gemini API key (starts with AIza...)"
             >
             <button onclick="saveApiKey()" class="btn btn-primary">Save API Key</button>
@@ -316,13 +316,13 @@
             <button onclick="clearApiKey()" class="btn btn-secondary">Clear Key</button>
             <div id="api-status" class="api-status"></div>
             <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                Don't have an API key? 
+                Don't have an API key?
                 <a href="https://makersuite.google.com/app/apikey" target="_blank">Get one free from Google</a>
             </p>
         </div>
 
-        <!-- Main Content (Hidden until API key is validated) -->
-        <div id="main-content" style="display: none;">
+        <!-- Main Content - Now visible by default (API key is server-side on Vercel) -->
+        <div id="main-content" style="display: block;">
             <!-- Main Content Grid -->
             <div class="main-content">
                 <!-- File Upload Section -->

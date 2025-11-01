@@ -404,12 +404,26 @@ IMPORTANT RULES:
             }
             
             // const text = response.candidates[0].content.parts[0].text;
-            
+
+            console.log('📍 Raw text from API (first 500 chars):', text.substring(0, 500));
+            console.log('📍 Raw text from API (last 500 chars):', text.substring(Math.max(0, text.length - 500)));
+            console.log('📍 Total text length:', text.length);
+
             // Clean up response (remove markdown code blocks if present)
             const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-            
-            // Parse JSON
-            const results = JSON.parse(cleanText);
+
+            console.log('📍 Cleaned text (first 500 chars):', cleanText.substring(0, 500));
+            console.log('📍 Cleaned text (last 500 chars):', cleanText.substring(Math.max(0, cleanText.length - 500)));
+
+            // Parse JSON with better error handling
+            let results;
+            try {
+                results = JSON.parse(cleanText);
+            } catch (parseError) {
+                console.error('📍 JSON Parse Error:', parseError.message);
+                console.error('📍 Full cleaned text:', cleanText);
+                throw parseError;
+            }
             
             // Validate results
             if (!Array.isArray(results)) {

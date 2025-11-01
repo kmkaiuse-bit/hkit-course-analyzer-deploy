@@ -380,15 +380,26 @@ IMPORTANT RULES:
     parseResponse(response) {
         try {
             console.log('📍 Parsing response:', response);
+            console.log('📍 Response keys:', Object.keys(response));
+            console.log('📍 response.success:', response.success);
+            console.log('📍 response.data:', response.data);
+            console.log('📍 response.data keys:', response.data ? Object.keys(response.data) : 'N/A');
+
             // Extract text from response (handle both Vercel function and direct Gemini formats)
             let text;
             if (response.success && response.data && response.data.text) {
                 // Vercel function format
+                console.log('📍 Using Vercel function format');
                 text = response.data.text;
             } else if (response.candidates && response.candidates[0] && response.candidates[0].content) {
                 // Direct Gemini response format
+                console.log('📍 Using direct Gemini format');
                 text = response.candidates[0].content.parts[0].text;
             } else {
+                console.error('📍 Could not match any response format!');
+                console.error('📍 response.success:', response.success);
+                console.error('📍 response.data:', response.data);
+                console.error('📍 response.candidates:', response.candidates);
                 throw new Error('Invalid API response structure');
             }
             

@@ -238,6 +238,88 @@ app.post('/api/learning/patterns', async (req, res) => {
     }
 });
 
+// Gemini API Proxy Endpoint (secure - API key stored server-side)
+app.post('/api/gemini', async (req, res) => {
+    try {
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+        // Get API key from environment
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey) {
+            return res.status(500).json({
+                success: false,
+                error: 'Gemini API key not configured on server. Please set GEMINI_API_KEY in .env file.'
+            });
+        }
+
+        const { prompt, model = 'gemini-2.5-flash', files = [], temperature = 0.3, maxTokens = 8192 } = req.body;
+
+        if (!prompt) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required field: prompt'
+            });
+        }
+
+        console.log(`📍 Processing Gemini API request with model: ${model}`);
+
+        // Initialize Gemini
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const geminiModel = genAI.getGenerativeModel({
+            model: model,
+            generationConfig: {
+                temperature: temperature,
+                maxOutputTokens: maxTokens,
+                topP: 0.9,
+                topK: 40
+            }
+        });
+
+        // Prepare request
+        let parts = [{ text: prompt }];
+
+        // Add PDF files if provided
+        if (files && files.length > 0) {
+            files.forEach(file => {
+                if (file.mimeType && file.data) {
+                    parts.push({
+                        inlineData: {
+                            mimeType: file.mimeType,
+                            data: file.data
+                        }
+                    });
+                }
+            });
+        }
+
+        // Generate content
+        const result = await geminiModel.generateContent({
+            contents: [{ parts: parts }]
+        });
+
+        const response = await result.response;
+        const text = response.text();
+
+        console.log('✅ Gemini API request successful');
+
+        res.json({
+            success: true,
+            data: {
+                text: text,
+                model: model
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Gemini API error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to process Gemini API request'
+        });
+    }
+});
+
 // Initialize server
 async function startServer() {
     try {

@@ -4,16 +4,16 @@
   "framework": null,
   "functions": {
     "api/gemini.js": {
-      "maxDuration": 10
+      "maxDuration": 60
     },
     "api/gemini-chunked.js": {
-      "maxDuration": 10
+      "maxDuration": 60
     },
     "api/gemini-status.js": {
-      "maxDuration": 5
+      "maxDuration": 10
     },
     "api/*.js": {
-      "maxDuration": 10
+      "maxDuration": 60
     }
   },
   "headers": [

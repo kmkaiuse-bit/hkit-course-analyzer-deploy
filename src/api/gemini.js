@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     }
 
     // Parse request body
-    const { prompt, model = 'gemini-1.5-flash', temperature = 0.7, maxTokens = 4096, files = [] } = req.body;
+    const { prompt, model = 'gemini-2.5-flash', temperature = 0.7, maxTokens = 4096, files = [] } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ 

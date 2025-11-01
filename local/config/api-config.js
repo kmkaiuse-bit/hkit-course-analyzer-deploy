@@ -28,7 +28,7 @@ async function callGeminiAPI(prompt) {
             },
             body: JSON.stringify({
                 prompt: prompt,
-                model: 'gemini-1.5-pro'
+                model: 'gemini-2.5-flash'
             })
         });
 

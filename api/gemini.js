@@ -27,8 +27,8 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Parse request body - use pro for higher quality responses
-    const { prompt, model = 'gemini-1.5-pro', temperature = 0.7, maxTokens = 4096, files = [] } = req.body;
+    // Parse request body - use 2.5 flash for optimal performance and quality
+    const { prompt, model = 'gemini-2.5-flash', temperature = 0.7, maxTokens = 4096, files = [] } = req.body;
 
     // Debug logging
     console.log('📍 Request received:', {

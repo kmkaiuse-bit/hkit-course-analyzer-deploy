@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     }
 
     // Parse request body
-    const { prompt, model = 'gemini-1.5-flash', temperature = 0.7 } = req.body;
+    const { prompt, model = 'gemini-2.5-flash', temperature = 0.7 } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ 
@@ -42,8 +42,8 @@ module.exports = async (req, res) => {
     const genAI = new GoogleGenerativeAI(apiKey);
     
     // Use flash model with reduced token limit for faster response
-    const geminiModel = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash', // Always use flash for speed
+    const geminiModel = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash', // Latest flash model for optimal speed
       generationConfig: {
         temperature: temperature,
         maxOutputTokens: 4096, // Reduced for faster response

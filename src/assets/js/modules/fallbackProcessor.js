@@ -88,7 +88,7 @@ class FallbackProcessor {
         console.log('🔄 Starting fallback processing...');
 
         const {
-            model = 'gemini-1.5-flash',
+            model = 'gemini-2.5-flash',
             onProgress = null,
             chunkSize = 3, // Smaller chunks for client-side processing
             timeout = 25000 // 25 second timeout for direct API

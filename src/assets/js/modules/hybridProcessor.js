@@ -235,7 +235,7 @@ class HybridProcessor {
         const requestData = {
             prompt,
             files: await this.prepareFilesForVercel(files),
-            model: options.model || 'gemini-1.5-flash'
+            model: options.model || 'gemini-2.5-flash'
         };
 
         const response = await Promise.race([

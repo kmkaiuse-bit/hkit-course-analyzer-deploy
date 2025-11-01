@@ -101,7 +101,7 @@ class ChunkProcessor {
         const requestData = {
             prompt,
             files: await this.prepareFilesForAPI(files),
-            model: options.model || 'gemini-1.5-flash'
+            model: options.model || 'gemini-2.5-flash'
         };
 
         const response = await fetch('/api/gemini', {
@@ -145,7 +145,7 @@ class ChunkProcessor {
             prompt,
             files: await this.prepareFilesForAPI(files),
             chunkSize: options.chunkSize || 5,
-            model: options.model || 'gemini-1.5-flash'
+            model: options.model || 'gemini-2.5-flash'
         };
 
         const response = await fetch('/api/gemini-chunked', {

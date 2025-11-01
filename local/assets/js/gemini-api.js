@@ -546,34 +546,74 @@ VERIFICATION: Count the courses in the transcript above. Your JSON array MUST co
     },
 
     /**
-     * Call Gemini API directly (Local Mode)
+     * Call Gemini API via Backend Server (Secure - No API key needed from user)
      */
     async callLocalAPI(prompt, files = []) {
         console.log('📍 callLocalAPI called with:', { promptLength: prompt.length, filesCount: files.length });
-        
-        // Check API key availability
-        if (!window.API_CONFIG || !window.API_CONFIG.getApiKey()) {
-            throw new Error('API key not configured. Please enter your Gemini API key first.');
-        }
-        
-        const apiKey = window.API_CONFIG.getApiKey();
-        console.log('📍 Using API key:', apiKey.substring(0, 10) + '...');
-        
+
         // Process files if any
         const processedFiles = await this.processFilesForLocal(files);
         console.log('📍 Processed files:', processedFiles.length);
-        
-        // Make direct API call with Gemini 1.5 Pro (optimized for speed and reliability)
-        console.log('📍 Using Gemini 1.5 Pro for optimal performance...');
-        return await this.makeDirectGeminiCall(prompt, processedFiles, apiKey);
+
+        // Call backend API server (API key stored server-side)
+        const backendUrl = 'http://localhost:3001/api/gemini';
+
+        console.log('📍 Calling backend server at:', backendUrl);
+
+        try {
+            const response = await fetch(backendUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    model: 'gemini-2.5-flash',
+                    files: processedFiles,
+                    temperature: 0.3,
+                    maxTokens: 8192
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Backend API call failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'Backend API returned unsuccessful response');
+            }
+
+            console.log('✅ Backend API call successful');
+
+            // Return in expected format
+            return {
+                data: {
+                    text: data.data.text,
+                    model: data.data.model
+                }
+            };
+
+        } catch (error) {
+            console.error('❌ Backend API call failed:', error);
+
+            // Provide helpful error messages
+            if (error.message.includes('Failed to fetch') || error.message.includes('ECONNREFUSED')) {
+                throw new Error('Cannot connect to backend server. Please make sure the server is running on port 3001.');
+            }
+
+            throw error;
+        }
     },
 
     /**
      * Make direct call to Gemini API
      */
     async makeDirectGeminiCall(prompt, files, apiKey) {
-        const modelName = 'gemini-1.5-pro';
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        const modelName = 'gemini-2.5-flash';
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
         
         console.log('📍 Using model:', modelName);
         

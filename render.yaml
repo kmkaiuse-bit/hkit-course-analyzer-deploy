@@ -1,0 +1,31 @@
+# Render.com configuration (alternative to Railway)
+services:
+  # Backend API Service
+  - type: web
+    name: hkit-analyzer-backend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: GEMINI_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: LEARNING_ENABLED
+        value: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hkit-learning-db
+          property: connectionString
+
+  # PostgreSQL Database (Optional)
+databases:
+  - name: hkit-learning-db
+    plan: starter
+    databaseName: hkit_learning_db
+    user: hkit_admin

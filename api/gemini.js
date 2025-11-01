@@ -27,8 +27,8 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Parse request body - use 2.5 flash for optimal performance and quality
-    const { prompt, model = 'gemini-2.5-flash', temperature = 0.7, maxTokens = 4096, files = [] } = req.body;
+    // Parse request body - use 2.5 pro for complex multi-course analysis with large output
+    const { prompt, model = 'gemini-2.5-pro', temperature = 0.7, maxTokens = 16384, files = [] } = req.body;
 
     // Debug logging
     console.log('📍 Request received:', {
@@ -52,11 +52,11 @@ module.exports = async (req, res) => {
     const genAI = new GoogleGenerativeAI(apiKey);
     
     // Use a faster model for better performance
-    const geminiModel = genAI.getGenerativeModel({ 
+    const geminiModel = genAI.getGenerativeModel({
       model: model,
       generationConfig: {
         temperature: temperature,
-        maxOutputTokens: Math.min(maxTokens, 8192), // Limit to prevent timeouts
+        maxOutputTokens: Math.min(maxTokens, 16384), // Increased for multi-course analysis
         topP: 0.95,
         topK: 40,
       },

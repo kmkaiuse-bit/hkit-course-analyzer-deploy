@@ -169,9 +169,9 @@ IMPORTANT RULES:
      * Make direct call to Gemini API
      */
     async makeDirectGeminiCall(prompt, files, apiKey) {
-        const modelName = 'gemini-2.5-flash';
+        const modelName = 'gemini-2.5-pro';  // Use Pro for complex multi-course analysis
         const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
-        
+
         console.log('📍 Using model:', modelName);
         
         // Prepare request body
@@ -192,7 +192,7 @@ IMPORTANT RULES:
                 contents: [{ parts: parts }],
                 generationConfig: {
                     temperature: 0.3,  // Lower for more consistent academic analysis
-                    maxOutputTokens: 8192,
+                    maxOutputTokens: 16384,  // Increased for multi-course analysis
                     topP: 0.9,  // Slightly more focused
                     topK: 40
                 }
@@ -204,7 +204,7 @@ IMPORTANT RULES:
                 }],
                 generationConfig: {
                     temperature: 0.3,  // Lower for more consistent academic analysis
-                    maxOutputTokens: 8192,
+                    maxOutputTokens: 16384,  // Increased for multi-course analysis
                     topP: 0.9,  // Slightly more focused
                     topK: 40
                 }
@@ -313,7 +313,8 @@ IMPORTANT RULES:
             // 构建请求数据
             const requestData = {
                 prompt: prompt,
-                model: 'gemini-2.5-flash'  // Latest model with improved performance
+                model: 'gemini-2.5-pro',  // Use Pro for complex multi-course analysis with large output
+                maxTokens: 16384  // Increased output capacity
             };
 
             // 如果有PDF文件，处理成base64

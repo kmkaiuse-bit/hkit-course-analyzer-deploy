@@ -87,11 +87,11 @@ module.exports = async (req, res) => {
       contentToGenerate = prompt;
     }
     
-    // Generate content with 9.5 second timeout (leaving 0.5 second buffer)
+    // Generate content with 55 second timeout (leaving 5 second buffer for 60s Vercel limit)
     const result = await Promise.race([
       geminiModel.generateContent(contentToGenerate),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 9500)
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 55000)
       )
     ]);
 

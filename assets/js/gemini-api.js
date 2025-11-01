@@ -169,8 +169,8 @@ IMPORTANT RULES:
      * Make direct call to Gemini API
      */
     async makeDirectGeminiCall(prompt, files, apiKey) {
-        const modelName = 'gemini-1.5-pro';
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        const modelName = 'gemini-2.5-flash';
+        const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
         
         console.log('📍 Using model:', modelName);
         
@@ -313,7 +313,7 @@ IMPORTANT RULES:
             // 构建请求数据
             const requestData = {
                 prompt: prompt,
-                model: 'gemini-1.5-pro'  // Higher quality responses
+                model: 'gemini-2.5-flash'  // Latest model with improved performance
             };
 
             // 如果有PDF文件，处理成base64

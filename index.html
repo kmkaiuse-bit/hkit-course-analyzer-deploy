@@ -294,6 +294,31 @@
         <div class="header">
             <h1>🎓 HKIT Course Exemption Analyzer</h1>
             <p>Advanced Standing Application Processing System - Enhanced Version</p>
+
+            <!-- Dev Mode Toggle (Hidden by default) -->
+            <div style="position: absolute; top: 20px; right: 20px;">
+                <button id="devModeToggle" onclick="toggleDevMode()" style="background: transparent; border: none; color: #cbd5e0; font-size: 12px; cursor: pointer; padding: 5px 10px;">
+                    🔧 Dev
+                </button>
+            </div>
+        </div>
+
+        <!-- Dev Mode Password Modal -->
+        <div id="devModeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; text-align: center;">
+                <h3 style="margin-bottom: 20px;">🔐 Developer Mode</h3>
+                <p style="margin-bottom: 15px; color: #666;">Enter password to access developer features:</p>
+                <input type="password" id="devModePassword" placeholder="Enter password" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 5px; margin-bottom: 15px; font-size: 16px;">
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="checkDevPassword()" style="background: #4299e1; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                        Unlock
+                    </button>
+                    <button onclick="closeDevModal()" style="background: #e2e8f0; color: #4a5568; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                        Cancel
+                    </button>
+                </div>
+                <p id="devModeError" style="color: #e53e3e; margin-top: 10px; font-size: 14px; display: none;">Incorrect password</p>
+            </div>
         </div>
 
         <div class="demo-notice" style="display: none;">
@@ -581,7 +606,7 @@
                                 <input type="radio" name="viewMode" value="table" checked>
                                 📋 Table View
                             </label>
-                            <label style="margin-left: 15px;">
+                            <label id="jsonViewOption" style="margin-left: 15px; display: none;">
                                 <input type="radio" name="viewMode" value="json">
                                 🔧 JSON View
                             </label>
@@ -666,6 +691,66 @@
             console.log('GeminiAPI available:', typeof GeminiAPI !== 'undefined');
             console.log('API_CONFIG available:', typeof API_CONFIG !== 'undefined');
             console.log('callGeminiAPI available:', typeof callGeminiAPI !== 'undefined');
+
+            // Check if dev mode is already enabled
+            const isDevMode = sessionStorage.getItem('devMode') === 'true';
+            if (isDevMode) {
+                enableDevMode();
+            }
+        });
+
+        // Dev Mode Functions
+        let devModeEnabled = false;
+
+        function toggleDevMode() {
+            const modal = document.getElementById('devModeModal');
+            modal.style.display = 'flex';
+            document.getElementById('devModePassword').value = '';
+            document.getElementById('devModeError').style.display = 'none';
+        }
+
+        function closeDevModal() {
+            document.getElementById('devModeModal').style.display = 'none';
+        }
+
+        function checkDevPassword() {
+            const password = document.getElementById('devModePassword').value;
+            const errorMsg = document.getElementById('devModeError');
+
+            if (password === 'HKIT123') {
+                sessionStorage.setItem('devMode', 'true');
+                enableDevMode();
+                closeDevModal();
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        function enableDevMode() {
+            devModeEnabled = true;
+            // Show JSON view option
+            const jsonOption = document.getElementById('jsonViewOption');
+            if (jsonOption) {
+                jsonOption.style.display = 'inline-block';
+            }
+            // Update dev button to show enabled state
+            const devButton = document.getElementById('devModeToggle');
+            if (devButton) {
+                devButton.style.color = '#48bb78';
+                devButton.innerHTML = '🔧 Dev ✓';
+            }
+        }
+
+        // Allow Enter key to submit password
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('devModePassword');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        checkDevPassword();
+                    }
+                });
+            }
         });
         
         async function saveApiKey() {

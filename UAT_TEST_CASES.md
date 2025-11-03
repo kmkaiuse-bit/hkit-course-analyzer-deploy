@@ -1,1126 +1,475 @@
-# HKIT Course Exemption Analyzer - UAT Test Cases
+# HKIT Course Exemption Analyzer - Simplified UAT
 
-**Version:** 1.0
+**Version:** 2.0 (Simplified for Single Tester)
 **Date:** 2025-11-03
-**Test Environment:** Production (Vercel) & Local Mode
+**Test Environment:** Production (Vercel)
+**Estimated Time:** 30-45 minutes
 
 ---
 
-## Test Environment Setup
+## What You Need
 
-### Prerequisites
-- [ ] Access to Vercel deployment URL
-- [ ] Sample transcript files (PDF, CSV, Excel)
-- [ ] Test API key for local mode (if applicable)
-- [ ] Multiple browsers for cross-browser testing (Chrome, Firefox, Edge, Safari)
-- [ ] Different file sizes (small <1MB, medium 1-4MB, large 4-20MB)
+- [ ] Access to Vercel deployment URL: https://your-app.vercel.app
+- [ ] 3 sample transcripts:
+  - Small text-based PDF (<1MB, ~10 courses)
+  - Large image-based/scanned PDF (4-10MB, 7+ pages)
+  - CSV or Excel file with course data
+- [ ] Chrome browser (latest version)
+- [ ] Student info to fill in: name, ID, programme
 
 ---
 
-## 1. File Upload & Processing
+## How to Use This Checklist
 
-### TC-001: Upload PDF Transcript (Text-based)
-**Priority:** High
-**Objective:** Verify text-based PDF upload and extraction
+1. ✅ Check the box when test **PASSES**
+2. ❌ Mark with X and write notes if test **FAILS**
+3. Complete tests in order (they build on each other)
+4. Total: **18 Essential Tests**
+
+---
+
+## Core Workflow Tests (Must Pass)
+
+### TEST 1: Upload Small PDF ⭐ CRITICAL
+**What:** Upload a small text-based PDF transcript
 
 **Steps:**
-1. Navigate to the analyzer page
-2. Click "Choose Files" or drag-and-drop a text-based PDF transcript
-3. Observe file processing
+1. Open the app
+2. Click "Choose Files" or drag-and-drop a small PDF (<1MB)
+3. Wait for file to appear in file list
 
-**Expected Results:**
-- [ ] File appears in the file list with correct name and size
-- [ ] "View Transcripts" button becomes visible
-- [ ] Subject extraction completes successfully
-- [ ] All courses from PDF are extracted and displayed
-- [ ] No errors in console
-
-**Test Data:** Text-based academic transcript PDF (< 4MB)
-
----
-
-### TC-002: Upload PDF Transcript (Image-based/Scanned)
-**Priority:** High
-**Objective:** Verify image-based PDF upload and OCR processing
-
-**Steps:**
-1. Navigate to the analyzer page
-2. Upload a scanned/image-based PDF transcript (4-20MB)
-3. Observe processing
-
-**Expected Results:**
+**Pass If:**
 - [ ] File uploads successfully
-- [ ] System detects large file size (>4.5MB)
-- [ ] Automatically switches to direct Gemini API (bypasses Vercel limit)
-- [ ] Console shows: "⚠️ PDF too large for Vercel"
-- [ ] AI successfully reads and extracts courses from images
-- [ ] Loading time indicator shows elapsed time
-- [ ] All courses extracted accurately
+- [ ] File name and size displayed correctly
+- [ ] "View Transcripts" button appears
+- [ ] No errors in console (F12)
 
-**Test Data:** Scanned academic transcript PDF (4-20MB, image-based)
+**Notes:** _______________________________________________
 
 ---
 
-### TC-003: Upload Excel/CSV Transcript
-**Priority:** High
-**Objective:** Verify Excel and CSV file processing
+### TEST 2: Upload Large Image-based PDF ⭐ CRITICAL
+**What:** Upload a large scanned/image PDF (tests 4.5MB bypass)
 
 **Steps:**
-1. Upload an Excel (.xlsx) file with transcript data
-2. Upload a CSV file with transcript data
+1. Upload an image-based PDF (4-10MB, scanned document)
+2. Watch console messages (F12)
 
-**Expected Results:**
-- [ ] Both file types accepted
-- [ ] Data extracted correctly
-- [ ] Course codes, names, and credits parsed properly
-- [ ] Special characters handled correctly
-- [ ] Multi-line cells processed correctly
+**Pass If:**
+- [ ] File uploads successfully
+- [ ] Console shows: "⚠️ PDF too large for Vercel" (if >4.5MB)
+- [ ] Console shows: "Using direct API call"
+- [ ] No errors or failures
 
-**Test Data:** Excel/CSV files with course data
+**Notes:** _______________________________________________
 
 ---
 
-### TC-004: Upload Multiple Files
-**Priority:** Medium
-**Objective:** Verify multi-file integration mode
+### TEST 3: Upload CSV/Excel File
+**What:** Upload structured data file
 
 **Steps:**
-1. Enable "Multi-file Integration Mode" checkbox
-2. Upload 2-3 transcript files (mix of PDF, CSV, Excel)
-3. Observe file list
+1. Upload a CSV or Excel file with transcript data
+2. Verify file appears in list
 
-**Expected Results:**
-- [ ] All files appear in file list
-- [ ] Each file shows correct name, type, and size
-- [ ] Files can be viewed individually
-- [ ] Remove button (❌) works for each file
-- [ ] "Clear All Files" button appears and works
-
----
-
-### TC-005: Large File Handling (>20MB)
-**Priority:** Medium
-**Objective:** Verify error handling for oversized files
-
-**Steps:**
-1. Attempt to upload a PDF larger than 20MB
-
-**Expected Results:**
-- [ ] Error message displayed: "PDF file too large: [filename]. Maximum size is 20MB."
-- [ ] File not added to file list
-- [ ] System remains stable
-
----
-
-### TC-006: Invalid File Type
-**Priority:** Low
-**Objective:** Verify rejection of unsupported file types
-
-**Steps:**
-1. Attempt to upload .docx, .txt, or image files
-
-**Expected Results:**
-- [ ] Appropriate error message shown
-- [ ] File not processed
-- [ ] No system crash
-
----
-
-## 2. View Transcripts Feature
-
-### TC-007: View Transcripts - First Click
-**Priority:** High
-**Objective:** Verify transcript viewer opens correctly on first attempt
-
-**Steps:**
-1. Upload a PDF transcript
-2. Click "View Transcripts" button immediately
-3. Observe popup window
-
-**Expected Results:**
-- [ ] Popup window opens (not blocked)
-- [ ] Shows "⏳ Loading PDF library..." if PDF.js not ready
-- [ ] Waits for library to load (max 5 seconds)
-- [ ] Popup displays content (NOT blank)
-- [ ] No need to close and reopen
-
----
-
-### TC-008: View Transcripts - All Pages Displayed
-**Priority:** High
-**Objective:** Verify all PDF pages are rendered
-
-**Steps:**
-1. Upload a multi-page PDF (7+ pages)
-2. Click "View Transcripts"
-3. Scroll through the popup window
-
-**Expected Results:**
-- [ ] All pages rendered (not limited to 5 pages)
-- [ ] Each page labeled "Page X of Y"
-- [ ] Progress indicator shows: "📄 Rendering page X of Y..." during load
-- [ ] Images clear and readable
-- [ ] No "...and X more pages" message
-
----
-
-### TC-009: View Transcripts - Multiple Files
-**Priority:** Medium
-**Objective:** Verify tab switching between multiple files
-
-**Steps:**
-1. Upload 3 different transcript files
-2. Click "View Transcripts"
-3. Click on different file tabs
-
-**Expected Results:**
-- [ ] Tabs shown for each file with file icon
-- [ ] Active tab highlighted
-- [ ] Content switches correctly
-- [ ] Each file type displays appropriately (PDF as images, CSV as table, text as formatted)
-
----
-
-## 3. Programme Selection & Settings
-
-### TC-010: Programme Selection
-**Priority:** High
-**Objective:** Verify programme dropdown population and selection
-
-**Steps:**
-1. Observe "Programme Type" dropdown
-2. Select different programmes (HD, BA, BSc, Top-up)
-
-**Expected Results:**
-- [ ] All programmes listed
-- [ ] Programme names clear and accurate
-- [ ] Selection persists during session
-- [ ] Template info updates based on selection
-
----
-
-### TC-011: Analysis Mode Selection
-**Priority:** Medium
-**Objective:** Verify analysis mode switching
-
-**Steps:**
-1. Toggle between "HKIT Unified Template" and "Standard CSV Analysis"
-
-**Expected Results:**
-- [ ] Both modes available
-- [ ] UI updates based on mode
-- [ ] Mode persists during session
-
----
-
-### TC-012: Multi-file Integration Toggle
-**Priority:** Low
-**Objective:** Verify multi-file mode toggle
-
-**Steps:**
-1. Check/uncheck "Multi-file Integration Mode"
-
-**Expected Results:**
-- [ ] Checkbox state changes
-- [ ] Behavior matches selection (single vs multi-file)
-
----
-
-## 4. Student Information Management
-
-### TC-013: Fill Student Information
-**Priority:** High
-**Objective:** Verify student info form functionality
-
-**Steps:**
-1. After uploading transcript, locate student info section
-2. Fill in: Student Name, Student ID, Programme
-3. Save information
-
-**Expected Results:**
-- [ ] All fields editable
-- [ ] Data saves correctly
-- [ ] Info appears in generated reports
-- [ ] Special characters handled (Chinese names, etc.)
-
----
-
-## 5. AI Analysis
-
-### TC-014: Basic Analysis - Small Transcript
-**Priority:** High
-**Objective:** Verify AI analysis for simple case
-
-**Steps:**
-1. Upload a transcript with 5-10 courses
-2. Select programme
-3. Click "Analyze Files"
-4. Observe progress
-
-**Expected Results:**
-- [ ] "Analyzing..." message appears
-- [ ] Progress bar shows completion percentage
-- [ ] Elapsed time counter displays (e.g., "Analyzing... (5.2s)")
-- [ ] Analysis completes within reasonable time (<30 seconds)
-- [ ] Results displayed in table format
+**Pass If:**
+- [ ] File accepted
+- [ ] File listed correctly
 - [ ] No errors
 
-**Test Data:** Small transcript (5-10 courses)
+**Notes:** _______________________________________________
 
 ---
 
-### TC-015: Analysis - Large Transcript
-**Priority:** High
-**Objective:** Verify AI handles large transcripts
+### TEST 4: View Transcripts - First Time ⭐ CRITICAL
+**What:** Verify popup works on first click (tests blank popup fix)
 
 **Steps:**
-1. Upload transcript with 30+ courses
+1. After uploading a PDF, click "View Transcripts"
+2. Observe popup window immediately
+
+**Pass If:**
+- [ ] Popup opens (not blocked)
+- [ ] Popup is NOT blank
+- [ ] Shows loading message if needed: "⏳ Loading PDF library..."
+- [ ] Content appears within 5 seconds
+- [ ] Tip message visible at top: "💡 Tip: If you see a blank window..."
+
+**Notes:** _______________________________________________
+
+---
+
+### TEST 5: View Transcripts - All Pages Shown ⭐ CRITICAL
+**What:** Verify all pages render (tests 5-page limit removal)
+
+**Steps:**
+1. Upload a 7+ page PDF
+2. Click "View Transcripts"
+3. Wait for rendering to complete
+4. Scroll through all pages
+
+**Pass If:**
+- [ ] Shows progress: "📄 Rendering page 1 of 7...", "2 of 7...", etc.
+- [ ] ALL pages render (count them - should match PDF page count)
+- [ ] Each page labeled: "Page X of Y"
+- [ ] No message about "and X more pages"
+
+**Notes:** _______________________________________________
+
+---
+
+### TEST 6: Select Programme and Fill Student Info ⭐ CRITICAL
+**What:** Fill in required information
+
+**Steps:**
+1. Select a programme from "Programme Type" dropdown
+2. Fill in student name, ID, and programme in student info section
+
+**Pass If:**
+- [ ] Programmes listed in dropdown
+- [ ] Selection works
+- [ ] Student info fields editable
+- [ ] Data saves (doesn't disappear)
+
+**Notes:** _______________________________________________
+
+---
+
+### TEST 7: Run Analysis - Small Transcript ⭐ CRITICAL
+**What:** Test AI analysis on simple case
+
+**Steps:**
+1. With small PDF uploaded and programme selected
+2. Click "Analyze Files"
+3. Watch progress
+
+**Pass If:**
+- [ ] Progress bar appears
+- [ ] Shows "Analyzing..." message
+- [ ] Elapsed time counter works (e.g., "5.2s")
+- [ ] Analysis completes successfully (<30 seconds)
+- [ ] Results table appears with all courses
+- [ ] No console errors
+
+**Notes:** _______________________________________________
+
+---
+
+### TEST 8: Run Analysis - Large Image PDF ⭐ CRITICAL
+**What:** Test AI can read scanned documents (tests accuracy fix)
+
+**Steps:**
+1. Upload large image-based PDF (4-10MB)
 2. Select programme
 3. Click "Analyze Files"
+4. Review results
 
-**Expected Results:**
+**Pass If:**
 - [ ] Analysis completes successfully
-- [ ] All courses analyzed
-- [ ] Results table shows all entries
-- [ ] Performance acceptable (<2 minutes)
-- [ ] No timeout errors
+- [ ] All courses from PDF appear in results
+- [ ] Course names are REAL (not made-up or fake)
+- [ ] Accuracy is good (matches actual transcript content)
+- [ ] Console shows direct API call logs
 
-**Test Data:** Large transcript (30+ courses)
-
----
-
-### TC-016: Analysis - Image-based PDF
-**Priority:** High
-**Objective:** Verify AI extracts text from scanned PDFs
-
-**Steps:**
-1. Upload scanned/image-based PDF
-2. Run analysis
-
-**Expected Results:**
-- [ ] Console shows direct API call (bypassing Vercel)
-- [ ] AI successfully reads course names from images
-- [ ] Accuracy comparable to text-based PDFs
-- [ ] No "fake subjects" or made-up courses
-- [ ] All visible courses extracted
+**Notes:** _______________________________________________
 
 ---
 
-### TC-017: Exemption Logic - Language Courses
-**Priority:** High
-**Objective:** Verify special exemption rules for language courses
+### TEST 9: Check Exemption Results ⭐ CRITICAL
+**What:** Verify results display correctly
 
 **Steps:**
-1. Upload transcript with English and Chinese courses
-2. Run analysis
+1. After analysis completes, review the results table
 
-**Expected Results:**
-- [ ] ANY English course → HD401/HD402/HC401/BA50084E exempted
-- [ ] ANY Chinese course → HD405 exempted
-- [ ] Justification clearly states language exemption rule
-
----
-
-### TC-018: Exemption Logic - Skills-based Matching
-**Priority:** High
-**Objective:** Verify concept-based matching (not just title matching)
-
-**Steps:**
-1. Upload transcript with courses like:
-   - "Critical Thinking Skills"
-   - "Business Economics"
-   - "Effective Communication"
-
-**Expected Results:**
-- [ ] "Critical Thinking" → "Employability Skills" (matched by skills)
-- [ ] "Economics" → "Analysis of Real World Issues" (matched by concepts)
-- [ ] "Communication" → "Presentation Skills" (matched by transferable skills)
-- [ ] Justification explains the concept match
-
----
-
-### TC-019: Exemption Logic - Maximum 50% Rule
-**Priority:** High
-**Objective:** Verify 50% exemption cap enforcement
-
-**Steps:**
-1. Upload transcript with many matching courses
-2. Run analysis
-
-**Expected Results:**
-- [ ] System respects maximum 50% exemption limit
-- [ ] Warning shown if limit would be exceeded
-- [ ] Summary card shows exemption percentage
-- [ ] Visual indicator (red/yellow) if approaching/exceeding limit
-
----
-
-### TC-020: Analysis Error Handling
-**Priority:** Medium
-**Objective:** Verify graceful error handling
-
-**Steps:**
-1. Simulate API failure (disconnect internet temporarily)
-2. Click "Analyze Files"
-
-**Expected Results:**
-- [ ] Clear error message displayed
-- [ ] No system crash
-- [ ] User can retry
-- [ ] Console logs error details for debugging
-
----
-
-## 6. Results Display & Interaction
-
-### TC-021: Results Table Display
-**Priority:** High
-**Objective:** Verify results table formatting and content
-
-**Steps:**
-1. Complete an analysis
-2. Review results table
-
-**Expected Results:**
-- [ ] Table columns clear: HKIT Subject Code, Name, Exemption Status, Previous Subject, Remarks
-- [ ] Green checkmarks (✓) for exemptions
-- [ ] Red crosses (✗) for non-exemptions
+**Pass If:**
+- [ ] Table shows: HKIT Subject Code, Name, Exemption Status, Previous Subject, Remarks
+- [ ] Green ✓ for exemptions, Red ✗ for non-exemptions
 - [ ] Credits calculated correctly
-- [ ] Remarks provide clear justification
-- [ ] Table scrollable if many results
-- [ ] Responsive design (works on different screen sizes)
+- [ ] Remarks explain the decision clearly
+- [ ] Summary card shows: total credits, exempted credits, percentage
+
+**Notes:** _______________________________________________
 
 ---
 
-### TC-022: Summary Card
-**Priority:** High
-**Objective:** Verify exemption summary statistics
+### TEST 10: Check Special Exemption Rules
+**What:** Verify language exemptions and 50% limit
 
 **Steps:**
-1. Review summary card after analysis
+1. Look for any English or Chinese courses in results
+2. Check exemption percentage in summary
 
-**Expected Results:**
-- [ ] Shows programme name
-- [ ] Total programme credits
-- [ ] Number of courses exempted
-- [ ] Total credits exempted
-- [ ] Exemption percentage
-- [ ] Visual indicators (colors) for compliance status
-- [ ] "Study plan needed for X credits" message
+**Pass If:**
+- [ ] Any English course → exempted for HD401/HD402/HC401/BA50084E
+- [ ] Any Chinese course → exempted for HD405
+- [ ] Exemption percentage ≤ 50% (or warning shown if exceeding)
+- [ ] Summary shows compliance status
+
+**Notes:** _______________________________________________
 
 ---
 
-### TC-023: View Toggle (Table/JSON)
-**Priority:** Low
-**Objective:** Verify view switching functionality
+### TEST 11: Edit Results ⭐ CRITICAL
+**What:** Test manual editing capability
 
 **Steps:**
-1. Complete analysis
-2. Toggle between "Table View" and "JSON View"
+1. Click "Edit Results"
+2. Change one exemption from "Exempted" to "" (empty)
+3. Change another from "" to "Exempted"
+4. Edit remarks for one course
+5. Click "Save Changes"
 
-**Expected Results:**
-- [ ] Both views available
-- [ ] Table view: formatted table
-- [ ] JSON view: properly formatted JSON
-- [ ] Data consistent between views
-
----
-
-## 7. Edit Mode
-
-### TC-024: Enter Edit Mode
-**Priority:** High
-**Objective:** Verify edit mode activation
-
-**Steps:**
-1. Complete analysis
-2. Click "Edit Results" button
-
-**Expected Results:**
+**Pass If:**
 - [ ] Edit mode activates
-- [ ] "Edit Results" button changes to "Save Changes" and "Cancel"
-- [ ] Table becomes editable
 - [ ] Dropdowns appear for exemption status
-- [ ] Remarks become editable text areas
-
----
-
-### TC-025: Change Exemption Status
-**Priority:** High
-**Objective:** Verify manual exemption override
-
-**Steps:**
-1. Enter edit mode
-2. Change exemption from "Exempted" to "" (empty)
-3. Change exemption from "" to "Exempted"
-4. Click "Save Changes"
-
-**Expected Results:**
-- [ ] Dropdown works correctly
-- [ ] Status updates in UI
-- [ ] Credits recalculated
+- [ ] Remarks become editable
+- [ ] Changes save successfully
+- [ ] Credits recalculate
 - [ ] Summary card updates
-- [ ] Warning if 50% limit exceeded
+
+**Notes:** _______________________________________________
 
 ---
 
-### TC-026: Edit Remarks
-**Priority:** Medium
-**Objective:** Verify remarks editing
+### TEST 12: Generate Study Plan
+**What:** Create list of courses student needs to take
 
 **Steps:**
-1. Enter edit mode
-2. Modify remarks for multiple courses
-3. Save changes
+1. After analysis, click "Generate Study Plan"
+2. Review the generated plan
 
-**Expected Results:**
-- [ ] Remarks field editable
-- [ ] Custom text saved
-- [ ] Changes persist in exports
+**Pass If:**
+- [ ] Study plan appears
+- [ ] Shows only NON-exempted courses
+- [ ] Displays course codes, names, credits
+- [ ] Total credits calculated correctly
+
+**Notes:** _______________________________________________
 
 ---
 
-### TC-027: Add/Remove Rows
-**Priority:** Medium
-**Objective:** Verify row manipulation
+### TEST 13: Export to CSV ⭐ CRITICAL
+**What:** Download results as CSV
 
 **Steps:**
-1. Enter edit mode
-2. Click "➕ Add New Row"
-3. Fill in new course details
-4. Click "❌ Remove" on a row
+1. Click "Download CSV"
+2. Open downloaded file in Excel
 
-**Expected Results:**
-- [ ] New row appears with empty fields
-- [ ] All fields editable
-- [ ] Remove button deletes row
-- [ ] Credits recalculated after changes
-
----
-
-### TC-028: Reset to AI Results
-**Priority:** Medium
-**Objective:** Verify reset functionality
-
-**Steps:**
-1. Make several edits
-2. Click "Reset to AI Results"
-3. Confirm reset
-
-**Expected Results:**
-- [ ] Confirmation dialog appears
-- [ ] After confirm, all changes reverted
-- [ ] Original AI results restored
-- [ ] Edit mode remains active
-
----
-
-### TC-029: Cancel Edit Mode
-**Priority:** Low
-**Objective:** Verify cancel functionality
-
-**Steps:**
-1. Make edits
-2. Click "Cancel"
-
-**Expected Results:**
-- [ ] Changes discarded
-- [ ] Returns to view mode
-- [ ] Original data shown
-
----
-
-## 8. Study Plan Generation
-
-### TC-030: Generate Study Plan
-**Priority:** High
-**Objective:** Verify study plan generation
-
-**Steps:**
-1. Complete analysis with some exemptions
-2. Click "Generate Study Plan"
-
-**Expected Results:**
-- [ ] Study plan generated
-- [ ] Lists only non-exempted courses
-- [ ] Shows course codes, names, and credits
-- [ ] Total credits for study plan calculated
-- [ ] Formatted clearly
-
----
-
-## 9. Export Functions
-
-### TC-031: Export to CSV
-**Priority:** High
-**Objective:** Verify CSV export functionality
-
-**Steps:**
-1. Complete analysis
-2. Click "Download CSV"
-
-**Expected Results:**
+**Pass If:**
 - [ ] CSV file downloads
 - [ ] Filename includes timestamp and student info
-- [ ] All columns present
-- [ ] Data accurate
-- [ ] Opens correctly in Excel/Google Sheets
-- [ ] Special characters preserved
+- [ ] Opens correctly in Excel
+- [ ] All data present and accurate
+- [ ] Special characters preserved (Chinese, etc.)
+
+**Notes:** _______________________________________________
 
 ---
 
-### TC-032: Export to Excel Application Form
-**Priority:** High
-**Objective:** Verify Excel export with full application form
+### TEST 14: Export to Excel ⭐ CRITICAL
+**What:** Download formatted Excel application
 
 **Steps:**
-1. Fill student information
-2. Complete analysis
-3. Click "Download Excel Application"
+1. Click "Download Excel Application"
+2. Open downloaded Excel file
 
-**Expected Results:**
+**Pass If:**
 - [ ] Excel file downloads
-- [ ] File contains multiple sheets if applicable
-- [ ] Student info section formatted professionally
+- [ ] Professional formatting applied
+- [ ] Student info section present
 - [ ] Exemption table formatted with colors
 - [ ] Summary statistics included
-- [ ] Credits calculated correctly
-- [ ] Professional layout suitable for official use
+- [ ] Ready for submission
+
+**Notes:** _______________________________________________
 
 ---
 
-### TC-033: Export to PDF Application Form
-**Priority:** High
-**Objective:** Verify PDF export
+### TEST 15: Export to PDF ⭐ CRITICAL
+**What:** Generate PDF application form
 
 **Steps:**
-1. Fill student information
-2. Complete analysis
-3. Click "Generate PDF Application"
+1. Click "Generate PDF Application"
+2. Review generated PDF
 
-**Expected Results:**
+**Pass If:**
 - [ ] PDF generates successfully
-- [ ] Header includes HKIT logo/branding
+- [ ] HKIT header/branding visible
 - [ ] Student info clearly displayed
-- [ ] Exemption table formatted with colors
+- [ ] Exemption table formatted properly
 - [ ] Page breaks appropriate
-- [ ] Footer with page numbers
 - [ ] Print-ready quality
 
----
-
-## 10. Learning Database (Local Mode Only)
-
-### TC-034: Save to Learning Database
-**Priority:** Medium
-**Objective:** Verify pattern recording
-
-**Steps:**
-1. Complete analysis (requires local server running)
-2. Click "Save to Database"
-
-**Expected Results:**
-- [ ] Success message: "X patterns saved to learning database"
-- [ ] Console shows successful API calls
-- [ ] Database records created/updated
-
-**Prerequisites:** Local server must be running (port 3001)
+**Notes:** _______________________________________________
 
 ---
 
-### TC-035: View Learning Dashboard
-**Priority:** Medium
-**Objective:** Verify dashboard display
+### TEST 16: Clear All and Restart
+**What:** Test reset functionality
 
 **Steps:**
-1. Press Ctrl+Shift+L or click learning badge
-2. Review dashboard
+1. Click "Clear All Files"
+2. Confirm clear action
+3. Upload new file and repeat analysis
 
-**Expected Results:**
-- [ ] Modal opens with statistics
-- [ ] Shows total patterns learned
-- [ ] Confidence level distribution
-- [ ] Recent patterns listed
-- [ ] Close button works
+**Pass If:**
+- [ ] All files removed
+- [ ] Results cleared
+- [ ] Interface resets to initial state
+- [ ] Can start new analysis without refresh
 
-**Prerequisites:** Local mode with database
+**Notes:** _______________________________________________
 
 ---
 
-### TC-036: Pattern Auto-Application
-**Priority:** Medium
-**Objective:** Verify learned patterns are auto-applied
+### TEST 17: Mobile/Responsive Check
+**What:** Quick responsive design check
 
 **Steps:**
-1. Analyze same transcript twice with learning enabled
-2. Compare speed and results
-
-**Expected Results:**
-- [ ] Second analysis faster
-- [ ] High-confidence patterns (>90%) auto-applied
-- [ ] Console shows: "X patterns auto-applied"
-- [ ] AI only analyzes new/uncertain courses
-- [ ] Results consistent
-
-**Prerequisites:** Local mode with database
-
----
-
-## 11. User Interface & UX
-
-### TC-037: Floating Control Panel
-**Priority:** Low
-**Objective:** Verify floating controls functionality
-
-**Steps:**
-1. Scroll down the page after uploading files
-2. Observe floating control panel
-
-**Expected Results:**
-- [ ] Floating panel appears when scrolling
-- [ ] Buttons mirror main action buttons
-- [ ] All buttons functional
-- [ ] Proper positioning (bottom-right)
-- [ ] Doesn't obstruct content
-
----
-
-### TC-038: Progress Indicators
-**Priority:** Medium
-**Objective:** Verify all loading indicators work
-
-**Steps:**
-1. Perform various actions (upload, analyze, export)
-2. Observe progress indicators
-
-**Expected Results:**
-- [ ] Loading spinners appear during processing
-- [ ] Progress bar shows percentage
-- [ ] Elapsed time counter displays
-- [ ] Status messages clear and accurate
-- [ ] No "frozen" appearance
-
----
-
-### TC-039: Error Messages
-**Priority:** Medium
-**Objective:** Verify error handling and user feedback
-
-**Steps:**
-1. Trigger various errors intentionally
-2. Observe error messages
-
-**Expected Results:**
-- [ ] Error messages clear and specific
-- [ ] Red/warning styling applied
-- [ ] User can understand what went wrong
-- [ ] Actionable suggestions provided
-- [ ] No generic "Error" messages
-
----
-
-### TC-040: Responsive Design - Mobile
-**Priority:** Low
-**Objective:** Verify mobile responsiveness
-
-**Steps:**
-1. Access app on mobile device or use browser dev tools
-2. Navigate through all features
-
-**Expected Results:**
-- [ ] Layout adapts to screen size
-- [ ] Buttons accessible (not too small)
-- [ ] Text readable without zooming
-- [ ] Tables scrollable horizontally
-- [ ] No overlapping elements
-
----
-
-### TC-041: Responsive Design - Tablet
-**Priority:** Low
-**Objective:** Verify tablet display
-
-**Steps:**
-1. Access on tablet or simulate tablet view
-
-**Expected Results:**
-- [ ] Proper layout on medium screens
-- [ ] All features accessible
-- [ ] Good use of screen space
-
----
-
-## 12. Browser Compatibility
-
-### TC-042: Chrome Browser
-**Priority:** High
-**Objective:** Verify full functionality in Chrome
-
-**Steps:**
-1. Test all core features in Chrome (latest version)
-
-**Expected Results:**
-- [ ] All features work correctly
-- [ ] No console errors
-- [ ] Proper rendering
-
----
-
-### TC-043: Firefox Browser
-**Priority:** Medium
-**Objective:** Verify compatibility with Firefox
-
-**Steps:**
-1. Test all core features in Firefox
-
-**Expected Results:**
-- [ ] All features work correctly
-- [ ] PDF rendering works
-- [ ] File uploads work
-
----
-
-### TC-044: Edge Browser
-**Priority:** Medium
-**Objective:** Verify compatibility with Edge
-
-**Steps:**
-1. Test all core features in Edge
-
-**Expected Results:**
-- [ ] All features work correctly
-- [ ] No compatibility issues
-
----
-
-### TC-045: Safari Browser (Mac/iOS)
-**Priority:** Low
-**Objective:** Verify Safari compatibility
-
-**Steps:**
-1. Test on Safari (if available)
-
-**Expected Results:**
-- [ ] Core features work
-- [ ] PDF.js loads correctly
-- [ ] No webkit-specific issues
-
----
-
-## 13. Performance Testing
-
-### TC-046: Page Load Time
-**Priority:** Medium
-**Objective:** Verify acceptable load time
-
-**Steps:**
-1. Clear cache
-2. Load application
-3. Measure time until interactive
-
-**Expected Results:**
-- [ ] Page loads in < 3 seconds on good connection
-- [ ] Progressive loading (not blank page)
-- [ ] CSS/JS loads correctly
-
----
-
-### TC-047: Large File Processing Speed
-**Priority:** Medium
-**Objective:** Verify performance with large files
-
-**Steps:**
-1. Upload 10MB+ PDF
-2. Measure processing time
-
-**Expected Results:**
-- [ ] Processes in reasonable time (< 2 minutes)
-- [ ] No browser freeze
-- [ ] Progress feedback provided
-
----
-
-### TC-048: Multiple Concurrent Users (Vercel)
-**Priority:** Low
-**Objective:** Verify Vercel handles concurrent users
-
-**Steps:**
-1. Simulate multiple users accessing simultaneously
-2. Each performs analysis
-
-**Expected Results:**
-- [ ] No performance degradation
-- [ ] All requests processed
-- [ ] No API rate limiting errors
-
----
-
-## 14. Security & Data Privacy
-
-### TC-049: API Key Protection (Local Mode)
-**Priority:** High
-**Objective:** Verify API key storage security
-
-**Steps:**
-1. Enter API key in local mode
-2. Check browser storage
-3. Reload page
-
-**Expected Results:**
-- [ ] Key stored in localStorage only
-- [ ] Key not visible in network requests (for Vercel mode)
-- [ ] Key persists across page reloads
-- [ ] Key can be cleared
-
----
-
-### TC-050: Data Privacy - No Server Storage
-**Priority:** High
-**Objective:** Verify transcripts not stored on server
-
-**Steps:**
-1. Upload sensitive transcript
-2. Check network tab for data transmission
-
-**Expected Results:**
-- [ ] Transcript sent to Gemini API only
-- [ ] No permanent storage on HKIT servers
-- [ ] Data cleared after session ends
-
----
-
-## 15. Edge Cases & Stress Testing
-
-### TC-051: Empty Transcript File
-**Priority:** Low
-**Objective:** Verify handling of empty files
-
-**Steps:**
-1. Upload empty PDF or CSV
-
-**Expected Results:**
-- [ ] Graceful error message
-- [ ] No crash
-- [ ] User can upload different file
-
----
-
-### TC-052: Special Characters in Course Names
-**Priority:** Medium
-**Objective:** Verify handling of special characters
-
-**Steps:**
-1. Upload transcript with courses containing: &, <, >, ", ', Chinese characters
-
-**Expected Results:**
-- [ ] All characters displayed correctly
-- [ ] No HTML injection
-- [ ] Exports preserve characters
-
----
-
-### TC-053: Very Long Course Names
-**Priority:** Low
-**Objective:** Verify UI handles long text
-
-**Steps:**
-1. Upload transcript with very long course names (100+ characters)
-
-**Expected Results:**
-- [ ] Text wraps appropriately
-- [ ] No layout breaking
-- [ ] Readable in all views
-
----
-
-### TC-054: Rapidly Clicking Buttons
-**Priority:** Low
-**Objective:** Verify debouncing/protection against multiple clicks
-
-**Steps:**
-1. Rapidly click "Analyze Files" multiple times
-
-**Expected Results:**
-- [ ] Only one analysis triggered
-- [ ] Button disabled during processing
-- [ ] No duplicate API calls
-
----
-
-### TC-055: Browser Back Button
-**Priority:** Low
-**Objective:** Verify behavior with browser navigation
-
-**Steps:**
-1. Complete analysis
-2. Click browser back button
-
-**Expected Results:**
-- [ ] Data preserved or appropriate warning
-- [ ] No errors
-- [ ] Can return to results
-
----
-
-## 16. Accessibility
-
-### TC-056: Keyboard Navigation
-**Priority:** Low
-**Objective:** Verify keyboard-only navigation
-
-**Steps:**
-1. Navigate app using only Tab, Enter, and arrow keys
-
-**Expected Results:**
-- [ ] All interactive elements reachable
-- [ ] Focus indicators visible
-- [ ] Logical tab order
-
----
-
-### TC-057: Screen Reader Compatibility
-**Priority:** Low
-**Objective:** Basic screen reader testing
-
-**Steps:**
-1. Use screen reader (NVDA/JAWS/VoiceOver)
+1. Press F12, toggle device toolbar (mobile view)
 2. Navigate through interface
 
-**Expected Results:**
-- [ ] Buttons announced correctly
-- [ ] Form fields have labels
-- [ ] Status messages readable
+**Pass If:**
+- [ ] Layout adapts to small screen
+- [ ] Buttons accessible (not too small)
+- [ ] Text readable
+- [ ] Main functions work
+
+**Notes:** _______________________________________________
 
 ---
 
-## 17. Footer & Support
-
-### TC-058: Technical Support Link
-**Priority:** Low
-**Objective:** Verify support email link works
+### TEST 18: Technical Support Link
+**What:** Verify footer contact info
 
 **Steps:**
-1. Scroll to footer
+1. Scroll to bottom of page
 2. Click technical support email link
 
-**Expected Results:**
-- [ ] Email client opens (mailto: link)
-- [ ] Email address correct: stevenkok@hkit.edu.hk
-- [ ] Link styled appropriately
+**Pass If:**
+- [ ] Footer visible with copyright info
+- [ ] Technical Support label present
+- [ ] Email link: stevenkok@hkit.edu.hk
+- [ ] Clicking opens email client (mailto: link)
+
+**Notes:** _______________________________________________
 
 ---
 
-## Test Summary Template
+## Test Summary
 
-### Test Execution Summary
+**Date Tested:** _______________
+**Tester Name:** _______________
+**Browser:** Chrome Version: _______________
 
-| Category | Total Tests | Passed | Failed | Blocked | Not Tested |
-|----------|-------------|---------|--------|---------|------------|
-| File Upload | 6 | | | | |
-| View Transcripts | 3 | | | | |
-| Programme/Settings | 3 | | | | |
-| Student Info | 1 | | | | |
-| AI Analysis | 7 | | | | |
-| Results Display | 3 | | | | |
-| Edit Mode | 6 | | | | |
-| Study Plan | 1 | | | | |
-| Export | 3 | | | | |
-| Learning Database | 3 | | | | |
-| UI/UX | 5 | | | | |
-| Browser Compatibility | 4 | | | | |
-| Performance | 3 | | | | |
-| Security | 2 | | | | |
-| Edge Cases | 5 | | | | |
-| Accessibility | 2 | | | | |
-| Footer | 1 | | | | |
-| **TOTAL** | **58** | | | | |
+| Test # | Test Name | Status | Notes |
+|--------|-----------|--------|-------|
+| 1 | Upload Small PDF | ☐ Pass ☐ Fail | |
+| 2 | Upload Large Image PDF | ☐ Pass ☐ Fail | |
+| 3 | Upload CSV/Excel | ☐ Pass ☐ Fail | |
+| 4 | View Transcripts - First Time | ☐ Pass ☐ Fail | |
+| 5 | View Transcripts - All Pages | ☐ Pass ☐ Fail | |
+| 6 | Programme & Student Info | ☐ Pass ☐ Fail | |
+| 7 | Analysis - Small Transcript | ☐ Pass ☐ Fail | |
+| 8 | Analysis - Large Image PDF | ☐ Pass ☐ Fail | |
+| 9 | Check Exemption Results | ☐ Pass ☐ Fail | |
+| 10 | Special Exemption Rules | ☐ Pass ☐ Fail | |
+| 11 | Edit Results | ☐ Pass ☐ Fail | |
+| 12 | Generate Study Plan | ☐ Pass ☐ Fail | |
+| 13 | Export CSV | ☐ Pass ☐ Fail | |
+| 14 | Export Excel | ☐ Pass ☐ Fail | |
+| 15 | Export PDF | ☐ Pass ☐ Fail | |
+| 16 | Clear and Restart | ☐ Pass ☐ Fail | |
+| 17 | Mobile/Responsive | ☐ Pass ☐ Fail | |
+| 18 | Technical Support Link | ☐ Pass ☐ Fail | |
 
----
-
-## Critical Path Test Cases (Priority High)
-
-**These must pass before production release:**
-
-1. TC-001: Upload PDF Transcript (Text-based)
-2. TC-002: Upload PDF Transcript (Image-based/Scanned)
-3. TC-003: Upload Excel/CSV Transcript
-4. TC-007: View Transcripts - First Click
-5. TC-008: View Transcripts - All Pages Displayed
-6. TC-010: Programme Selection
-7. TC-013: Fill Student Information
-8. TC-014: Basic Analysis - Small Transcript
-9. TC-015: Analysis - Large Transcript
-10. TC-016: Analysis - Image-based PDF
-11. TC-017: Exemption Logic - Language Courses
-12. TC-018: Exemption Logic - Skills-based Matching
-13. TC-019: Exemption Logic - Maximum 50% Rule
-14. TC-021: Results Table Display
-15. TC-022: Summary Card
-16. TC-024: Enter Edit Mode
-17. TC-025: Change Exemption Status
-18. TC-030: Generate Study Plan
-19. TC-031: Export to CSV
-20. TC-032: Export to Excel Application Form
-21. TC-033: Export to PDF Application Form
-22. TC-042: Chrome Browser
-23. TC-049: API Key Protection
-24. TC-050: Data Privacy
+**Total Passed:** _____ / 18
+**Total Failed:** _____ / 18
 
 ---
 
-## Known Limitations & Notes
+## Overall Assessment
 
-1. **Learning Database Features:** Only available in local mode with PostgreSQL server
-2. **File Size Limits:**
-   - Vercel mode: 4.5MB effective limit (base64 encoding)
-   - Direct API mode: 20MB maximum
-3. **Browser Support:** Optimized for Chrome, Firefox, Edge. Safari may have minor issues
-4. **PDF.js Dependency:** Requires CDN access for PDF rendering
-5. **API Dependency:** Requires Gemini API for analysis
+**Ready for Production?**  ☐ YES    ☐ NO    ☐ YES with Minor Issues
+
+**Critical Issues Found:**
+1. _______________________________________________
+2. _______________________________________________
+3. _______________________________________________
+
+**Minor Issues Found:**
+1. _______________________________________________
+2. _______________________________________________
+
+**Additional Comments:**
+_______________________________________________
+_______________________________________________
+_______________________________________________
+_______________________________________________
 
 ---
 
-## Bug Reporting Template
+## Quick Bug Report Template (If Needed)
 
-**Bug ID:** UAT-BUG-XXX
-**Test Case:** TC-XXX
-**Severity:** Critical / High / Medium / Low
-**Priority:** P0 / P1 / P2 / P3
-
-**Description:**
-[Clear description of the bug]
-
+**Bug:** [Short description]
+**Test #:** [Which test found it]
 **Steps to Reproduce:**
-1. Step 1
-2. Step 2
-3. Step 3
+1.
+2.
+3.
 
-**Expected Result:**
-[What should happen]
-
-**Actual Result:**
-[What actually happened]
-
-**Screenshots/Logs:**
-[Attach if applicable]
-
-**Environment:**
-- Browser: [Chrome 120 / Firefox 121 / etc.]
-- OS: [Windows 11 / macOS / etc.]
-- Mode: [Vercel / Local]
-
-**Additional Notes:**
-[Any other relevant information]
+**Expected:** [What should happen]
+**Actual:** [What actually happened]
+**Screenshot:** [Attach if helpful]
+**Severity:** ☐ Critical  ☐ High  ☐ Medium  ☐ Low
 
 ---
 
-## Sign-off
+## Most Critical Tests (Must Pass Before Launch)
 
-**Tested By:** _____________________
-**Date:** _____________________
-**Overall Status:** ☐ Pass  ☐ Fail  ☐ Pass with Minor Issues
+These **8 tests** are absolutely critical and must pass:
 
-**Comments:**
-_________________________________________________________________
-_________________________________________________________________
-_________________________________________________________________
+1. ✅ **Test 1:** Upload Small PDF
+2. ✅ **Test 2:** Upload Large Image PDF (tests 4.5MB fix)
+3. ✅ **Test 4:** View Transcripts - First Time (tests blank popup fix)
+4. ✅ **Test 5:** View Transcripts - All Pages (tests 5-page limit removal)
+5. ✅ **Test 6:** Programme & Student Info
+6. ✅ **Test 7:** Analysis - Small Transcript
+7. ✅ **Test 8:** Analysis - Large Image PDF (tests accuracy fix)
+8. ✅ **Test 11:** Edit Results
+
+**If these 8 pass, the app is functional. The rest are important but not blockers.**
+
+---
+
+## Tips for Testing
+
+1. **Clear Browser Cache** before starting if you've tested before
+2. **Open Console (F12)** to see detailed logs and errors
+3. **Test with REAL transcripts** if possible (anonymize student info)
+4. **Take screenshots** of any issues you find
+5. **Note performance** - slow is okay, but freezing is not
+6. **Try to break it** - upload weird files, click rapidly, etc.
+
+---
+
+## Known Limitations (Not Bugs)
+
+- Learning Database features only work in local mode (not on Vercel)
+- Maximum file size: 20MB for PDFs
+- Requires internet connection for Gemini API
+- Best performance in Chrome browser
+
+---
+
+## Success Criteria
+
+**App is ready for production if:**
+- ✅ All 8 critical tests pass
+- ✅ At least 15 out of 18 total tests pass
+- ✅ No critical bugs found
+- ✅ Exports generate correctly
+- ✅ Analysis accuracy is good (no fake subjects)
+- ✅ Performance is acceptable (<2 min for large files)
+
+**Signature:** _____________________  **Date:** _______________

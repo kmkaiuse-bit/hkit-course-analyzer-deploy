@@ -6,7 +6,7 @@
 const FileHandler = {
     // Supported file types (PDF only)
     supportedTypes: ['.pdf'],
-    maxFileSize: 50 * 1024 * 1024, // 50MB
+    maxFileSize: 20 * 1024 * 1024, // 20MB (Gemini API limit)
     uploadedFiles: [],
 
     /**
@@ -95,7 +95,13 @@ const FileHandler = {
 
         // Check file size
         if (file.size > this.maxFileSize) {
-            Utils.showError(`File too large: ${Utils.formatFileSize(file.size)}. Max size: ${Utils.formatFileSize(this.maxFileSize)}`);
+            const fileSize = Utils.formatFileSize(file.size);
+            const maxSize = Utils.formatFileSize(this.maxFileSize);
+            Utils.showError(
+                `PDF file "${file.name}" is too large (${fileSize}).\n\n` +
+                `Maximum file size: ${maxSize}\n\n` +
+                `Tip: Try compressing the PDF or splitting it into smaller files.`
+            );
             return false;
         }
 

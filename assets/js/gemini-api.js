@@ -321,15 +321,29 @@ IMPORTANT RULES:
                     console.log(`📊 Estimated base64: ${(estimatedBase64Size / 1024 / 1024).toFixed(2)}MB`);
                     console.log('🔄 Switching to direct Gemini API call to bypass Vercel limit...');
 
-                    // Check if user has API key in localStorage for direct call
-                    const apiKey = localStorage.getItem('geminiApiKey');
-                    if (!apiKey) {
+                    // Check for API key (priority: config file > localStorage > error)
+                    let apiKey = null;
+
+                    // 1. Check config file (YOUR key for all users)
+                    if (window.CLIENT_API_CONFIG && window.CLIENT_API_CONFIG.GEMINI_API_KEY) {
+                        apiKey = window.CLIENT_API_CONFIG.GEMINI_API_KEY;
+                        console.log('✅ Using API key from config file (shared key)');
+                    }
+                    // 2. Check localStorage (user's own key)
+                    else if (localStorage.getItem('geminiApiKey')) {
+                        apiKey = localStorage.getItem('geminiApiKey');
+                        console.log('✅ Using API key from localStorage (user key)');
+                    }
+                    // 3. No key available
+                    else {
                         throw new Error(
                             '⚠️ Large PDF detected (image-based)!\n\n' +
-                            'Vercel has a 4.5MB limit. To process this PDF, please:\n\n' +
-                            '1. Enter your Gemini API key in the "API Configuration" section above, OR\n' +
-                            '2. Use the local version: http://localhost:8000/local/enhanced.html (no limits)\n\n' +
-                            'Get a free API key at: https://aistudio.google.com/app/apikey'
+                            'Vercel has a 4.5MB limit. To process this PDF:\n\n' +
+                            'Option 1 (Recommended): Use local version (no limits)\n' +
+                            '   → http://localhost:8000/local/enhanced.html\n\n' +
+                            'Option 2: Enter your Gemini API key above\n' +
+                            '   → Get free key: https://aistudio.google.com/app/apikey\n\n' +
+                            'Option 3: Compress PDF to under 3MB'
                         );
                     }
 

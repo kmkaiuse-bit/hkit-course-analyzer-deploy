@@ -492,6 +492,9 @@ const FileHandler = {
                     <div class="header">
                         <h1>📄 Transcript Viewer</h1>
                         <p>Review uploaded transcript content</p>
+                        <div style="background: rgba(255, 255, 255, 0.2); padding: 8px 12px; border-radius: 6px; margin-top: 10px; font-size: 0.85rem;">
+                            💡 <strong>Tip:</strong> If you see a blank window or any issues, please close and reopen this viewer.
+                        </div>
                     </div>
                     <div id="tabContainer" class="file-tabs"></div>
                     <div id="contentContainer"></div>

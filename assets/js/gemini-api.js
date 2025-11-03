@@ -309,66 +309,60 @@ IMPORTANT RULES:
      */
     async callVercelAPI(prompt, files = []) {
         try {
+            // For image-based PDFs, check if we need to bypass Vercel
+            if (files.length > 0) {
+                const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
+                const estimatedBase64Size = totalSize * 1.33;
+                const vercelLimit = 4.5 * 1024 * 1024; // 4.5MB
 
-            // 构建请求数据
+                if (estimatedBase64Size > vercelLimit) {
+                    console.log('⚠️ PDF too large for Vercel (image-based PDF detected)');
+                    console.log(`📊 File size: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
+                    console.log(`📊 Estimated base64: ${(estimatedBase64Size / 1024 / 1024).toFixed(2)}MB`);
+                    console.log('🔄 Switching to direct Gemini API call to bypass Vercel limit...');
+
+                    // Check if user has API key in localStorage for direct call
+                    const apiKey = localStorage.getItem('geminiApiKey');
+                    if (!apiKey) {
+                        throw new Error(
+                            '⚠️ Large PDF detected (image-based)!\n\n' +
+                            'Vercel has a 4.5MB limit. To process this PDF, please:\n\n' +
+                            '1. Enter your Gemini API key in the "API Configuration" section above, OR\n' +
+                            '2. Use the local version: http://localhost:8000/local/enhanced.html (no limits)\n\n' +
+                            'Get a free API key at: https://aistudio.google.com/app/apikey'
+                        );
+                    }
+
+                    // Use direct API call to bypass Vercel
+                    return await this.makeDirectGeminiCall(prompt, files, apiKey);
+                }
+            }
+
+            // For small files or no files, use Vercel
+            console.log('📡 Using Vercel API (file size within limits)');
+
             const requestData = {
                 prompt: prompt,
-                model: 'gemini-2.5-pro',  // Use Pro for complex multi-course analysis with large output
-                maxTokens: 16384  // Increased output capacity
+                model: 'gemini-2.5-pro',
+                maxTokens: 16384
             };
 
-            // For Vercel: Extract text from PDFs instead of sending files to avoid 4.5MB payload limit
+            // Send files through Vercel (small enough to fit)
             if (files.length > 0) {
-                console.log('⚠️ Vercel has 4.5MB payload limit - extracting text from PDFs instead of sending files');
-
-                let extractedText = '';
+                requestData.files = [];
 
                 for (const fileObj of files) {
                     if (fileObj.file.type === 'application/pdf') {
-                        try {
-                            console.log(`📄 Extracting text from PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
+                        console.log(`Processing PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
+                        const arrayBuffer = await fileObj.file.arrayBuffer();
+                        const base64Data = this.arrayBufferToBase64(arrayBuffer);
 
-                            // Extract text using PDF.js (already loaded in HTML)
-                            if (typeof pdfjsLib === 'undefined') {
-                                throw new Error('PDF.js library not loaded. Please refresh the page.');
-                            }
-
-                            const arrayBuffer = await fileObj.file.arrayBuffer();
-                            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-
-                            console.log(`📄 PDF has ${pdf.numPages} pages`);
-
-                            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                                const page = await pdf.getPage(pageNum);
-                                const textContent = await page.getTextContent();
-
-                                console.log(`📄 Page ${pageNum}: Found ${textContent.items.length} text items`);
-
-                                // Extract text with better spacing
-                                const pageText = textContent.items
-                                    .map(item => item.str)
-                                    .filter(str => str.trim().length > 0) // Remove empty strings
-                                    .join(' ');
-
-                                extractedText += pageText + '\n\n';
-
-                                console.log(`📄 Page ${pageNum}: Extracted ${pageText.length} characters`);
-                            }
-
-                            console.log(`✅ Total extracted ${extractedText.length} characters from ${fileObj.name}`);
-
-                        } catch (error) {
-                            console.error('Error extracting text from PDF:', error);
-                            throw new Error(`Failed to extract text from PDF: ${fileObj.name} - ${error.message}`);
-                        }
+                        requestData.files.push({
+                            name: fileObj.name,
+                            mimeType: 'application/pdf',
+                            data: base64Data
+                        });
                     }
-                }
-
-                // Append extracted text to prompt instead of sending files
-                if (extractedText) {
-                    requestData.prompt = prompt + '\n\nEXTRACTED TRANSCRIPT CONTENT:\n' + extractedText;
-                    console.log(`📝 Added extracted text to prompt (${extractedText.length} chars)`);
-                    console.log(`💾 Payload size reduced from ~${Math.round(extractedText.length * 1.33 / 1024)}KB (base64) to ~${Math.round(extractedText.length / 1024)}KB (text)`);
                 }
             }
 

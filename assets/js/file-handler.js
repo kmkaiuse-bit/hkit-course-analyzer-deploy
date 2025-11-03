@@ -498,9 +498,34 @@ const FileHandler = {
                 </body>
                 </html>
             `);
-            
+
             popup.document.close();
-            
+
+            // Wait for PDF.js to be fully loaded in main window
+            // This ensures first-time clicks work properly
+            if (typeof window.pdfjsLib === 'undefined') {
+                // Show loading message while waiting
+                const contentContainer = popup.document.getElementById('contentContainer');
+                if (contentContainer) {
+                    contentContainer.innerHTML = '<div class="loading">⏳ Loading PDF library...</div>';
+                }
+
+                // Wait for PDF.js to load (max 5 seconds)
+                let attempts = 0;
+                while (typeof window.pdfjsLib === 'undefined' && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+
+                if (typeof window.pdfjsLib === 'undefined') {
+                    const contentContainer = popup.document.getElementById('contentContainer');
+                    if (contentContainer) {
+                        contentContainer.innerHTML = '<div class="error">PDF.js library failed to load. Please refresh the page and try again.</div>';
+                    }
+                    return;
+                }
+            }
+
             // Load and display files
             await this.populateTranscriptWindow(popup);
             

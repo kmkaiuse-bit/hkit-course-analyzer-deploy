@@ -27,33 +27,114 @@ Implement a learning database system that captures exemption decision patterns t
 
 ### 2.1 Database Design (HKIT-Centric)
 
+#### 2.1.1 Database Technology: SQLite
+
+**Recommendation: Use SQLite for solo-managed deployment**
+
+Benefits for single-administrator projects:
+- **Zero server management**: Single file database (`exemption_data.db`)
+- **Easy backups**: Simple file copy for backup/restore
+- **Portable**: Move file anywhere, works on any platform
+- **No credentials**: No complex authentication setup
+- **Full SQL power**: Complete SQL query support
+- **Easy migration**: Can upgrade to MySQL/PostgreSQL later if needed
+- **Built-in support**: Available in most frameworks by default
+
+File structure:
+```
+📁 Project Root
+├── 📄 exemption_data.db          # SQLite database file
+├── 📁 backups/
+│   ├── exemption_data_2025-01-15.db
+│   └── exemption_data_2025-02-01.db
+└── 📁 app/
+```
+
+#### 2.1.2 Database Schema
+
 ```sql
--- Single table structure for lean implementation
+-- Table 1: Learning Patterns (for AI improvement)
 CREATE TABLE exemption_patterns (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+
   -- Core relationship (HKIT course is primary)
   hkit_subject VARCHAR(20) NOT NULL,           -- e.g., "HD401"
   previous_subject VARCHAR(255) NOT NULL,      -- e.g., "Critical Thinking"
   previous_normalized VARCHAR(255) NOT NULL,   -- e.g., "critical_thinking"
-  
+
   -- Learning metrics
-  times_seen INT DEFAULT 1,                    -- Total occurrences
-  times_exempted INT DEFAULT 0,                -- Times exemption granted
-  times_rejected INT DEFAULT 0,                -- Times exemption denied
-  confidence DECIMAL(3,2) DEFAULT 0.00,        -- Calculated confidence score
-  
+  times_seen INTEGER DEFAULT 1,                -- Total occurrences
+  times_exempted INTEGER DEFAULT 0,            -- Times exemption granted
+  times_rejected INTEGER DEFAULT 0,            -- Times exemption denied
+  confidence REAL DEFAULT 0.00,                -- Calculated confidence score (0.00-1.00)
+
   -- Metadata
-  last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
   programme_context VARCHAR(50),               -- Optional: programme code
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
-  -- Indexes for performance
-  INDEX idx_hkit (hkit_subject),
-  INDEX idx_previous (previous_normalized),
-  INDEX idx_confidence (confidence),
-  UNIQUE KEY unique_pattern (hkit_subject, previous_normalized)
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  -- Constraint
+  UNIQUE(hkit_subject, previous_normalized)
 );
+
+-- Indexes for exemption_patterns
+CREATE INDEX idx_hkit ON exemption_patterns(hkit_subject);
+CREATE INDEX idx_previous ON exemption_patterns(previous_normalized);
+CREATE INDEX idx_confidence ON exemption_patterns(confidence);
+
+-- Table 2: Analysis Results (for record-keeping and review)
+CREATE TABLE analysis_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+  -- Session metadata
+  analysis_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+  programme_code VARCHAR(50) NOT NULL,
+  programme_name VARCHAR(255),
+
+  -- Optional tracking fields
+  student_id VARCHAR(100),                     -- Optional: student reference
+  application_reference VARCHAR(100),          -- Optional: application ID
+  academic_year VARCHAR(20),                   -- e.g., "2024/2025"
+
+  -- Analysis data (stored as JSON for flexibility)
+  transcript_subjects TEXT,                    -- JSON: All subjects from transcript
+  exemption_results TEXT,                      -- JSON: Complete exemption table
+
+  -- Summary statistics
+  total_subjects_analyzed INTEGER DEFAULT 0,
+  total_exemptions_granted INTEGER DEFAULT 0,
+  total_exemptions_rejected INTEGER DEFAULT 0,
+
+  -- Status and quality tracking
+  status VARCHAR(20) DEFAULT 'completed',      -- draft, completed, approved
+  ai_assisted BOOLEAN DEFAULT 1,               -- Was AI used for analysis
+  user_edited BOOLEAN DEFAULT 0,               -- Did user make manual changes
+  notes TEXT,                                  -- Optional notes/comments
+
+  -- Metadata
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for analysis_results
+CREATE INDEX idx_programme ON analysis_results(programme_code);
+CREATE INDEX idx_date ON analysis_results(analysis_date);
+CREATE INDEX idx_status ON analysis_results(status);
+CREATE INDEX idx_student ON analysis_results(student_id);
+CREATE INDEX idx_academic_year ON analysis_results(academic_year);
+
+-- Table 3: Audit Log (optional, for tracking changes)
+CREATE TABLE audit_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  table_name VARCHAR(50) NOT NULL,
+  record_id INTEGER NOT NULL,
+  action VARCHAR(20) NOT NULL,                 -- insert, update, delete
+  changed_data TEXT,                           -- JSON: What changed
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_audit_table ON audit_log(table_name, record_id);
+CREATE INDEX idx_audit_timestamp ON audit_log(timestamp);
 ```
 
 ### 2.2 System Components
@@ -247,16 +328,32 @@ function buildEnhancedPrompt(subjects, programme, patterns) {
 
 ##### 3.2.2 After User Saves (DATA RECORDING HAPPENS HERE)
 ```javascript
-async function saveAnalysisResults(results, userEdits) {
-  // Record all exemption decisions for learning
+async function saveAnalysisResults(results, userEdits, metadata) {
+  // STEP 1: Save complete analysis results to database
+  const analysisRecord = await saveAnalysisRecord({
+    programmeCode: metadata.programmeCode,
+    programmeName: metadata.programmeName,
+    transcriptSubjects: metadata.originalSubjects,
+    exemptionResults: results,
+    totalAnalyzed: results.length,
+    totalExempted: results.filter(r => r['Exemption Granted'] === 'Yes').length,
+    totalRejected: results.filter(r => r['Exemption Granted'] === 'No').length,
+    userEdited: userEdits && userEdits.size > 0,
+    studentId: metadata.studentId || null,
+    applicationRef: metadata.applicationRef || null,
+    academicYear: metadata.academicYear || getCurrentAcademicYear(),
+    notes: metadata.notes || null
+  });
+
+  // STEP 2: Record individual patterns for learning
   const recordingTasks = [];
-  
+
   for (const row of results) {
     const hkitSubject = row['Exempted HKIT Subject Code'];
     const previousSubject = row['Subject Name of Previous Studies'];
     const exemptionGranted = row['Exemption Granted'] === 'Yes';
     const wasEdited = userEdits && userEdits.has(row.id);
-    
+
     if (hkitSubject && previousSubject) {
       recordingTasks.push(
         recordExemptionPattern({
@@ -264,27 +361,67 @@ async function saveAnalysisResults(results, userEdits) {
           previous: previousSubject,
           exempted: exemptionGranted,
           wasUserEdit: wasEdited,
-          programme: row['Programme'] || null
+          programme: row['Programme'] || null,
+          analysisId: analysisRecord.id  // Link to analysis record
         })
       );
     }
   }
-  
+
   // Execute all recording tasks
   const recordingResults = await Promise.all(recordingTasks);
-  
+
   // Show feedback to user
   const successCount = recordingResults.filter(r => r.success).length;
   showNotification(
-    `✅ Saved! ${successCount} patterns learned for future analysis.`,
+    `✅ Saved! Analysis #${analysisRecord.id} recorded. ${successCount} patterns learned.`,
     'success'
   );
-  
+
   return {
     saved: true,
+    analysisId: analysisRecord.id,
     patternsLearned: successCount,
     timestamp: new Date().toISOString()
   };
+}
+
+// New function: Save complete analysis record
+async function saveAnalysisRecord(data) {
+  try {
+    const result = await db.query(`
+      INSERT INTO analysis_results (
+        programme_code, programme_name,
+        transcript_subjects, exemption_results,
+        total_subjects_analyzed, total_exemptions_granted,
+        total_exemptions_rejected, user_edited,
+        student_id, application_reference, academic_year, notes
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      data.programmeCode,
+      data.programmeName,
+      JSON.stringify(data.transcriptSubjects),
+      JSON.stringify(data.exemptionResults),
+      data.totalAnalyzed,
+      data.totalExempted,
+      data.totalRejected,
+      data.userEdited ? 1 : 0,
+      data.studentId,
+      data.applicationRef,
+      data.academicYear,
+      data.notes
+    ]);
+
+    return {
+      success: true,
+      id: result.insertId || result.lastID  // Works for both MySQL and SQLite
+    };
+
+  } catch (error) {
+    console.error('Failed to save analysis record:', error);
+    throw error;
+  }
 }
 
 async function recordExemptionPattern({hkit, previous, exempted, wasUserEdit, programme}) {
@@ -454,8 +591,13 @@ function calculateConfidence(timesExempted, timesRejected) {
 }
 ```
 
-### 5.3 API Endpoints (if needed)
+### 5.3 API Endpoints
+
 ```javascript
+// ========================================
+// LEARNING PATTERNS API
+// ========================================
+
 // GET /api/patterns/check
 // Check if patterns exist for given subjects
 {
@@ -483,6 +625,79 @@ function calculateConfidence(timesExempted, timesRejected) {
   averageConfidence: 0.82,
   recentActivity: {...}
 }
+
+// ========================================
+// ANALYSIS RESULTS API (NEW)
+// ========================================
+
+// POST /api/analysis/save
+// Save complete analysis result
+{
+  programmeCode: "BEng(CS)",
+  programmeName: "Bachelor of Engineering in Computer Science",
+  transcriptSubjects: ["Mathematics", "English", ...],
+  exemptionResults: [...],
+  studentId: "S12345678",  // optional
+  applicationRef: "APP-2025-001",  // optional
+  academicYear: "2024/2025",
+  notes: "Special consideration for..."  // optional
+}
+
+// GET /api/analysis/history?limit=20&offset=0
+// Get recent analysis history
+{
+  results: [
+    {
+      id: 123,
+      date: "2025-01-15T10:30:00Z",
+      programme: "BEng(CS)",
+      totalSubjects: 15,
+      exemptionsGranted: 8,
+      status: "completed"
+    }
+  ],
+  total: 245,
+  page: 1
+}
+
+// GET /api/analysis/:id
+// Get specific analysis details
+{
+  id: 123,
+  programmeCode: "BEng(CS)",
+  programmeName: "Bachelor of Engineering in Computer Science",
+  analysisDate: "2025-01-15T10:30:00Z",
+  transcriptSubjects: [...],
+  exemptionResults: [...],
+  summary: {
+    total: 15,
+    exempted: 8,
+    rejected: 7
+  }
+}
+
+// GET /api/analysis/search?programme=BEng&year=2024
+// Search analysis records
+{
+  filters: {
+    programme: "BEng(CS)",
+    academicYear: "2024/2025",
+    dateFrom: "2024-09-01",
+    dateTo: "2025-01-31",
+    status: "completed"
+  }
+}
+
+// DELETE /api/analysis/:id
+// Delete analysis record (soft delete)
+{
+  id: 123,
+  deleted: true
+}
+
+// GET /api/analysis/export/:id?format=json
+// Export specific analysis (json, csv, excel)
+// Returns downloadable file
 ```
 
 ---
@@ -541,12 +756,84 @@ function calculateConfidence(timesExempted, timesRejected) {
 - Programme context is optional
 - No transcript content stored
 
-### 7.3 Data Export/Import
+### 7.3 SQLite Backup Strategy
+
+**Automated Backup Implementation:**
+
 ```javascript
-// Export format (JSON)
+// Simple daily backup script
+const fs = require('fs');
+const path = require('path');
+
+function backupDatabase() {
+  const dbPath = './exemption_data.db';
+  const backupDir = './backups';
+  const date = new Date().toISOString().split('T')[0];
+  const backupPath = path.join(backupDir, `exemption_data_${date}.db`);
+
+  // Create backups directory if not exists
+  if (!fs.existsSync(backupDir)) {
+    fs.mkdirSync(backupDir, { recursive: true });
+  }
+
+  // Copy database file
+  fs.copyFileSync(dbPath, backupPath);
+  console.log(`✅ Backup created: ${backupPath}`);
+
+  // Optional: Clean up old backups (keep last 30 days)
+  cleanOldBackups(backupDir, 30);
+}
+
+function cleanOldBackups(backupDir, keepDays) {
+  const files = fs.readdirSync(backupDir);
+  const now = Date.now();
+  const maxAge = keepDays * 24 * 60 * 60 * 1000;
+
+  files.forEach(file => {
+    const filePath = path.join(backupDir, file);
+    const stats = fs.statSync(filePath);
+    const age = now - stats.mtime.getTime();
+
+    if (age > maxAge) {
+      fs.unlinkSync(filePath);
+      console.log(`🗑️  Deleted old backup: ${file}`);
+    }
+  });
+}
+
+// Run backup daily (add to cron job or task scheduler)
+// Linux/Mac cron: 0 2 * * * node backup-database.js
+// Windows Task Scheduler: Run daily at 2:00 AM
+backupDatabase();
+```
+
+**Manual Backup:**
+```bash
+# Simple file copy (Windows)
+copy exemption_data.db backups\exemption_data_%date:~-4,4%%date:~-10,2%%date:~-7,2%.db
+
+# Simple file copy (Linux/Mac)
+cp exemption_data.db backups/exemption_data_$(date +%Y%m%d).db
+```
+
+**Restore from Backup:**
+```bash
+# Windows
+copy backups\exemption_data_2025-01-15.db exemption_data.db
+
+# Linux/Mac
+cp backups/exemption_data_2025-01-15.db exemption_data.db
+```
+
+### 7.4 Data Export/Import
+
+#### 7.4.1 Pattern Export (JSON)
+```javascript
+// Export learning patterns for sharing/migration
 {
   "version": "1.0",
   "exported": "2025-09-11T10:30:00Z",
+  "type": "learning_patterns",
   "patterns": [
     {
       "hkit": "HD401",
@@ -557,6 +844,35 @@ function calculateConfidence(timesExempted, timesRejected) {
     }
   ]
 }
+```
+
+#### 7.4.2 Analysis Export (CSV)
+```javascript
+// Export analysis history as CSV
+async function exportAnalysisToCSV(analysisId) {
+  const analysis = await db.query(
+    'SELECT * FROM analysis_results WHERE id = ?',
+    [analysisId]
+  );
+
+  const results = JSON.parse(analysis.exemption_results);
+
+  const csvHeader = 'HKIT Code,HKIT Name,Previous Subject,Grade,Exempted,Confidence\n';
+  const csvRows = results.map(row =>
+    `"${row.hkit_code}","${row.hkit_name}","${row.previous}","${row.grade}","${row.exempted}","${row.confidence}"`
+  ).join('\n');
+
+  return csvHeader + csvRows;
+}
+```
+
+#### 7.4.3 Full Database Export (SQLite Dump)
+```bash
+# Export complete database to SQL file
+sqlite3 exemption_data.db .dump > exemption_data_export.sql
+
+# Import from SQL file
+sqlite3 new_exemption_data.db < exemption_data_export.sql
 ```
 
 ---
@@ -616,6 +932,8 @@ function calculateConfidence(timesExempted, timesRejected) {
 ## 11. Appendix
 
 ### A. Database Queries Reference
+
+#### A.1 Learning Patterns Queries
 ```sql
 -- Most common exemption patterns
 SELECT hkit_subject, previous_subject, confidence, times_seen
@@ -625,17 +943,116 @@ ORDER BY times_seen DESC
 LIMIT 100;
 
 -- Patterns for specific HKIT course
-SELECT previous_subject, confidence, 
-       CONCAT(times_exempted, '/', times_seen) as success_rate
+SELECT previous_subject, confidence,
+       (times_exempted || '/' || times_seen) as success_rate
 FROM exemption_patterns
 WHERE hkit_subject = 'HD401'
 ORDER BY confidence DESC;
 
--- Recent learning activity
+-- Recent learning activity (SQLite)
 SELECT DATE(last_updated) as date, COUNT(*) as patterns_updated
 FROM exemption_patterns
-WHERE last_updated > DATE_SUB(NOW(), INTERVAL 7 DAY)
+WHERE last_updated > datetime('now', '-7 days')
 GROUP BY DATE(last_updated);
+
+-- High confidence patterns by programme
+SELECT programme_context, hkit_subject, previous_subject, confidence
+FROM exemption_patterns
+WHERE confidence > 0.85 AND programme_context IS NOT NULL
+ORDER BY programme_context, confidence DESC;
+```
+
+#### A.2 Analysis Results Queries (NEW)
+```sql
+-- Recent analysis history
+SELECT id, analysis_date, programme_code,
+       total_subjects_analyzed, total_exemptions_granted,
+       status, user_edited
+FROM analysis_results
+ORDER BY analysis_date DESC
+LIMIT 20;
+
+-- Analysis by programme (with statistics)
+SELECT programme_code,
+       COUNT(*) as total_analyses,
+       AVG(total_exemptions_granted) as avg_exemptions,
+       AVG(CAST(total_exemptions_granted AS REAL) / total_subjects_analyzed) as avg_exemption_rate
+FROM analysis_results
+WHERE status = 'completed'
+GROUP BY programme_code
+ORDER BY total_analyses DESC;
+
+-- Find specific analysis by date range
+SELECT id, programme_code, analysis_date,
+       total_subjects_analyzed, total_exemptions_granted
+FROM analysis_results
+WHERE analysis_date >= '2025-01-01'
+  AND analysis_date < '2025-02-01'
+  AND programme_code = 'BEng(CS)'
+ORDER BY analysis_date DESC;
+
+-- Get complete analysis with details
+SELECT id, analysis_date, programme_name,
+       transcript_subjects, exemption_results,
+       total_exemptions_granted, notes
+FROM analysis_results
+WHERE id = ?;
+
+-- Monthly analysis volume
+SELECT strftime('%Y-%m', analysis_date) as month,
+       COUNT(*) as analyses_count,
+       SUM(total_subjects_analyzed) as total_subjects,
+       SUM(total_exemptions_granted) as total_exemptions
+FROM analysis_results
+GROUP BY strftime('%Y-%m', analysis_date)
+ORDER BY month DESC;
+
+-- User-edited analyses (quality check)
+SELECT id, programme_code, analysis_date,
+       total_subjects_analyzed, user_edited
+FROM analysis_results
+WHERE user_edited = 1
+ORDER BY analysis_date DESC;
+
+-- Search by student ID or application reference
+SELECT id, analysis_date, programme_code,
+       student_id, application_reference,
+       total_exemptions_granted
+FROM analysis_results
+WHERE student_id = ? OR application_reference = ?;
+
+-- Academic year summary
+SELECT academic_year,
+       programme_code,
+       COUNT(*) as total_analyses,
+       AVG(total_exemptions_granted) as avg_exemptions
+FROM analysis_results
+WHERE academic_year = '2024/2025'
+GROUP BY academic_year, programme_code;
+```
+
+#### A.3 Combined Queries (Learning + Analysis)
+```sql
+-- How patterns improved over time
+SELECT ep.hkit_subject, ep.previous_subject, ep.confidence,
+       COUNT(ar.id) as times_used_in_analysis
+FROM exemption_patterns ep
+LEFT JOIN analysis_results ar ON
+  json_extract(ar.exemption_results, '$') LIKE '%' || ep.hkit_subject || '%'
+WHERE ep.confidence > 0.7
+GROUP BY ep.hkit_subject, ep.previous_subject
+ORDER BY times_used_in_analysis DESC;
+
+-- Programme-specific pattern effectiveness
+SELECT ar.programme_code,
+       ep.hkit_subject,
+       ep.confidence,
+       COUNT(ar.id) as analyses_count
+FROM exemption_patterns ep
+JOIN analysis_results ar ON ar.programme_code = ep.programme_context
+WHERE ep.confidence > 0.8
+GROUP BY ar.programme_code, ep.hkit_subject
+ORDER BY analyses_count DESC;
 ```
 
 ### B. Sample Learning Context
@@ -662,7 +1079,16 @@ GROUP BY DATE(last_updated);
 ---
 
 ## Document Version
-- **Version**: 1.0
-- **Date**: 2025-09-11
+- **Version**: 2.0
+- **Date**: 2025-11-03
 - **Author**: HKIT Course Analyzer Team
 - **Status**: Ready for Implementation
+- **Changes in v2.0**:
+  - Added SQLite database recommendation for solo-managed deployment
+  - Added `analysis_results` table for storing complete analysis sessions
+  - Added `audit_log` table for change tracking (optional)
+  - Updated data persistence logic to save both patterns AND full analysis
+  - Added comprehensive API endpoints for analysis history management
+  - Added SQLite backup/restore procedures
+  - Added database query examples for analysis results
+  - Converted SQL syntax from MySQL to SQLite (INTEGER PRIMARY KEY AUTOINCREMENT, REAL, etc.)

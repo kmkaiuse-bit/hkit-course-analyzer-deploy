@@ -122,23 +122,50 @@ const EditModeController = {
         const resetBtn = document.getElementById('resetBtn');
         const analyzeBtn = document.getElementById('analyzeBtn');
         const studyPlanBtn = document.getElementById('generateStudyPlanBtn');
+        const saveToDbBtn = document.getElementById('saveToDbBtn');
+
+        // Floating button counterparts
+        const floatingEditBtn = document.getElementById('floatingEditBtn');
+        const floatingSaveBtn = document.getElementById('floatingSaveBtn');
+        const floatingCancelBtn = document.getElementById('floatingCancelBtn');
+        const floatingResetBtn = document.getElementById('floatingResetBtn');
+        const floatingStudyPlanBtn = document.getElementById('floatingStudyPlanBtn');
+        const floatingSaveToDbBtn = document.getElementById('floatingSaveToDbBtn');
 
         if (isEditMode) {
-            // 編輯模式：隱藏編輯、重置和排課，顯示保存和取消
+            // 編輯模式：隱藏編輯、重置、排課和資料庫保存，顯示保存和取消
             if (editBtn) editBtn.style.display = 'none';
             if (resetBtn) resetBtn.style.display = 'none';
             if (studyPlanBtn) studyPlanBtn.style.display = 'none';
+            if (saveToDbBtn) saveToDbBtn.style.display = 'none';
             if (saveBtn) saveBtn.style.display = 'inline-block';
             if (cancelBtn) cancelBtn.style.display = 'inline-block';
             if (analyzeBtn) analyzeBtn.disabled = true;
+
+            // Floating buttons
+            if (floatingEditBtn) floatingEditBtn.style.display = 'none';
+            if (floatingResetBtn) floatingResetBtn.style.display = 'none';
+            if (floatingStudyPlanBtn) floatingStudyPlanBtn.style.display = 'none';
+            if (floatingSaveToDbBtn) floatingSaveToDbBtn.style.display = 'none';
+            if (floatingSaveBtn) floatingSaveBtn.style.display = 'inline-block';
+            if (floatingCancelBtn) floatingCancelBtn.style.display = 'inline-block';
         } else {
-            // 檢視模式：顯示編輯、重置和排課，隱藏保存和取消
+            // 檢視模式：顯示編輯、重置、排課和資料庫保存，隱藏保存和取消
             if (editBtn) editBtn.style.display = 'inline-block';
             if (resetBtn) resetBtn.style.display = 'inline-block';
             if (studyPlanBtn) studyPlanBtn.style.display = 'inline-block';
+            if (saveToDbBtn) saveToDbBtn.style.display = 'inline-block';
             if (saveBtn) saveBtn.style.display = 'none';
             if (cancelBtn) cancelBtn.style.display = 'none';
             if (analyzeBtn) analyzeBtn.disabled = false;
+
+            // Floating buttons
+            if (floatingEditBtn) floatingEditBtn.style.display = 'inline-block';
+            if (floatingResetBtn) floatingResetBtn.style.display = 'inline-block';
+            if (floatingStudyPlanBtn) floatingStudyPlanBtn.style.display = 'inline-block';
+            if (floatingSaveToDbBtn) floatingSaveToDbBtn.style.display = 'inline-block';
+            if (floatingSaveBtn) floatingSaveBtn.style.display = 'none';
+            if (floatingCancelBtn) floatingCancelBtn.style.display = 'none';
         }
     },
 

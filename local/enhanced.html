@@ -1134,78 +1134,104 @@ ${recentActivity.slice(0, 5)
             // Declare variables at function level for finally block access
             let originalMainText = '💾 Save to Database';
             let originalFloatingText = '💾 Save DB';
-            
+
             try {
-                // Get current results
+                // Get current results (including user edits)
                 const currentResults = EditModeController.getCurrentData() || [];
                 if (currentResults.length === 0) {
                     alert('🔍 No analysis results available to save.\n\nPlease analyze a transcript first.');
                     return;
                 }
-                
+
                 // Filter out records with empty previous subjects
-                const validResults = currentResults.filter(result => 
-                    result['Subject Name of Previous Studies'] && 
+                const validResults = currentResults.filter(result =>
+                    result['Subject Name of Previous Studies'] &&
                     result['Subject Name of Previous Studies'].trim() !== ''
                 );
-                
+
                 const invalidCount = currentResults.length - validResults.length;
-                
-                // Show preview confirmation
-                const confirmMessage = 
+                const exemptedCount = validResults.filter(r => r['Exemption Granted'] === 'TRUE').length;
+                const rejectedCount = validResults.length - exemptedCount;
+
+                // Show preview confirmation with cloud storage info
+                const confirmMessage =
                     `🔍 Database Save Preview:\n\n` +
                     `✅ Valid patterns to save: ${validResults.length}\n` +
+                    `   ├─ 🟢 Exemptions: ${exemptedCount}\n` +
+                    `   └─ 🔴 Rejections: ${rejectedCount}\n` +
                     `⚠️ Records skipped (no previous subject): ${invalidCount}\n` +
-                    `\n📊 Sample valid patterns:\n` +
-                    validResults.slice(0, 3).map(r => 
-                        `• ${r['HKIT Subject Code']}: ${r['Subject Name of Previous Studies']}`
+                    `\n📊 Sample patterns:\n` +
+                    validResults.slice(0, 3).map(r =>
+                        `• ${r['HKIT Subject Code']}: ${r['Subject Name of Previous Studies']} → ${r['Exemption Granted']}`
                     ).join('\n') +
                     (validResults.length > 3 ? `\n... and ${validResults.length - 3} more` : '') +
-                    `\n\nContinue with database save?`;
-                
+                    `\n\n☁️ Will save to: Supabase Cloud Database` +
+                    `\n\n💡 This will help improve future exemption predictions!\n\n` +
+                    `Continue with database save?`;
+
                 if (!confirm(confirmMessage)) {
                     return;
                 }
-                
-                // Check if learning client is available
-                if (!window.learningClient) {
-                    alert('❌ Learning system not available.\n\nPlease refresh the page and ensure the learning server is running.');
+
+                // Check if StorageManager is available
+                if (typeof StorageManager === 'undefined') {
+                    alert('❌ Storage system not available.\n\nPlease refresh the page and try again.');
                     return;
                 }
-                
+
                 // Change button text to show loading
                 const saveBtn = document.getElementById('saveToDbBtn');
                 const floatingSaveBtn = document.getElementById('floatingSaveToDbBtn');
-                
+
                 // Store original text (now using function-level variables)
                 originalMainText = saveBtn?.textContent || '💾 Save to Database';
                 originalFloatingText = floatingSaveBtn?.textContent || '💾 Save DB';
-                
+
                 if (saveBtn) saveBtn.textContent = '⏳ Saving...';
                 if (floatingSaveBtn) floatingSaveBtn.textContent = '⏳ Saving...';
-                
-                // Save to database
-                const programmeContext = (typeof StudentInfoManager !== 'undefined') ? 
-                    StudentInfoManager.getStudentInfo()?.appliedProgramme || 'unknown' : 'unknown';
-                
-                const response = await window.learningClient.recordAnalysisResults(validResults, programmeContext);
-                
+
+                // Get student info for context
+                const studentInfo = (typeof StudentInfoManager !== 'undefined') ?
+                    StudentInfoManager.getStudentInfo() || {} : {};
+
+                // Save to database using StorageManager (Supabase + fallbacks)
+                await StorageManager.recordAnalysisResults(validResults, studentInfo);
+
+                // Determine where data was saved
+                let storageLocation = '📦 IndexedDB (Browser)';
+                if (StorageManager.supabaseClient && StorageManager.supabaseClient.isConnected) {
+                    storageLocation = '☁️ Supabase Cloud Database';
+                } else if (window.learningClient) {
+                    storageLocation = '🏥 PostgreSQL (localhost:3001)';
+                }
+
                 // Show success message
-                const successMessage = 
+                const successMessage =
                     `✅ Database Save Successful!\n\n` +
-                    `📊 Patterns saved: ${response?.recordedPatterns || validResults.length}\n` +
-                    `🏥 Server: PostgreSQL localhost:3001\n` +
+                    `📊 Patterns saved: ${validResults.length}\n` +
+                    `   ├─ 🟢 Exemptions: ${exemptedCount}\n` +
+                    `   └─ 🔴 Rejections: ${rejectedCount}\n` +
+                    `💾 Storage: ${storageLocation}\n` +
                     `📅 Timestamp: ${new Date().toLocaleString()}\n\n` +
-                    `Your analysis results are now contributing to the time-weighted learning system!`;
-                
+                    `Your analysis results are now contributing to the learning system!`;
+
                 alert(successMessage);
-                
+
                 // Update learning status
                 checkLearningSystemStatus();
-                
+
+                // Hide the save button after successful save
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (floatingSaveBtn) floatingSaveBtn.style.display = 'none';
+
+                // Show notification
+                if (typeof NotificationManager !== 'undefined') {
+                    NotificationManager.success('☁️ Saved to cloud database!', 3000);
+                }
+
             } catch (error) {
                 console.error('Database save error:', error);
-                alert(`❌ Database Save Failed\n\nError: ${error.message}\n\nPlease check that the learning server is running and try again.`);
+                alert(`❌ Database Save Failed\n\nError: ${error.message}\n\nPlease try again or check the console for details.`);
             } finally {
                 // Reset button text
                 const saveBtn = document.getElementById('saveToDbBtn');

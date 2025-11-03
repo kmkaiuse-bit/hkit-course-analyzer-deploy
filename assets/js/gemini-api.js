@@ -283,9 +283,17 @@ IMPORTANT RULES:
                     if (fileObj.file.size > 20 * 1024 * 1024) {
                         throw new Error(`PDF file too large: ${fileObj.name}. Maximum size is 20MB.`);
                     }
-                    
-                    const arrayBuffer = await fileObj.file.arrayBuffer();
-                    const base64Data = this.arrayBufferToBase64(arrayBuffer);
+
+                    // Use cached arrayBuffer if available, otherwise read and cache it
+                    if (!fileObj.arrayBuffer) {
+                        console.log(`Reading ArrayBuffer from File object: ${fileObj.name}`);
+                        fileObj.arrayBuffer = await fileObj.file.arrayBuffer();
+                        console.log(`ArrayBuffer cached for: ${fileObj.name}`);
+                    } else {
+                        console.log(`Using cached ArrayBuffer for: ${fileObj.name}`);
+                    }
+
+                    const base64Data = this.arrayBufferToBase64(fileObj.arrayBuffer);
                     
                     processedFiles.push({
                         name: fileObj.name,

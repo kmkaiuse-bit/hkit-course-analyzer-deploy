@@ -628,9 +628,19 @@ const FileHandler = {
             // Set worker source
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-            // Read file as array buffer
+            // Read file as array buffer (cache it for reuse)
             console.log('Reading file as array buffer...');
-            const arrayBuffer = await fileObj.file.arrayBuffer();
+
+            // Use cached arrayBuffer if available, otherwise read and cache it
+            if (!fileObj.arrayBuffer) {
+                console.log('Reading ArrayBuffer from File object for the first time...');
+                fileObj.arrayBuffer = await fileObj.file.arrayBuffer();
+                console.log('ArrayBuffer cached for future use');
+            } else {
+                console.log('Using cached ArrayBuffer');
+            }
+
+            const arrayBuffer = fileObj.arrayBuffer;
             console.log('Array buffer size:', arrayBuffer.byteLength);
 
             // Load PDF

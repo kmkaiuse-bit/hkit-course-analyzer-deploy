@@ -9,6 +9,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
         // Initialize PDF.js worker when the page loads
         if (typeof pdfjsLib !== 'undefined') {
@@ -1630,21 +1634,28 @@ ${recentActivity.slice(0, 5)
             const analysisSection = document.querySelector('.analysis-section');
             let isFloatingVisible = false;
             
-            // Scroll detection
+            // Scroll detection (Modified: Always show if results are present)
             function handleScroll() {
                 if (!analysisSection) return;
-                
-                const analysisRect = analysisSection.getBoundingClientRect();
-                const shouldShow = analysisRect.top < -100; // Show when analysis section is 100px above viewport
-                
-                if (shouldShow && !isFloatingVisible) {
-                    floatingControls.style.display = 'block';
-                    setTimeout(() => floatingControls.classList.add('show'), 10);
-                    isFloatingVisible = true;
-                } else if (!shouldShow && isFloatingVisible) {
-                    floatingControls.classList.remove('show');
-                    setTimeout(() => floatingControls.style.display = 'none', 300);
-                    isFloatingVisible = false;
+
+                // Check if results section is visible
+                const resultsSection = document.getElementById('resultsSection');
+                const hasResults = resultsSection && resultsSection.style.display !== 'none';
+
+                if (hasResults) {
+                    // Always show floating controls when results are displayed
+                    if (!isFloatingVisible) {
+                        floatingControls.style.display = 'block';
+                        setTimeout(() => floatingControls.classList.add('show'), 10);
+                        isFloatingVisible = true;
+                    }
+                } else {
+                    // Hide when no results
+                    if (isFloatingVisible) {
+                        floatingControls.classList.remove('show');
+                        setTimeout(() => floatingControls.style.display = 'none', 300);
+                        isFloatingVisible = false;
+                    }
                 }
             }
             
@@ -1790,6 +1801,11 @@ ${recentActivity.slice(0, 5)
 
     <!-- JavaScript Files (Same as production but with local API config) -->
     <script src="config/api-config-local.js"></script>
+
+    <!-- Supabase Cloud Database Integration -->
+    <script src="config/supabase-config.js"></script>
+    <script src="assets/js/supabase-client.js"></script>
+
     <script src="assets/js/learning-client.js"></script>
     <script src="assets/js/modules/notificationManager.js"></script>
     <script src="assets/js/modules/subjectCollector.js"></script>
@@ -1814,5 +1830,43 @@ ${recentActivity.slice(0, 5)
     <script src="assets/js/results-display.js"></script>
     <script src="assets/js/export-manager.js"></script>
     <script src="assets/js/app.js"></script>
+
+    <!-- Initialize Supabase Connection -->
+    <script>
+        // Initialize Supabase when page loads
+        (async function() {
+            try {
+                const config = SUPABASE_CONFIG.getConfig();
+
+                if (config.enabled) {
+                    console.log('🔄 Initializing Supabase connection...');
+                    const success = await SupabaseClient.init(config.url, config.anonKey);
+
+                    if (success) {
+                        console.log('✅ Cloud database connected - data will sync to Supabase');
+
+                        // Update StorageManager to use Supabase
+                        if (typeof StorageManager !== 'undefined' && StorageManager.setSupabaseClient) {
+                            StorageManager.setSupabaseClient(SupabaseClient);
+                        }
+
+                        // Show connection status
+                        if (typeof NotificationManager !== 'undefined') {
+                            NotificationManager.success('☁️ Cloud database connected!', 3000);
+                        }
+                    } else {
+                        console.warn('⚠️ Could not connect to Supabase - using local storage only');
+                        if (typeof NotificationManager !== 'undefined') {
+                            NotificationManager.info('📱 Running in offline mode (local storage only)', 3000);
+                        }
+                    }
+                } else {
+                    console.log('📱 Supabase disabled or no credentials - using local storage only');
+                }
+            } catch (error) {
+                console.error('❌ Supabase initialization failed:', error);
+            }
+        })();
+    </script>
 </body>
 </html>

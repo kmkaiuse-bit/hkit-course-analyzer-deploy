@@ -2,19 +2,30 @@
  * Storage Manager Module
  * Manages persistent storage using IndexedDB for exemption patterns and historical data
  * Provides learning capabilities for improved accuracy over time
+ *
+ * NEW: Supports cloud sync with Supabase when available
  */
 
 const StorageManager = {
     dbName: 'HKITExemptionDB',
     dbVersion: 1,
     db: null,
-    
+    supabaseClient: null,  // NEW: Cloud database client
+
     // Database schema
     stores: {
         exemptionPatterns: 'exemptionPatterns',
         userDecisions: 'userDecisions',
         subjectMappings: 'subjectMappings',
         settings: 'settings'
+    },
+
+    /**
+     * Set Supabase client for cloud sync
+     */
+    setSupabaseClient(client) {
+        this.supabaseClient = client;
+        console.log('✅ StorageManager: Supabase client enabled');
     },
 
     /**
@@ -285,7 +296,51 @@ const StorageManager = {
     async recordAnalysisResults(results, studentInfo = {}) {
         if (!Array.isArray(results)) return;
 
-        // Use learning client if available (PostgreSQL), otherwise fallback to local storage
+        // Priority 1: Use Supabase cloud database if available
+        if (this.supabaseClient && this.supabaseClient.isConnected) {
+            try {
+                // Prepare batch patterns for Supabase
+                const patterns = results.map(result => ({
+                    previousSubject: result['Subject Name of Previous Studies'],
+                    hkitSubject: result['HKIT Subject Code'],
+                    exempted: result['Exemption Granted'] === 'TRUE',
+                    source: 'api',
+                    confidence: 0.6
+                })).filter(p => p.previousSubject && p.hkitSubject);
+
+                // Save patterns to Supabase
+                await this.supabaseClient.recordBatchPatterns(patterns);
+
+                // Save complete analysis result
+                const exemptionCount = results.filter(r => r['Exemption Granted'] === 'TRUE').length;
+                await this.supabaseClient.saveAnalysisResult({
+                    programmeCode: studentInfo.programmeCode || null,
+                    programmeName: studentInfo.programmeName || null,
+                    transcriptSubjects: results.map(r => r['Subject Name of Previous Studies']),
+                    exemptionResults: results,
+                    totalAnalyzed: results.length,
+                    totalExempted: exemptionCount,
+                    totalRejected: results.length - exemptionCount,
+                    userEdited: false,
+                    studentId: studentInfo.studentId || null,
+                    applicationRef: studentInfo.applicationNumber || null,
+                    academicYear: studentInfo.academicYear || null
+                });
+
+                console.log('✅ Saved analysis results to Supabase cloud database');
+
+                // Debug logging
+                if (typeof DebugMonitor !== 'undefined') {
+                    DebugMonitor.logActivity(`☁️ Saved to cloud: ${results.length} results (${exemptionCount} exemptions)`, 'success');
+                }
+
+                return; // Success - no need for fallback
+            } catch (error) {
+                console.warn('⚠️ Supabase save failed, falling back to next option:', error);
+            }
+        }
+
+        // Priority 2: Use learning client if available (PostgreSQL), otherwise fallback to local storage
         if (typeof window !== 'undefined' && window.learningClient) {
             try {
                 await window.learningClient.recordAnalysisResults(results, studentInfo);
@@ -296,7 +351,15 @@ const StorageManager = {
             }
         }
 
-        // Fallback to local IndexedDB storage
+        // Priority 3: Fallback to local IndexedDB storage
+        await this.recordToIndexedDB(results, studentInfo);
+    },
+
+    /**
+     * Record analysis results to local IndexedDB
+     * @private
+     */
+    async recordToIndexedDB(results, studentInfo = {}) {
         const recordPromises = results.map(result => {
             const previousSubject = result['Subject Name of Previous Studies'];
             const hkitSubject = result['HKIT Subject Code'];
@@ -304,10 +367,10 @@ const StorageManager = {
 
             if (previousSubject && hkitSubject) {
                 return this.recordExemptionPattern(
-                    previousSubject, 
-                    hkitSubject, 
-                    exempted, 
-                    'api', 
+                    previousSubject,
+                    hkitSubject,
+                    exempted,
+                    'api',
                     0.6 // API results get moderate confidence
                 );
             }

@@ -1,0 +1,119 @@
+# Supabase 自動備份工作流程
+# 每天凌晨 2:00 (UTC) 自動備份數據庫 = 香港時間上午 10:00
+# 免費使用 GitHub Actions
+
+name: Supabase Database Backup
+
+on:
+  # 每天自動運行 (UTC 時間 02:00 = 香港時間 10:00)
+  schedule:
+    - cron: '0 2 * * *'
+
+  # 允許手動觸發備份
+  workflow_dispatch:
+
+  # 每次推送到 main 分支時也備份 (可選)
+  # push:
+  #   branches: [main]
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 步驟 1: 檢出代碼
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步驟 2: 設置 Supabase CLI
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # 步驟 3: 創建備份目錄
+      - name: Create backup directory
+        run: |
+          mkdir -p backups
+          echo "Backup directory created"
+
+      # 步驟 4: 備份數據庫 (完整備份)
+      - name: Backup Supabase Database
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          # 生成時間戳
+          TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+          BACKUP_FILE="backups/supabase_backup_${TIMESTAMP}.sql"
+
+          echo "Creating backup: ${BACKUP_FILE}"
+
+          # 使用 Supabase CLI 備份
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "$BACKUP_FILE"
+
+          # 檢查文件大小
+          if [ -f "$BACKUP_FILE" ]; then
+            SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
+            echo "Backup created successfully: ${SIZE}"
+            echo "BACKUP_FILE=${BACKUP_FILE}" >> $GITHUB_ENV
+            echo "BACKUP_SIZE=${SIZE}" >> $GITHUB_ENV
+          else
+            echo "Error: Backup file not created"
+            exit 1
+          fi
+
+      # 步驟 5: 壓縮備份 (節省空間)
+      - name: Compress backup
+        run: |
+          gzip -9 "$BACKUP_FILE"
+          echo "Backup compressed: ${BACKUP_FILE}.gz"
+          echo "BACKUP_FILE_GZ=${BACKUP_FILE}.gz" >> $GITHUB_ENV
+
+      # 步驟 6: 上傳備份為 Artifact (保留 30 天)
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_number }}
+          path: ${{ env.BACKUP_FILE_GZ }}
+          retention-days: 30
+
+      # 步驟 7: 提交備份到 Git (可選 - 僅保留最近 7 天)
+      - name: Commit backup to repository
+        run: |
+          # 配置 Git
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # 只保留最近 7 天的備份
+          find backups -name "*.sql.gz" -mtime +7 -delete
+
+          # 添加新備份
+          git add backups/*.gz
+
+          # 提交 (如果有變化)
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+            git commit -m "chore: auto backup Supabase database - ${TIMESTAMP}"
+            git push
+          fi
+
+      # 步驟 8: 發送通知 (成功)
+      - name: Backup summary
+        if: success()
+        run: |
+          echo "✅ Backup completed successfully!"
+          echo "📁 File: ${{ env.BACKUP_FILE_GZ }}"
+          echo "📊 Size: ${{ env.BACKUP_SIZE }}"
+          echo "🕐 Time: $(date)"
+          echo "🔗 Download: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      # 步驟 9: 發送通知 (失敗)
+      - name: Backup failed notification
+        if: failure()
+        run: |
+          echo "❌ Backup failed!"
+          echo "Please check the logs for details"
+          echo "🔗 Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

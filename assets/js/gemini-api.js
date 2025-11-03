@@ -347,8 +347,28 @@ IMPORTANT RULES:
                         );
                     }
 
-                    // Use direct API call to bypass Vercel
-                    return await this.makeDirectGeminiCall(prompt, files, apiKey);
+                    // Convert files to base64 format for direct API call
+                    console.log('📄 Converting PDFs to base64 for direct API...');
+                    const base64Files = [];
+
+                    for (const fileObj of files) {
+                        if (fileObj.file.type === 'application/pdf') {
+                            console.log(`📄 Processing: ${fileObj.name}`);
+                            const arrayBuffer = await fileObj.file.arrayBuffer();
+                            const base64Data = this.arrayBufferToBase64(arrayBuffer);
+
+                            base64Files.push({
+                                name: fileObj.name,
+                                mimeType: 'application/pdf',
+                                data: base64Data
+                            });
+
+                            console.log(`✅ Converted ${fileObj.name} to base64`);
+                        }
+                    }
+
+                    // Use direct API call to bypass Vercel (with proper base64 format)
+                    return await this.makeDirectGeminiCall(prompt, base64Files, apiKey);
                 }
             }
 

@@ -71,9 +71,9 @@ const AdvancedExporter = {
 
             // 整合學生資訊到每一行
             const integratedData = currentData.map(row => ({
-                'Student Name': studentInfo.name || '',
-                'Application Number': studentInfo.applicationNumber || '',
-                'Applied Programme': studentInfo.appliedProgramme || '',
+                'Student Name': studentInfo.name || '未填寫',
+                'Application Number': studentInfo.applicationNumber || '未填寫',
+                'Applied Programme': studentInfo.appliedProgramme || '未填寫',
                 ...row
             }));
 
@@ -137,10 +137,10 @@ const AdvancedExporter = {
             const ws = {};
             
             // 學生資訊
-            const studentName = studentInfo.name || '';
-            const applicationNo = studentInfo.applicationNumber || '';
-            const appliedProgramme = studentInfo.appliedProgramme ?
-                studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' : '';
+            const studentName = studentInfo.name || '未填寫';
+            const applicationNo = studentInfo.applicationNumber || '未填寫';
+            const appliedProgramme = studentInfo.appliedProgramme ? 
+                studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' : '未填寫';
             
             // Get intake year from UI, fallback to current year
             const intakeYearInput = document.getElementById('intakeYear');
@@ -286,11 +286,11 @@ const AdvancedExporter = {
             const printWindow = window.open('', '_blank', 'width=210mm,height=297mm');
             
             // 學生資訊
-            const studentName = studentInfo.name || '';
-            const applicationNo = studentInfo.applicationNumber || '';
-            const appliedProgrammePdf = (studentInfo.appliedProgramme && studentInfo.appliedProgramme.trim()) ?
-                studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' :
-                (programme.name || '');
+            const studentName = studentInfo.name || '未填寫';
+            const applicationNo = studentInfo.applicationNumber || '未填寫';
+            const appliedProgrammePdf = (studentInfo.appliedProgramme && studentInfo.appliedProgramme.trim()) ? 
+                studentInfo.appliedProgramme.replace('Higher Diploma in ', '') + ' Stream' : 
+                (programme.name || '未填寫');
             
             // Get intake year from UI, fallback to current year
             const intakeYearInput = document.getElementById('intakeYear');

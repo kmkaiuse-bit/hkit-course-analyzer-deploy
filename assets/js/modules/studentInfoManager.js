@@ -250,7 +250,14 @@ const StudentInfoManager = {
             
             // 首先同步當前選中的課程
             this.syncCurrentProgramme();
-
+            
+            // 預填一些測試資料（可選）
+            const studentName = document.getElementById('studentName');
+            const applicationNumber = document.getElementById('applicationNumber');
+            
+            if (studentName && !studentName.value) studentName.value = 'Steven Kok';
+            if (applicationNumber && !applicationNumber.value) applicationNumber.value = 'APP2024001';
+            
             // 驗證狀態
             this.validateStudentInfo();
         }

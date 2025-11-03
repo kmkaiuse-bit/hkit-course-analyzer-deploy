@@ -309,7 +309,7 @@ IMPORTANT RULES:
      */
     async callVercelAPI(prompt, files = []) {
         try {
-            
+
             // 构建请求数据
             const requestData = {
                 prompt: prompt,
@@ -317,35 +317,48 @@ IMPORTANT RULES:
                 maxTokens: 16384  // Increased output capacity
             };
 
-            // 如果有PDF文件，处理成base64
+            // For Vercel: Extract text from PDFs instead of sending files to avoid 4.5MB payload limit
             if (files.length > 0) {
-                requestData.files = [];
-                
+                console.log('⚠️ Vercel has 4.5MB payload limit - extracting text from PDFs instead of sending files');
+
+                let extractedText = '';
+
                 for (const fileObj of files) {
                     if (fileObj.file.type === 'application/pdf') {
                         try {
-                            console.log(`Processing PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
-                            
-                            // Check file size limit (Gemini has ~20MB limit for files)
-                            if (fileObj.file.size > 20 * 1024 * 1024) {
-                                throw new Error(`PDF file too large: ${fileObj.name}. Maximum size is 20MB.`);
+                            console.log(`📄 Extracting text from PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
+
+                            // Extract text using PDF.js (already loaded in HTML)
+                            if (typeof pdfjsLib === 'undefined') {
+                                throw new Error('PDF.js library not loaded. Please refresh the page.');
                             }
-                            
+
                             const arrayBuffer = await fileObj.file.arrayBuffer();
-                            const base64Data = this.arrayBufferToBase64(arrayBuffer);
-                            
-                            requestData.files.push({
-                                name: fileObj.name,
-                                mimeType: 'application/pdf',
-                                data: base64Data
-                            });
-                            
-                            console.log(`✅ PDF processed successfully: ${fileObj.name}`);
+                            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+
+                            console.log(`📄 PDF has ${pdf.numPages} pages`);
+
+                            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                                const page = await pdf.getPage(pageNum);
+                                const textContent = await page.getTextContent();
+                                const pageText = textContent.items.map(item => item.str).join(' ');
+                                extractedText += pageText + '\n';
+                            }
+
+                            console.log(`✅ Extracted ${extractedText.length} characters from ${fileObj.name}`);
+
                         } catch (error) {
-                            console.error('Error processing PDF file:', error);
-                            throw new Error(`Failed to process PDF file: ${fileObj.name} - ${error.message}`);
+                            console.error('Error extracting text from PDF:', error);
+                            throw new Error(`Failed to extract text from PDF: ${fileObj.name} - ${error.message}`);
                         }
                     }
+                }
+
+                // Append extracted text to prompt instead of sending files
+                if (extractedText) {
+                    requestData.prompt = prompt + '\n\nEXTRACTED TRANSCRIPT CONTENT:\n' + extractedText;
+                    console.log(`📝 Added extracted text to prompt (${extractedText.length} chars)`);
+                    console.log(`💾 Payload size reduced from ~${Math.round(extractedText.length * 1.33 / 1024)}KB (base64) to ~${Math.round(extractedText.length / 1024)}KB (text)`);
                 }
             }
 

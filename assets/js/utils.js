@@ -4,6 +4,10 @@
  */
 
 const Utils = {
+    // Timer tracking for loading time
+    _loadingStartTime: null,
+    _loadingTimerInterval: null,
+
     /**
      * Format file size in human readable format
      * @param {number} bytes - File size in bytes
@@ -26,14 +30,68 @@ const Utils = {
         const progressBar = document.getElementById('progressBar');
         const progressFill = document.getElementById('progressFill');
         const statusMessage = document.getElementById('statusMessage');
-        
+
         if (progressBar) {
             progressBar.style.display = 'block';
             progressFill.style.width = percentage + '%';
-            
+
             if (statusMessage && message) {
-                statusMessage.textContent = message;
+                // Start timer if this is the first progress update
+                if (percentage > 0 && percentage < 100 && !this._loadingStartTime) {
+                    this._loadingStartTime = Date.now();
+                    this._startLoadingTimer(statusMessage, message);
+                } else if (percentage >= 100) {
+                    // Stop timer when complete
+                    this._stopLoadingTimer();
+                    const elapsedSeconds = this._loadingStartTime ?
+                        ((Date.now() - this._loadingStartTime) / 1000).toFixed(1) : 0;
+                    statusMessage.textContent = `${message} (${elapsedSeconds}s)`;
+                } else {
+                    // Update message during progress
+                    this._updateLoadingMessage(statusMessage, message);
+                }
             }
+        }
+    },
+
+    /**
+     * Start the loading timer
+     * @private
+     */
+    _startLoadingTimer(statusMessage, baseMessage) {
+        // Clear any existing timer
+        this._stopLoadingTimer();
+
+        // Update timer every 100ms for smooth display
+        this._loadingTimerInterval = setInterval(() => {
+            if (this._loadingStartTime) {
+                const elapsed = ((Date.now() - this._loadingStartTime) / 1000).toFixed(1);
+                statusMessage.textContent = `${baseMessage} (${elapsed}s)`;
+            }
+        }, 100);
+    },
+
+    /**
+     * Update loading message while keeping timer
+     * @private
+     */
+    _updateLoadingMessage(statusMessage, newMessage) {
+        if (this._loadingStartTime) {
+            const elapsed = ((Date.now() - this._loadingStartTime) / 1000).toFixed(1);
+            statusMessage.textContent = `${newMessage} (${elapsed}s)`;
+        } else {
+            statusMessage.textContent = newMessage;
+        }
+    },
+
+    /**
+     * Stop the loading timer
+     * @private
+     */
+    _stopLoadingTimer() {
+        if (this._loadingTimerInterval) {
+            clearInterval(this._loadingTimerInterval);
+            this._loadingTimerInterval = null;
         }
     },
 
@@ -45,6 +103,9 @@ const Utils = {
         if (progressBar) {
             progressBar.style.display = 'none';
         }
+        // Reset timer when hiding progress
+        this._stopLoadingTimer();
+        this._loadingStartTime = null;
     },
 
     /**

@@ -148,9 +148,9 @@ const ResultsDisplay = {
 
         // 整合學生資訊到每一行數據
         const dataWithStudentInfo = this.currentResults.map(row => ({
-            'Student Name': studentInfo.name || '未填寫',
-            'Application Number': studentInfo.applicationNumber || '未填寫',
-            'Applied Programme': studentInfo.appliedProgramme || '未填寫',
+            'Student Name': studentInfo.name || '',
+            'Application Number': studentInfo.applicationNumber || '',
+            'Applied Programme': studentInfo.appliedProgramme || '',
             ...row
         }));
 
@@ -186,8 +186,8 @@ const ResultsDisplay = {
         
         // 學生資訊欄位特殊樣式
         if (this.isStudentInfoField(header)) {
-            if (value === '未填寫') {
-                return `<span class="text-gray-400 italic">${value}</span>`;
+            if (!value || value === '') {
+                return '-';
             }
             return `<span class="text-blue-700 font-medium">${value}</span>`;
         }

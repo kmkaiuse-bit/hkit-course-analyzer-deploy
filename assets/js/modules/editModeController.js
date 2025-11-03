@@ -174,9 +174,9 @@ const EditModeController = {
             const aiSuggested = this.generateAISuggestedDisplay(row);
             
             return {
-                'Student Name': studentInfo.name || '未填寫',
-                'Application Number': studentInfo.applicationNumber || '未填寫',
-                'Applied Programme': studentInfo.appliedProgramme || '未填寫',
+                'Student Name': studentInfo.name || '',
+                'Application Number': studentInfo.applicationNumber || '',
+                'Applied Programme': studentInfo.appliedProgramme || '',
                 'HKIT Subject Code': row['HKIT Subject Code'],
                 'HKIT Subject Name': row['HKIT Subject Name'],
                 'AI Suggested': aiSuggested,
@@ -286,8 +286,8 @@ const EditModeController = {
      */
     formatDisplayCell(header, value) {
         if (this.isStudentInfoField(header)) {
-            if (value === '未填寫') {
-                return `<span class="text-gray-400 italic">${value}</span>`;
+            if (!value || value === '') {
+                return '-';
             }
             return `<span class="text-blue-700 font-medium">${value}</span>`;
         }

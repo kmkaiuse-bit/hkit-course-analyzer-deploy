@@ -341,11 +341,21 @@ IMPORTANT RULES:
                             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                                 const page = await pdf.getPage(pageNum);
                                 const textContent = await page.getTextContent();
-                                const pageText = textContent.items.map(item => item.str).join(' ');
-                                extractedText += pageText + '\n';
+
+                                console.log(`📄 Page ${pageNum}: Found ${textContent.items.length} text items`);
+
+                                // Extract text with better spacing
+                                const pageText = textContent.items
+                                    .map(item => item.str)
+                                    .filter(str => str.trim().length > 0) // Remove empty strings
+                                    .join(' ');
+
+                                extractedText += pageText + '\n\n';
+
+                                console.log(`📄 Page ${pageNum}: Extracted ${pageText.length} characters`);
                             }
 
-                            console.log(`✅ Extracted ${extractedText.length} characters from ${fileObj.name}`);
+                            console.log(`✅ Total extracted ${extractedText.length} characters from ${fileObj.name}`);
 
                         } catch (error) {
                             console.error('Error extracting text from PDF:', error);

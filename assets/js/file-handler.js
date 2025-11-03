@@ -4,8 +4,8 @@
  */
 
 const FileHandler = {
-    // Supported file types
-    supportedTypes: ['.csv', '.xlsx', '.xls', '.pdf'],
+    // Supported file types (PDF only)
+    supportedTypes: ['.pdf'],
     maxFileSize: 50 * 1024 * 1024, // 50MB
     uploadedFiles: [],
 
@@ -81,23 +81,15 @@ const FileHandler = {
     validateFile(file) {
         // Check file type by extension
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-        
-        if (!this.supportedTypes.includes(fileExtension)) {
-            Utils.showError(`Unsupported file type: ${fileExtension}. Supported: ${this.supportedTypes.join(', ')}`);
+
+        if (fileExtension !== '.pdf') {
+            Utils.showError(`Only PDF files are supported. You tried to upload: ${file.name} (${fileExtension})`);
             return false;
         }
 
-        // Additional MIME type check for better validation
-        const validMimeTypes = {
-            '.pdf': ['application/pdf'],
-            '.csv': ['text/csv', 'application/csv', 'text/plain'],
-            '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-            '.xls': ['application/vnd.ms-excel', 'application/excel']
-        };
-
-        const expectedMimes = validMimeTypes[fileExtension];
-        if (expectedMimes && !expectedMimes.includes(file.type) && file.type !== '') {
-            console.warn(`MIME type mismatch for ${file.name}: expected ${expectedMimes.join(' or ')}, got ${file.type}`);
+        // Additional MIME type check for PDF
+        if (file.type !== '' && file.type !== 'application/pdf') {
+            console.warn(`MIME type mismatch for ${file.name}: expected application/pdf, got ${file.type}`);
             // Don't fail validation, just warn - some systems report different MIME types
         }
 

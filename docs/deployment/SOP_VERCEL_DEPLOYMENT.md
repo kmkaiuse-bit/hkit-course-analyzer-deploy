@@ -1,252 +1,542 @@
 # Standard Operating Procedure: Vercel Deployment
 
 ## Document Information
-- **Version**: 1.0
-- **Last Updated**: September 3, 2025
-- **Author**: Claude Code Assistant
-- **Project**: HKIT Course Analyzer Enhanced UI/ex
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "DEPLOYMENT_REGION": "us-east"
-  },
-  "regions": [
-    "iad1"
-  ]
-}
-```
-
-### Step 4: Deploy
-1. Click "Deploy" in Vercel dashboard
-2. Wait for build completion (2-3 minutes)
-3. Note the deployment URL
+- **Version**: 2.0
+- **Last Updated**: November 3, 2025
+- **Author**: HKIT Development Team
+- **Project**: HKIT Course Exemption Analyzer
+- **Deployment Type**: Static Site (Client-Side Only)
 
 ---
 
-## Common Problems & Solutions
+## Overview
 
-### Problem 1: 404 NOT_FOUND Error
-**Symptom:** `404: NOT_FOUND` when accessing the app
+This SOP covers the standard deployment procedure for the HKIT Course Exemption Analyzer on Vercel. This is a **static site** with no server-side code, using client-side JavaScript for all functionality.
 
-**Root Cause:** API files in wrong directory or conflicting routes
+**Production URL**: https://hkit-course-analyzer-deploy.vercel.app/
 
-**Solution:**
-1. Ensure API files are in `/api` directory (not `/src/api`)
-2. Remove conflicting `routes` configuration from `vercel.json`
-3. Vercel cannot have both `routes` and `headers` configurations
+---
 
-**Code Fix:**
-```bash
-# Move API files to correct location
-cp src/api/*.js api/
-# Remove routes section from vercel.json
+## Architecture Summary
+
+### Current Architecture (November 2025)
+```
+User Browser
+    ↓
+Static HTML/CSS/JS (Vercel CDN)
+    ↓
+Client-Side Processing:
+    • PDF.js (PDF parsing)
+    • Google Gemini AI (user's API key)
+    • Supabase Client SDK (cloud database)
+    ↓
+External Services:
+    • Google Gemini API (AI analysis)
+    • Supabase (cloud PostgreSQL database)
 ```
 
-### Problem 2: Geographic Restrictions Error
-**Symptom:** `[400 Bad Request] User location is not supported for the API use`
+### Key Characteristics
+- ✅ **Static Site**: No build process, no server-side code
+- ✅ **Client-Side Processing**: All logic runs in user's browser
+- ✅ **No Environment Variables**: Users provide their own API keys
+- ✅ **Auto-Deploy**: Every git push triggers deployment
+- ✅ **Manual Database Saves**: User confirms before saving data
 
-**Root Cause:** Vercel functions running from unsupported region (Hong Kong)
+---
 
-**Geographic Context:**
-- **Singapore-based Google Accounts**: May have regional API restrictions
-- **Hong Kong Region (hkg1)**: Not supported for Gemini API
-- **US Regions**: Full Gemini API support
+## Prerequisites
 
-**Solution:**
-1. **Change Vercel Region** in `vercel.json`:
-   ```json
-   "regions": ["iad1"]
-   ```
-2. **Force Deployment** to apply new region
-3. **Test from US region** if needed
+Before deployment, ensure you have:
 
-**Alternative:** Use Local Mode (bypasses geographic restrictions)
+1. **GitHub Repository Access**
+   - Repository: `kmkaiuse-bit/hkit-course-analyzer-deploy`
+   - Branch: `main`
+   - Access: Write permissions
 
-### Problem 3: Missing Dependencies Error
-**Symptom:** `Module not found: @google/generative-ai`
+2. **Vercel Account**
+   - Account: Active Vercel account
+   - Permissions: Deploy access to project
 
-**Root Cause:** Vercel functions don't have access to required dependencies
+3. **Supabase Setup** (Optional but recommended)
+   - Active Supabase project
+   - Database schema deployed
+   - Credentials configured in `config/supabase-config.js`
 
-**Solution:**
-1. **Add build command** to `vercel.json`:
-   ```json
-   "buildCommand": "npm install"
-   ```
-2. **Create API-specific package.json**:
-   ```json
-   // api/package.json
-   {
-     "dependencies": {
-       "@google/generative-ai": "^0.21.0"
-     }
-   }
-   ```
+4. **Test Credentials**
+   - Google Gemini API key for testing
+   - Sample transcript PDF files
 
-### Problem 4: Timeout Errors (9-10 seconds)
-**Symptom:** `Request timeout - please try again with shorter input`
+---
 
-**Root Cause:** Vercel Free Plan has 10-second hard limit per function
+## Deployment Procedure
 
-**Solution Options:**
-1. **Use Local Mode** (Recommended)
-   - No timeout limitations
-   - Faster processing
-   - Better for large files
+### Initial Deployment (First Time)
 
-2. **Optimize for Small Files**
-   - Use `gemini-1.5-flash` for speed
-   - Lower temperature (0.3)
-   - Reduce prompt complexity
+#### Step 1: Connect GitHub Repository
 
-3. **Implement Chunked Processing**
-   - Split large files into chunks
-   - Process incrementally
-   - Use status polling
+1. Login to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click **Add New...** → **Project**
+3. Select **Import Git Repository**
+4. Choose `kmkaiuse-bit/hkit-course-analyzer-deploy`
+5. Click **Import**
 
-### Problem 5: API Key Not Found
-**Symptom:** `GEMINI_API_KEY not configured`
+#### Step 2: Configure Project Settings
 
-**Root Cause:** Environment variable not set or not applied
+**Framework Preset**: `Other` (no framework)
 
-**Solution:**
-1. **Verify Environment Variable** in Vercel Dashboard
-2. **Redeploy after setting** environment variables
-3. **Check API key format** (must start with `AIza`)
+**Root Directory**:
+- Leave empty or set to `.`
+- Do NOT set to any subdirectory
+
+**Build Settings**:
+- Build Command: *Leave empty*
+- Output Directory: *Leave empty*
+- Install Command: *Leave empty*
+
+**Git Configuration**:
+- Production Branch: `main`
+- Enable Automatic Deployments: ✓ Yes
+
+#### Step 3: Environment Variables
+
+**For current architecture: NO environment variables needed**
+
+The application:
+- Does not use server-side environment variables
+- Users provide their own Gemini API keys via UI
+- Supabase credentials are in client-side config (safe for public)
+
+#### Step 4: Deploy
+
+1. Review all settings
+2. Click **Deploy**
+3. Wait for deployment (typically 1-2 minutes)
+4. Verify deployment URL
+
+---
+
+### Continuous Deployment (Updates)
+
+After initial setup, deployment is automatic:
+
+```bash
+# Make changes to code
+git add .
+git commit -m "Description of changes"
+git push origin main
+```
+
+Vercel automatically:
+1. Detects push to `main` branch
+2. Deploys new version (1-2 minutes)
+3. Updates production site
+4. Keeps previous deployments for rollback
+
+**No manual deployment steps needed for normal updates.**
+
+---
+
+## Configuration Files
+
+### vercel.json (Project Root)
+
+Location: `/vercel.json`
+
+Current configuration:
+```json
+{
+  "cleanUrls": true,
+  "trailingSlash": false
+}
+```
+
+**Purpose**:
+- `cleanUrls`: Serves `/about` instead of `/about.html`
+- `trailingSlash`: No trailing slashes in URLs
+
+**When to modify**: Rarely - only for routing changes
+
+---
+
+### config/supabase-config.js
+
+Location: `/config/supabase-config.js`
+
+Contains Supabase connection settings:
+```javascript
+const SUPABASE_CONFIG = {
+    url: 'https://[project-id].supabase.co',
+    anonKey: 'eyJhbGci...',
+    enabled: true
+};
+```
+
+**Security Note**: The `anonKey` is safe to commit publicly - it's designed for client-side use and protected by Supabase Row Level Security (RLS).
+
+**When to modify**: Only when changing Supabase project or credentials
 
 ---
 
 ## Testing Procedures
 
-### Test 1: Basic Connectivity
-1. Visit deployed URL
-2. Check for Enhanced UI elements:
-   - API key configuration section
-   - Student information forms
-   - Enhanced badge "🚀 ENHANCED MODE"
+### Post-Deployment Testing Checklist
 
-### Test 2: Server Mode (Small Files)
-1. Upload small PDF (1-2 pages)
-2. Select programme
-3. Click "Analyze Files"
-4. Expected: Success within 10 seconds
-
-### Test 3: Local Mode (Large Files)
-1. Click API key section
-2. Enter Gemini API key
-3. Save key
-4. Upload large PDF
-5. Expected: Success with no timeout
-
-### Test 4: Error Handling
-1. Try without API key → Should show clear error
-2. Try with invalid API key → Should show authentication error
-3. Try with very large file → Should suggest local mode
-
----
-
-## Maintenance
-
-### Regular Checks
-- [ ] **Monthly**: Verify API key validity
-- [ ] **Quarterly**: Update dependencies in package.json
-- [ ] **As Needed**: Monitor Vercel function logs
-- [ ] **As Needed**: Check Google Cloud billing/quotas
-
-### Updates
-1. **Code Updates**: Push to GitHub (auto-deploys)
-2. **Environment Variables**: Update via Vercel Dashboard
-3. **Dependencies**: Update package.json and redeploy
-
----
-
-## Troubleshooting Commands
-
-### Debug API Issues
-```bash
-# Check Vercel function logs
-# Go to Vercel Dashboard → Functions → View Logs
-
-# Test API endpoint directly
-curl -X POST https://your-app.vercel.app/api/gemini \
-  -H "Content-Type: application/json" \
-  -d '{"prompt":"test"}'
+#### Test 1: Basic Site Access
+```
+✓ Visit: https://hkit-course-analyzer-deploy.vercel.app/
+✓ Page loads without 404/500 errors
+✓ UI displays correctly
+✓ No console errors (F12 → Console)
 ```
 
-### Local Development
-```bash
-# Test locally before deployment
-npm install
-npx vercel dev
+#### Test 2: File Upload
+```
+✓ Click "Upload PDF" button
+✓ Select test transcript PDF
+✓ File appears in upload area
+✓ Programme dropdown populates
+```
 
-# Or simple HTTP server
-python -m http.server 8000
+#### Test 3: AI Analysis (Requires User API Key)
+```
+✓ Enter Google Gemini API key in settings
+✓ Upload sample transcript
+✓ Select programme
+✓ Click "Analyze Files"
+✓ Results display within 10-30 seconds
+✓ Courses show exemption status
+```
+
+#### Test 4: Database Save (Supabase)
+```
+✓ Complete analysis successfully
+✓ "💾 Save to Database" button appears
+✓ Click button
+✓ Confirmation dialog displays
+✓ Confirm save
+✓ Success notification appears
+✓ Verify data in Supabase Table Editor
+```
+
+#### Test 5: Export Features
+```
+✓ Click "Export to CSV"
+✓ CSV file downloads
+✓ Click "Export to Excel"
+✓ Excel file downloads
+✓ Click "Export to PDF"
+✓ PDF file downloads
 ```
 
 ---
 
-## Success Criteria
+## Common Issues & Solutions
 
-### Deployment Success Indicators
-- [x] ✅ App loads without 404 errors
-- [x] ✅ Enhanced UI features visible
-- [x] ✅ API endpoints respond (not 500 errors)
-- [x] ✅ Local mode works for all file sizes
-- [x] ✅ Server mode works for small files
-- [x] ✅ Geographic restrictions bypassed
+### Issue 1: 404 Page Not Found
 
-### Performance Benchmarks
-- **Small Files (<500KB)**: Server mode success rate >90%
-- **Large Files (>2MB)**: Local mode success rate >99%
-- **Response Time**: <10 seconds for server mode
-- **Error Rate**: <1% for properly configured system
+**Symptoms**:
+- Accessing site shows "404: NOT_FOUND"
+- Page doesn't load
+
+**Causes**:
+- Incorrect root directory setting
+- Missing `index.html` in root
+- Incorrect vercel.json configuration
+
+**Solutions**:
+1. Check Vercel Project Settings → General → Root Directory (should be empty or `.`)
+2. Verify `index.html` exists in repository root
+3. Check `vercel.json` is valid JSON
+4. Redeploy from Vercel dashboard
 
 ---
 
-## Contact Information
+### Issue 2: Files Not Loading (CSS/JS)
 
-### Support Resources
+**Symptoms**:
+- Page loads but looks broken (no styling)
+- Console shows 404 errors for CSS/JS files
+
+**Causes**:
+- Incorrect file paths in HTML
+- Files not committed to repository
+- Caching issues
+
+**Solutions**:
+1. Verify all asset paths are relative: `./assets/css/style.css`
+2. Check files exist in repository on GitHub
+3. Clear browser cache (Ctrl+Shift+Delete)
+4. Check Vercel deployment logs for build errors
+
+---
+
+### Issue 3: Supabase Connection Failed
+
+**Symptoms**:
+- "Cloud database connection failed" notification
+- "Save to Database" fails
+- Console shows Supabase errors
+
+**Causes**:
+- Incorrect Supabase credentials
+- Supabase project paused/inactive
+- Network connectivity issues
+- RLS policy issues
+
+**Solutions**:
+1. Verify credentials in `config/supabase-config.js`:
+   ```javascript
+   url: 'https://[correct-project-id].supabase.co',
+   anonKey: 'eyJhbGci...' // Must start with eyJ
+   ```
+2. Check Supabase project is active (not paused) at https://supabase.com/dashboard
+3. Verify RLS policies allow anon access for required tables
+4. Check browser console for specific error messages
+5. Test Supabase connection directly via SQL Editor
+
+---
+
+### Issue 4: AI Analysis Not Working
+
+**Symptoms**:
+- "Analyze Files" button does nothing
+- Error: "API key not configured"
+- Analysis fails with timeout
+
+**Causes**:
+- User hasn't entered Gemini API key
+- Invalid/expired API key
+- Large PDF file causing timeout
+- Network issues
+
+**Solutions**:
+1. **User-side issue**: Ensure user has entered valid Gemini API key
+2. Guide user to get key: https://makersuite.google.com/app/apikey
+3. For large PDFs: May take 30-60 seconds, be patient
+4. Check browser console for specific errors
+5. Try smaller test PDF first
+
+---
+
+### Issue 5: Auto-Deploy Not Working
+
+**Symptoms**:
+- Git push doesn't trigger deployment
+- Changes not appearing on production site
+
+**Causes**:
+- Wrong branch pushed
+- Vercel GitHub integration disconnected
+- Deployment paused in Vercel
+
+**Solutions**:
+1. Verify pushing to `main` branch: `git branch` (should show `* main`)
+2. Check Vercel Dashboard → Project → Git:
+   - GitHub connection status
+   - Auto-deploy enabled
+3. Manual deploy: Vercel Dashboard → Deployments → Redeploy
+4. Check GitHub Actions aren't blocking push
+
+---
+
+## Rollback Procedures
+
+### When to Rollback
+
+Rollback to previous deployment if:
+- New deployment breaks critical functionality
+- Serious bugs discovered after deployment
+- Incorrect configuration deployed
+
+### How to Rollback
+
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Select your project
+3. Click **Deployments** tab
+4. Find last working deployment (green checkmark)
+5. Click **•••** menu on that deployment
+6. Select **Promote to Production**
+7. Confirm promotion
+
+**Effect**: Site immediately reverts to selected deployment (instant rollback)
+
+---
+
+## Monitoring & Maintenance
+
+### Daily Checks (Automated)
+- Vercel monitors uptime automatically
+- GitHub Actions (if configured) run tests
+
+### Weekly Manual Checks
+- [ ] Verify production site loads correctly
+- [ ] Test one sample analysis end-to-end
+- [ ] Check Supabase database for new data
+- [ ] Review Vercel analytics for usage patterns
+
+### Monthly Maintenance
+- [ ] Review Vercel deployment logs for errors
+- [ ] Check Supabase database performance
+- [ ] Verify API quotas not exceeded (Google Gemini)
+- [ ] Update dependencies if security patches available
+- [ ] Backup Supabase database
+
+---
+
+## Performance Benchmarks
+
+### Expected Performance
+
+**Site Load Time**:
+- First load: < 3 seconds
+- Cached load: < 1 second
+
+**AI Analysis Time** (varies by PDF size):
+- Small PDF (1-3 pages): 5-15 seconds
+- Medium PDF (4-10 pages): 15-30 seconds
+- Large PDF (10+ pages): 30-60 seconds
+
+**Database Save Time**:
+- Typical: < 2 seconds
+- During high load: < 5 seconds
+
+**File Export Time**:
+- CSV: < 1 second
+- Excel: < 2 seconds
+- PDF: < 3 seconds
+
+---
+
+## Security Considerations
+
+### Client-Side Security
+- ✅ User API keys stored in localStorage (user's device only)
+- ✅ No API keys transmitted to Vercel servers
+- ✅ Supabase anon key is rate-limited and RLS-protected
+- ✅ HTTPS enforced by Vercel
+
+### Database Security
+- ✅ Row Level Security (RLS) policies on all Supabase tables
+- ✅ Anon key has limited permissions
+- ✅ No service role key exposed client-side
+- ✅ Audit log tracks all database changes
+
+### Best Practices
+- 🔐 Never commit service role keys to repository
+- 🔐 Use environment variables for sensitive server-side configs (if added later)
+- 🔐 Regular security audits of dependencies
+- 🔐 Keep Supabase RLS policies restrictive
+
+---
+
+## Support & Escalation
+
+### Self-Service Resources
+1. Check this SOP first
+2. Review Vercel deployment logs
+3. Check Supabase database logs
+4. Review browser console errors
+5. Test with sample data
+
+### Technical Support Contacts
+- **Technical Lead**: stevenkok@hkit.edu.hk
 - **Vercel Documentation**: https://vercel.com/docs
-- **Google Cloud Console**: https://console.cloud.google.com
-- **GitHub Repository**: [Your Repository URL]
+- **Supabase Documentation**: https://supabase.com/docs
+- **GitHub Issues**: https://github.com/kmkaiuse-bit/hkit-course-analyzer-deploy/issues
 
 ### Escalation Path
-1. **Check this SOP** for known solutions
-2. **Review Vercel function logs** for specific errors
-3. **Test local mode** as workaround
-4. **Contact development team** with specific error messages
+1. **Level 1**: Check documentation and logs
+2. **Level 2**: Email technical support with error details
+3. **Level 3**: Create GitHub issue with reproduction steps
+4. **Level 4**: Emergency contact for production outages
 
 ---
 
-## Appendix
+## Appendices
 
-### A. Supported Vercel Regions
-- `iad1` - Washington, D.C. (US East) ✅ Recommended
-- `sfo1` - San Francisco (US West) ✅ Alternative
-- `hkg1` - Hong Kong ❌ Not supported for Gemini API
+### Appendix A: File Structure
 
-### B. Google Cloud Regions with Gemini Support
-- US regions: Full support
-- EU regions: Full support
-- Asia-Pacific: Limited support (varies by country)
-- Singapore: May have restrictions for certain Google accounts
+```
+hkit-course-analyzer-deploy/
+├── index.html                  # Main application entry point
+├── vercel.json                 # Vercel configuration
+├── assets/
+│   ├── css/                   # Stylesheets
+│   ├── js/                    # JavaScript modules
+│   │   ├── app.js            # Main application logic
+│   │   ├── gemini-api.js     # Gemini AI integration
+│   │   ├── supabase-client.js # Supabase client
+│   │   └── modules/          # Feature modules
+│   └── images/               # Static images
+├── config/
+│   ├── supabase-config.js    # Supabase credentials
+│   └── programmes/           # Programme course data
+├── docs/
+│   └── deployment/           # This SOP and guides
+├── db/
+│   └── migrations/           # Database schema files
+└── local/
+    └── enhanced.html         # Local development version
+```
 
-### C. File Size Recommendations
-- **Vercel Server Mode**: <1MB PDF, <500KB optimal
-- **Local Mode**: No practical limits (tested up to 20MB)
-- **Chunked Processing**: 1-10MB (future enhancement)
+### Appendix B: Useful Commands
+
+```bash
+# Check current git branch
+git branch
+
+# Switch to main branch
+git checkout main
+
+# Pull latest changes
+git pull origin main
+
+# View deployment status
+# (Visit Vercel Dashboard)
+
+# Clear browser cache
+# Ctrl+Shift+Delete (Windows/Linux)
+# Cmd+Shift+Delete (Mac)
+
+# View browser console errors
+# F12 → Console tab
+```
+
+### Appendix C: Emergency Contacts
+
+**Production Outage**:
+1. Check Vercel status: https://vercel.com/status
+2. Rollback to last working deployment
+3. Notify technical lead immediately
+4. Create incident report
+
+**Data Loss Concern**:
+1. Do NOT make further changes
+2. Contact technical lead immediately
+3. Check Supabase backup system
+4. Restore from most recent backup
+
+---
+
+## Document Revision History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 2.0 | 2025-11-03 | HKIT Dev Team | Complete rewrite for static site architecture |
+| 1.0 | 2025-09-03 | Claude Code | Initial version (deprecated) |
+
+---
+
+## Approval
+
+This SOP has been reviewed and approved for:
+- ✅ Accuracy of deployment procedures
+- ✅ Completeness of troubleshooting steps
+- ✅ Security considerations
+- ✅ Alignment with current production architecture
+
+**Status**: Production Ready
+**Next Review Date**: March 2026
 
 ---
 

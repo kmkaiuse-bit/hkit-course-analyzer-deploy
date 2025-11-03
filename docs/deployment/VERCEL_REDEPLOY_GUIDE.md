@@ -1,98 +1,275 @@
-# 🚀 Vercel重新部署完整指南
+# 🚀 Vercel Redeployment Guide - HKIT Course Analyzer
 
-## 📝 前置准备
-确保你的GitHub仓库 `hkit-course-analyzer` 分支已经包含最新代码。
+## Overview
+This guide covers how to redeploy the HKIT Course Analyzer on Vercel when needed (e.g., configuration issues, migration, or cleanup).
 
-## 步骤1：删除当前Vercel项目
-1. 登录 [Vercel Dashboard](https://vercel.com/dashboard)
-2. 找到你的 `hkit-course-analyzer` 项目
-3. 点击项目进入设置
-4. 滚动到底部，找到 "Delete Project"
-5. 确认删除
+**Current Production URL**: https://hkit-course-analyzer-deploy.vercel.app/
 
-## 步骤2：重新导入项目
-1. 回到 Vercel Dashboard
-2. 点击 "Add New..." → "Project"
-3. 选择 "Import Git Repository"
-4. 找到你的 `hkit-course-analyzer` 仓库
-5. **重要配置**：
-   - **Framework Preset**: 选择 `Other`（不要选择任何框架）
-   - **Root Directory**: 留空（默认使用根目录）
-   - **Build & Output Settings**:
-     - Build Command: 留空
-     - Output Directory: 留空
-     - Install Command: 留空
-   - **Node.js Version**: 18.x
+---
 
-## 步骤3：配置环境变量
-在导入页面的 "Environment Variables" 部分：
-1. 点击 "Add"
-2. 添加以下变量：
-   - Name: `GEMINI_API_KEY`
-   - Value: 你的Gemini API密钥
-   - Environment: 勾选所有（Production, Preview, Development）
+## When to Redeploy
 
-## 步骤4：选择正确的分支
-1. 在 "Git Branch" 部分
-2. 选择 `hkit-course-analyzer` 分支（不是main）
+You should redeploy when:
+- ❌ Deployment configuration is corrupted
+- 🔧 Major configuration changes are needed
+- 🆕 Migrating to a new Vercel account
+- 🧹 Cleaning up old test deployments
 
-## 步骤5：部署
-1. 点击 "Deploy"
-2. 等待部署完成（通常1-2分钟）
+**Note**: Normal code updates do NOT require redeployment - Vercel auto-deploys on every git push.
 
-## 步骤6：验证部署
-部署完成后：
-1. 访问你的应用URL
-2. 打开浏览器开发者工具（F12）
-3. 进入Network标签
-4. 刷新页面并尝试上传文件
-5. 检查 `/api/test` 请求是否返回200
+---
 
-## 🔍 验证清单
-- [ ] `/api/test` 返回 "API is working!"
-- [ ] `/api/gemini` 可以正常调用
-- [ ] 上传文件后能看到分析结果
-- [ ] 没有API密钥错误提示
+## Prerequisites
 
-## ⚠️ 如果还是不工作
-如果重新部署后还是404，尝试以下方法：
+✅ GitHub repository: `hkit-course-analyzer-deploy` (main branch)
+✅ Vercel account with access rights
+✅ Supabase project credentials (if using database features)
+✅ Google Gemini API key (users provide their own)
 
-### 方法1：检查部署日志
-1. 在Vercel Dashboard中点击你的项目
-2. 点击 "Functions" 标签
-3. 查看是否有函数被检测到
-4. 点击 "View Function Logs" 查看错误
+---
 
-### 方法2：使用vercel.json强制配置
-确保 `vercel.json` 内容如下：
+## Step 1: Delete Current Vercel Project (Optional)
+
+**⚠️ Only do this if you need a clean slate**
+
+1. Login to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Find your `hkit-course-analyzer-deploy` project
+3. Click project → **Settings**
+4. Scroll to bottom → **Delete Project**
+5. Confirm deletion
+
+---
+
+## Step 2: Import Project from GitHub
+
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click **Add New...** → **Project**
+3. Find `hkit-course-analyzer-deploy` repository
+4. Click **Import**
+
+---
+
+## Step 3: Configure Deployment Settings
+
+### Framework & Build Settings
+
+**Important**: This is a **static site** with no build process
+
+- **Framework Preset**: `Other` (no framework)
+- **Root Directory**: `.` (leave empty/default)
+- **Build Command**: Leave empty
+- **Output Directory**: Leave empty
+- **Install Command**: Leave empty
+- **Node.js Version**: 18.x or 20.x
+
+### Git Branch Selection
+
+- **Branch**: `main` ✅
+- **Auto-deploy**: Enabled (default)
+
+---
+
+## Step 4: Configure Environment Variables
+
+**For current setup, NO environment variables are required on Vercel.**
+
+Why?
+- ✅ Users enter their own Gemini API keys in the UI
+- ✅ Supabase credentials are in client-side config files (safe for public use)
+- ✅ All processing happens client-side in the browser
+
+**If you want to add Supabase integration tracking (optional)**:
+```
+Name: NEXT_PUBLIC_SUPABASE_URL
+Value: https://[your-project-id].supabase.co
+Environment: Production, Preview, Development
+
+Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+Value: [your-supabase-anon-key]
+Environment: Production, Preview, Development
+```
+
+---
+
+## Step 5: Deploy
+
+1. Review all settings
+2. Click **Deploy**
+3. Wait 1-2 minutes for deployment to complete
+4. Note your production URL (e.g., `https://hkit-course-analyzer-deploy.vercel.app/`)
+
+---
+
+## Step 6: Verify Deployment
+
+### Verification Checklist
+
+1. **Basic Access**
+   - [ ] Visit production URL
+   - [ ] Page loads without errors
+   - [ ] No 404 or 500 errors
+
+2. **Core Functionality**
+   - [ ] Upload PDF file works
+   - [ ] Programme selection dropdown populated
+   - [ ] "Analyze Files" button visible
+   - [ ] API key configuration section visible
+
+3. **AI Analysis** (requires user's Gemini API key)
+   - [ ] Enter test API key
+   - [ ] Upload sample transcript
+   - [ ] Click "Analyze Files"
+   - [ ] Results display correctly
+
+4. **Database Features** (if Supabase configured)
+   - [ ] Complete analysis
+   - [ ] "💾 Save to Database" button appears
+   - [ ] Click save → confirmation dialog appears
+   - [ ] Confirm → success message
+   - [ ] Check Supabase Table Editor for saved data
+
+---
+
+## Troubleshooting
+
+### Problem: 404 Not Found
+
+**Cause**: Wrong root directory or build settings
+
+**Solution**:
+1. Go to Project Settings → General
+2. Ensure Root Directory is empty or `.`
+3. Redeploy
+
+### Problem: Files Not Loading
+
+**Cause**: Incorrect file paths or routing
+
+**Solution**:
+1. Check `vercel.json` exists in root with correct configuration
+2. Verify all asset paths are relative (e.g., `./assets/css/style.css`)
+3. Clear browser cache and retry
+
+### Problem: Supabase Connection Failed
+
+**Cause**: Incorrect Supabase credentials in config files
+
+**Solution**:
+1. Check `config/supabase-config.js` has correct:
+   - Project URL: `https://[project-id].supabase.co`
+   - Anon key: `eyJhbGci...` (starts with eyJ)
+2. Verify Supabase project is active (not paused)
+3. Check Supabase RLS policies allow public access for anon key
+
+### Problem: API Analysis Not Working
+
+**Cause**: User hasn't entered Gemini API key OR invalid key
+
+**Solution**:
+1. This is **user-side issue** - they need to provide their own key
+2. Guide users to get key at: https://makersuite.google.com/app/apikey
+3. Ensure API key input section is visible and functional
+
+---
+
+## Post-Deployment Tasks
+
+1. **Update Documentation**
+   - [ ] Update production URL in README.md (if changed)
+   - [ ] Update any hardcoded URLs in documentation
+
+2. **Test Supabase Integration**
+   - [ ] Perform test analysis and save to database
+   - [ ] Verify data appears in Supabase Table Editor
+   - [ ] Check learning patterns are being recorded
+
+3. **Notify Users** (if URL changed)
+   - [ ] Email updated URL to staff
+   - [ ] Update bookmarks/shortcuts
+   - [ ] Update any training materials
+
+---
+
+## Auto-Deployment Workflow
+
+After initial setup, **you don't need to manually redeploy**.
+
+Every time you push to GitHub:
+```bash
+git add .
+git commit -m "Your update message"
+git push origin main
+```
+
+Vercel automatically:
+1. Detects the push
+2. Builds and deploys
+3. Updates production site (1-2 minutes)
+
+---
+
+## Emergency Rollback
+
+If a deployment breaks the site:
+
+1. Go to Vercel Dashboard → Your Project
+2. Click **Deployments** tab
+3. Find last working deployment
+4. Click **•••** menu → **Promote to Production**
+5. Site immediately reverts to that version
+
+---
+
+## Configuration Files Reference
+
+### vercel.json
+Located in project root. Key settings:
 ```json
 {
-  "functions": {
-    "api/*.js": {
-      "maxDuration": 10
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }
 ```
 
-### 方法3：创建最小测试
-创建一个新文件 `api/hello.js`：
+### config/supabase-config.js
+Supabase connection settings (client-side, safe to commit):
 ```javascript
-module.exports = (req, res) => {
-  res.status(200).json({ message: 'Hello World' });
+const SUPABASE_CONFIG = {
+    url: 'https://your-project.supabase.co',
+    anonKey: 'your-anon-key',
+    enabled: true
 };
 ```
 
-然后提交并推送，看是否能访问 `/api/hello`。
+---
 
-## 📞 需要更多帮助？
-如果按照以上步骤还是无法解决，请提供：
-1. Vercel部署日志的截图
-2. Functions标签页的截图
-3. 浏览器Network标签的截图
+## Support Resources
+
+- **Vercel Documentation**: https://vercel.com/docs
+- **GitHub Repository**: https://github.com/kmkaiuse-bit/hkit-course-analyzer-deploy
+- **Supabase Setup Guide**: See `SUPABASE_VERCEL_SETUP_SOP.md`
+- **Technical Support**: stevenkok@hkit.edu.hk
+
+---
+
+## Summary
+
+**Current Architecture**:
+- 📄 Static HTML/CSS/JS site
+- ☁️ Deployed on Vercel
+- 🔄 Auto-deploys from GitHub main branch
+- 🗄️ Optional Supabase cloud database
+- 🤖 Client-side Gemini AI processing (user provides key)
+
+**Key Points**:
+- ✅ No build process needed
+- ✅ No server-side code
+- ✅ No environment variables required (unless optional features)
+- ✅ Auto-deploys on every git push
+- ✅ Manual database saves (user confirms before saving)
+
+---
+
+**Document Version**: 2.0
+**Last Updated**: November 3, 2025
+**Status**: Production Ready

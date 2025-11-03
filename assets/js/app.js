@@ -152,26 +152,29 @@ const App = {
             // Get selected programme
             const programmeId = document.getElementById('programmeType').value;
             
+            // Validate that all uploaded files are PDFs
+            const nonPDFFiles = FileHandler.uploadedFiles.filter(f => f.file.type !== 'application/pdf');
+            if (nonPDFFiles.length > 0) {
+                const fileNames = nonPDFFiles.map(f => f.name).join(', ');
+                if (typeof Utils !== 'undefined' && Utils.showError) {
+                    Utils.showError(`Only PDF files are supported. Please remove: ${fileNames}`);
+                } else {
+                    alert(`Only PDF files are supported. Please remove: ${fileNames}`);
+                }
+                return;
+            }
+
             // Show loading state
             if (typeof Utils !== 'undefined' && Utils.showProgress) {
-                Utils.showProgress(10, 'Reading transcript files...');
+                Utils.showProgress(10, 'Reading PDF transcript files...');
             }
-            
-            // Check if we have PDF files
-            const hasPDFFiles = FileHandler.uploadedFiles.some(f => f.file.type === 'application/pdf');
-            
-            let transcriptContent = '';
-            if (!hasPDFFiles) {
-                // Read text content for non-PDF files
-                transcriptContent = await FileHandler.getCombinedContent();
-            }
-            
+
             if (typeof Utils !== 'undefined' && Utils.showProgress) {
                 Utils.showProgress(30, 'Sending to AI for analysis...');
             }
-            
-            // Call Gemini API with files array for PDF support
-            const results = await GeminiAPI.analyzeTranscripts(transcriptContent, programmeId, FileHandler.uploadedFiles);
+
+            // Call Gemini API with PDF files array
+            const results = await GeminiAPI.analyzeTranscripts('', programmeId, FileHandler.uploadedFiles);
             
             if (typeof Utils !== 'undefined' && Utils.showProgress) {
                 Utils.showProgress(80, 'Processing results...');

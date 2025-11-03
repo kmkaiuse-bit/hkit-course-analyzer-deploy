@@ -589,40 +589,48 @@ const FileHandler = {
     async renderPDFContent(fileObj, popup) {
         try {
             console.log('Starting PDF rendering for:', fileObj.name);
-            
+
             // Use PDF.js from parent window instead of popup window
             const pdfjsLib = window.pdfjsLib;
             if (!pdfjsLib) {
                 console.error('PDF.js not available');
                 return '<div class="error">PDF.js not loaded. Please refresh the page and try again.</div>';
             }
-            
+
             console.log('PDF.js available, setting worker source...');
-            
+
             // Set worker source
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-            
+
             // Read file as array buffer
             console.log('Reading file as array buffer...');
             const arrayBuffer = await fileObj.file.arrayBuffer();
             console.log('Array buffer size:', arrayBuffer.byteLength);
-            
+
             // Load PDF
             console.log('Loading PDF document...');
             const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
             const pdf = await loadingTask.promise;
             console.log('PDF loaded, pages:', pdf.numPages);
-            
+
             // Check if PDF has pages
             if (!pdf.numPages || pdf.numPages === 0) {
                 throw new Error('The document has no pages or is corrupted');
             }
-            
+
+            // Get content container for progress updates
+            const contentContainer = popup.document.getElementById('contentContainer');
+
             let pdfHTML = '<div class="pdf-viewer">';
-            
-            // Render each page
+
+            // Render each page with progress updates
             const pageElements = [];
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) { // Render ALL pages
+                // Update loading message with progress
+                if (contentContainer) {
+                    contentContainer.innerHTML = `<div class="loading">📄 Rendering page ${pageNum} of ${pdf.numPages}...</div>`;
+                }
+
                 console.log(`Rendering page ${pageNum}...`);
                 const page = await pdf.getPage(pageNum);
                 const viewport = page.getViewport({ scale: 1.2 });
@@ -657,7 +665,7 @@ const FileHandler = {
                     </div>
                 `;
             }
-            
+
             pdfHTML += '</div>';
             return pdfHTML;
             

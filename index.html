@@ -1336,7 +1336,7 @@
                 // Get current results (including user edits)
                 const currentResults = EditModeController.getCurrentData() || [];
                 if (currentResults.length === 0) {
-                    alert('🔍 No analysis results available to save.\\n\\nPlease analyze a transcript first.');
+                    alert('🔍 No analysis results available to save.\n\nPlease analyze a transcript first.');
                     return;
                 }
 
@@ -1356,19 +1356,19 @@
 
                 // Show preview confirmation with cloud storage info
                 const confirmMessage =
-                    `Save Analysis Results to Cloud Database?\\n\\n` +
-                    `You're about to save ${validResults.length} course exemption decisions:\\n\\n` +
-                    `  ✅ ${exemptedCount} subject${exemptedCount !== 1 ? 's' : ''} will be EXEMPTED\\n` +
-                    `  ❌ ${rejectedCount} subject${rejectedCount !== 1 ? 's' : ''} need to be STUDIED\\n` +
-                    (invalidCount > 0 ? `  ⚠️  ${invalidCount} record${invalidCount !== 1 ? 's' : ''} skipped (missing subject name)\\n` : '') +
-                    `\\n📚 Example decisions:\\n` +
+                    `Save Analysis Results to Cloud Database?\n\n` +
+                    `You're about to save ${validResults.length} course exemption decisions:\n\n` +
+                    `  ✅ ${exemptedCount} subject${exemptedCount !== 1 ? 's' : ''} will be EXEMPTED\n` +
+                    `  ❌ ${rejectedCount} subject${rejectedCount !== 1 ? 's' : ''} need to be STUDIED\n` +
+                    (invalidCount > 0 ? `  ⚠️  ${invalidCount} record${invalidCount !== 1 ? 's' : ''} skipped (missing subject name)\n` : '') +
+                    `\n📚 Example decisions:\n` +
                     validResults.slice(0, 3).map(r => {
                         const status = (r['Exemption Granted'] === 'TRUE' || r['Exemption Granted'] === true) ? 'EXEMPTED ✓' : 'MUST STUDY';
                         return `   • ${r['HKIT Subject Code']}: ${r['Subject Name of Previous Studies']} → ${status}`;
-                    }).join('\\n') +
-                    (validResults.length > 3 ? `\\n   ... and ${validResults.length - 3} more` : '') +
-                    `\\n\\n💾 Storage Location: Supabase Cloud Database` +
-                    `\\n💡 Why save? This helps improve AI predictions for future students.\\n\\n` +
+                    }).join('\n') +
+                    (validResults.length > 3 ? `\n   ... and ${validResults.length - 3} more` : '') +
+                    `\n\n💾 Storage Location: Supabase Cloud Database` +
+                    `\n💡 Why save? This helps improve AI predictions for future students.\n\n` +
                     `Do you want to proceed?`;
 
                 if (!confirm(confirmMessage)) {
@@ -1377,7 +1377,7 @@
 
                 // Check if StorageManager is available
                 if (typeof StorageManager === 'undefined') {
-                    alert('❌ Storage system not available.\\n\\nPlease refresh the page and try again.');
+                    alert('❌ Storage system not available.\n\nPlease refresh the page and try again.');
                     return;
                 }
 
@@ -1409,13 +1409,13 @@
 
                 // Show success message
                 const successMessage =
-                    `✅ Successfully Saved to Cloud!\\n\\n` +
-                    `Your exemption decisions have been saved:\\n\\n` +
-                    `  ✅ ${exemptedCount} exempted subject${exemptedCount !== 1 ? 's' : ''}\\n` +
-                    `  ❌ ${rejectedCount} subject${rejectedCount !== 1 ? 's' : ''} to study\\n` +
-                    `  📊 Total: ${validResults.length} decisions saved\\n\\n` +
-                    `💾 Saved to: ${storageLocation}\\n` +
-                    `📅 Time: ${new Date().toLocaleString()}\\n\\n` +
+                    `✅ Successfully Saved to Cloud!\n\n` +
+                    `Your exemption decisions have been saved:\n\n` +
+                    `  ✅ ${exemptedCount} exempted subject${exemptedCount !== 1 ? 's' : ''}\n` +
+                    `  ❌ ${rejectedCount} subject${rejectedCount !== 1 ? 's' : ''} to study\n` +
+                    `  📊 Total: ${validResults.length} decisions saved\n\n` +
+                    `💾 Saved to: ${storageLocation}\n` +
+                    `📅 Time: ${new Date().toLocaleString()}\n\n` +
                     `Thank you! This data helps improve predictions for future students.`;
 
                 alert(successMessage);
@@ -1431,7 +1431,7 @@
 
             } catch (error) {
                 console.error('Database save error:', error);
-                alert(`❌ Database Save Failed\\n\\nError: ${error.message}\\n\\nPlease try again or check the console for details.`);
+                alert(`❌ Database Save Failed\n\nError: ${error.message}\n\nPlease try again or check the console for details.`);
             } finally {
                 // Reset button text
                 const saveBtn = document.getElementById('saveToDbBtn');

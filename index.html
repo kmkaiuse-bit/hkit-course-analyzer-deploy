@@ -1356,19 +1356,20 @@
 
                 // Show preview confirmation with cloud storage info
                 const confirmMessage =
-                    `🔍 Database Save Preview:\\n\\n` +
-                    `✅ Valid patterns to save: ${validResults.length}\\n` +
-                    `   ├─ 🟢 Exemptions: ${exemptedCount}\\n` +
-                    `   └─ 🔴 Rejections: ${rejectedCount}\\n` +
-                    `⚠️ Records skipped (no previous subject): ${invalidCount}\\n` +
-                    `\\n📊 Sample patterns:\\n` +
-                    validResults.slice(0, 3).map(r =>
-                        `• ${r['HKIT Subject Code']}: ${r['Subject Name of Previous Studies']} → ${r['Exemption Granted']}`
-                    ).join('\\n') +
-                    (validResults.length > 3 ? `\\n... and ${validResults.length - 3} more` : '') +
-                    `\\n\\n☁️ Will save to: Supabase Cloud Database` +
-                    `\\n\\n💡 This will help improve future exemption predictions!\\n\\n` +
-                    `Continue with database save?`;
+                    `Save Analysis Results to Cloud Database?\\n\\n` +
+                    `You're about to save ${validResults.length} course exemption decisions:\\n\\n` +
+                    `  ✅ ${exemptedCount} subject${exemptedCount !== 1 ? 's' : ''} will be EXEMPTED\\n` +
+                    `  ❌ ${rejectedCount} subject${rejectedCount !== 1 ? 's' : ''} need to be STUDIED\\n` +
+                    (invalidCount > 0 ? `  ⚠️  ${invalidCount} record${invalidCount !== 1 ? 's' : ''} skipped (missing subject name)\\n` : '') +
+                    `\\n📚 Example decisions:\\n` +
+                    validResults.slice(0, 3).map(r => {
+                        const status = (r['Exemption Granted'] === 'TRUE' || r['Exemption Granted'] === true) ? 'EXEMPTED ✓' : 'MUST STUDY';
+                        return `   • ${r['HKIT Subject Code']}: ${r['Subject Name of Previous Studies']} → ${status}`;
+                    }).join('\\n') +
+                    (validResults.length > 3 ? `\\n   ... and ${validResults.length - 3} more` : '') +
+                    `\\n\\n💾 Storage Location: Supabase Cloud Database` +
+                    `\\n💡 Why save? This helps improve AI predictions for future students.\\n\\n` +
+                    `Do you want to proceed?`;
 
                 if (!confirm(confirmMessage)) {
                     return;
@@ -1408,13 +1409,14 @@
 
                 // Show success message
                 const successMessage =
-                    `✅ Database Save Successful!\\n\\n` +
-                    `📊 Patterns saved: ${validResults.length}\\n` +
-                    `   ├─ 🟢 Exemptions: ${exemptedCount}\\n` +
-                    `   └─ 🔴 Rejections: ${rejectedCount}\\n` +
-                    `💾 Storage: ${storageLocation}\\n` +
-                    `📅 Timestamp: ${new Date().toLocaleString()}\\n\\n` +
-                    `Your analysis results are now contributing to the learning system!`;
+                    `✅ Successfully Saved to Cloud!\\n\\n` +
+                    `Your exemption decisions have been saved:\\n\\n` +
+                    `  ✅ ${exemptedCount} exempted subject${exemptedCount !== 1 ? 's' : ''}\\n` +
+                    `  ❌ ${rejectedCount} subject${rejectedCount !== 1 ? 's' : ''} to study\\n` +
+                    `  📊 Total: ${validResults.length} decisions saved\\n\\n` +
+                    `💾 Saved to: ${storageLocation}\\n` +
+                    `📅 Time: ${new Date().toLocaleString()}\\n\\n` +
+                    `Thank you! This data helps improve predictions for future students.`;
 
                 alert(successMessage);
 

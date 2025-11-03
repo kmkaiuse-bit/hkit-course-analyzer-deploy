@@ -24,7 +24,7 @@ You should redeploy when:
 ✅ GitHub repository: `hkit-course-analyzer-deploy` (main branch)
 ✅ Vercel account with access rights
 ✅ Supabase project credentials (if using database features)
-✅ Google Gemini API key (users provide their own)
+✅ Google Gemini API key configured in application
 
 ---
 
@@ -74,7 +74,7 @@ You should redeploy when:
 **For current setup, NO environment variables are required on Vercel.**
 
 Why?
-- ✅ Users enter their own Gemini API keys in the UI
+- ✅ Gemini API key is configured in the application code
 - ✅ Supabase credentials are in client-side config files (safe for public use)
 - ✅ All processing happens client-side in the browser
 
@@ -113,12 +113,13 @@ Environment: Production, Preview, Development
    - [ ] Upload PDF file works
    - [ ] Programme selection dropdown populated
    - [ ] "Analyze Files" button visible
-   - [ ] API key configuration section visible
+   - [ ] Student information form visible
 
-3. **AI Analysis** (requires user's Gemini API key)
-   - [ ] Enter test API key
+3. **AI Analysis**
+   - [ ] Fill in student information
    - [ ] Upload sample transcript
    - [ ] Click "Analyze Files"
+   - [ ] Analysis completes successfully
    - [ ] Results display correctly
 
 4. **Database Features** (if Supabase configured)
@@ -163,12 +164,13 @@ Environment: Production, Preview, Development
 
 ### Problem: API Analysis Not Working
 
-**Cause**: User hasn't entered Gemini API key OR invalid key
+**Cause**: Gemini API key not configured in application OR API quota exceeded
 
 **Solution**:
-1. This is **user-side issue** - they need to provide their own key
-2. Guide users to get key at: https://makersuite.google.com/app/apikey
-3. Ensure API key input section is visible and functional
+1. Verify Gemini API key is properly configured in application code
+2. Check API quota limits at: https://makersuite.google.com
+3. Check browser console for specific error messages
+4. For large PDFs, analysis may take 30-60 seconds
 
 ---
 

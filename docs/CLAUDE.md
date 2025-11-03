@@ -47,7 +47,7 @@ node clear-database.js        # Clear all data
 ## Environment Variables
 
 ### Production (Vercel)
-- `GEMINI_API_KEY` - Google Gemini API key
+- No environment variables required - API key configured in application code
 
 ### Local (.env file)
 ```env

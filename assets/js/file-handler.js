@@ -622,12 +622,12 @@ const FileHandler = {
             
             // Render each page
             const pageElements = [];
-            for (let pageNum = 1; pageNum <= Math.min(pdf.numPages, 5); pageNum++) { // Limit to first 5 pages
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) { // Render ALL pages
                 console.log(`Rendering page ${pageNum}...`);
                 const page = await pdf.getPage(pageNum);
                 const viewport = page.getViewport({ scale: 1.2 });
                 console.log(`Page ${pageNum} viewport:`, viewport.width, 'x', viewport.height);
-                
+
                 // Create canvas in parent window context
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
@@ -636,32 +636,26 @@ const FileHandler = {
                 canvas.style.maxWidth = '100%';
                 canvas.style.height = 'auto';
                 canvas.style.border = '1px solid #e2e8f0';
-                
+
                 console.log(`Rendering page ${pageNum} to canvas...`);
                 // Render page
                 await page.render({ canvasContext: context, viewport: viewport }).promise;
                 console.log(`Page ${pageNum} rendered successfully`);
-                
+
                 // Convert canvas to data URL for cross-window compatibility
                 const dataURL = canvas.toDataURL('image/png');
                 console.log(`Page ${pageNum} data URL length:`, dataURL.length);
-                
+
                 pdfHTML += `
                     <div style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
                         <div style="background: #f7fafc; padding: 8px; font-weight: 500; border-bottom: 1px solid #e2e8f0;">
-                            Page ${pageNum}
+                            Page ${pageNum} of ${pdf.numPages}
                         </div>
                         <div style="text-align: center; padding: 10px;">
                             <img src="${dataURL}" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0;" alt="Page ${pageNum}">
                         </div>
                     </div>
                 `;
-            }
-            
-            if (pdf.numPages > 5) {
-                pdfHTML += `<div style="text-align: center; color: #666; font-style: italic; padding: 20px;">
-                    ... and ${pdf.numPages - 5} more pages
-                </div>`;
             }
             
             pdfHTML += '</div>';

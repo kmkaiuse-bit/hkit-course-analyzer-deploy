@@ -436,40 +436,40 @@
                 </div>
             </div>
 
-            <!-- 學生資訊輸入區域 -->
+            <!-- Student Information Input Section -->
             <div class="bg-white rounded-2xl shadow-xl p-8 mb-8" id="studentInfoCard" style="display: none;">
-                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">👨‍🎓 學生資訊</h2>
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">👨‍🎓 Student Information</h2>
 
                 <div class="grid md:grid-cols-3 gap-6">
-                    <!-- 學生姓名 -->
+                    <!-- Student Name -->
                     <div class="space-y-2">
                         <label for="studentName" class="block text-sm font-medium text-gray-700">
                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            學生姓名 *
+                            Student Name *
                         </label>
-                        <input type="text" id="studentName" placeholder="請輸入學生姓名"
+                        <input type="text" id="studentName" placeholder="Enter student name"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             required>
                     </div>
 
-                    <!-- 申請編號 -->
+                    <!-- Application Number -->
                     <div class="space-y-2">
                         <label for="applicationNumber" class="block text-sm font-medium text-gray-700">
                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
                             </svg>
-                            申請編號 *
+                            Application Number *
                         </label>
-                        <input type="text" id="applicationNumber" placeholder="例如：APP2024001"
+                        <input type="text" id="applicationNumber" placeholder="e.g., APP2024001"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             required>
                     </div>
 
-                    <!-- 申請課程 -->
+                    <!-- Applied Programme -->
                     <div class="space-y-2">
                         <label for="appliedProgramme" class="block text-sm font-medium text-gray-700">
                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -477,29 +477,29 @@
                                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
                                 </path>
                             </svg>
-                            申請課程 *
+                            Applied Programme *
                         </label>
                         <select id="appliedProgramme"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             required>
-                            <option value="">請選擇申請課程</option>
-                            <!-- 選項將由 JavaScript 動態填入 -->
+                            <option value="">Select applied programme</option>
+                            <!-- Options will be populated by JavaScript -->
                         </select>
                     </div>
                 </div>
 
-                <!-- 驗證狀態顯示 -->
+                <!-- Validation Status Display -->
                 <div id="validationStatus" class="mt-4 hidden">
                     <div class="flex items-center space-x-2 text-sm">
                         <svg class="w-4 h-4" id="validationIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
                             </path>
                         </svg>
-                        <span id="validationText">學生資訊已完整填寫</span>
+                        <span id="validationText">Student information completed</span>
                     </div>
                 </div>
 
-                <!-- 保存按鈕 -->
+                <!-- Save Button -->
                 <div class="mt-6 text-center">
                     <button id="saveStudentInfoBtn"
                         class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed">
@@ -508,7 +508,7 @@
                                 d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12">
                             </path>
                         </svg>
-                        保存學生資訊
+                        Save Student Information
                     </button>
                 </div>
             </div>

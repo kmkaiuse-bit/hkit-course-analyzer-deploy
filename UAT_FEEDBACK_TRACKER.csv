@@ -1,0 +1,22 @@
+,,,,,,,,
+,HKIT COURSE EXEMPTION ANALYZER,,,,,,,
+,User Feedback & UAT Tracker,,,Tester,,,Developer,Developer
+,Date,Particular,Feature/Function,Category,Comments,Priority,Status,Developer Comments
+,11/03/2025,Upload Small PDF - Testing,File Upload & Processing,UAT Testing,,,Not Tested,
+,11/03/2025,Upload Large Image PDF (>4.5MB) - Testing,File Upload & Processing,UAT Testing,,,Not Tested,Test direct API bypass for Vercel limit
+,11/03/2025,Upload CSV/Excel File - Testing,File Upload & Processing,UAT Testing,,,Not Tested,
+,11/03/2025,View Transcripts - First Click,View Transcripts,UAT Testing,,,Not Tested,Test blank popup fix
+,11/03/2025,View Transcripts - All Pages Display,View Transcripts,UAT Testing,,,Not Tested,Test 5-page limit removal (should show all pages)
+,11/03/2025,Select Programme & Fill Student Info,Programme Selection,UAT Testing,,,Not Tested,
+,11/03/2025,AI Analysis - Small Transcript,AI Analysis,UAT Testing,,,Not Tested,
+,11/03/2025,AI Analysis - Large Image PDF,AI Analysis,UAT Testing,,,Not Tested,Test accuracy with scanned PDFs
+,11/03/2025,Check Exemption Results Display,Results Display,UAT Testing,,,Not Tested,
+,11/03/2025,Language Exemptions & 50% Rule,Results Display,UAT Testing,,,Not Tested,
+,11/03/2025,Edit Results Mode,Edit Mode,UAT Testing,,,Not Tested,
+,11/03/2025,Generate Study Plan,Study Plan,UAT Testing,,,Not Tested,
+,11/03/2025,Export to CSV,Export Functions,UAT Testing,,,Not Tested,
+,11/03/2025,Export to Excel Application,Export Functions,UAT Testing,,,Not Tested,
+,11/03/2025,Export to PDF Application,Export Functions,UAT Testing,,,Not Tested,
+,11/03/2025,Clear All & Restart,Reset Functionality,UAT Testing,,,Not Tested,
+,11/03/2025,Mobile/Responsive Design,UI/UX,UAT Testing,,,Not Tested,
+,11/03/2025,Technical Support Link,Footer/Support,UAT Testing,,,Not Tested,

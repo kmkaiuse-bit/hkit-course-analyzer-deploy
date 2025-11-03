@@ -1347,7 +1347,11 @@
                 );
 
                 const invalidCount = currentResults.length - validResults.length;
-                const exemptedCount = validResults.filter(r => r['Exemption Granted'] === 'TRUE').length;
+                const exemptedCount = validResults.filter(r =>
+                    r['Exemption Granted'] === 'TRUE' ||
+                    r['Exemption Granted'] === true ||
+                    r['Exemption Granted'] === 'true'
+                ).length;
                 const rejectedCount = validResults.length - exemptedCount;
 
                 // Show preview confirmation with cloud storage info

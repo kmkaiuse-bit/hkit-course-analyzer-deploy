@@ -501,11 +501,16 @@ const EditModeController = {
                 const customInput = container.querySelector('.custom-subject-input');
                 
                 if (event.target.value === '__CUSTOM__') {
+                    // Store original value before hiding dropdown
+                    // The first option contains the original selected value (with ✨)
+                    const originalValue = dropdown.options[0]?.value || '';
+                    dropdown.dataset.originalValue = originalValue;
+
                     // 顯示自定義輸入框
                     event.target.style.display = 'none';
                     customInput.style.display = 'block';
                     customInput.focus();
-                    
+
                     // 設置自動完成
                     this.setupAutocomplete(customInput);
                 } else {
@@ -535,24 +540,29 @@ const EditModeController = {
                 
                 setTimeout(() => {
                     const value = event.target.value.trim();
-                    
+
                     if (value) {
                         // 更新數據
                         const rowIndex = parseInt(event.target.dataset.row);
                         const header = event.target.dataset.header;
-                        
+
                         this.currentData[rowIndex][header] = value;
                         console.log(`📝 已更新自定義科目: 第${rowIndex}行, ${header} = ${value}`);
-                        
+
                         // 添加到 SubjectCollector
                         if (typeof SubjectCollector !== 'undefined') {
                             SubjectCollector.addSubject(value);
                         }
-                        
+
                         // 更新下拉選單選項
                         this.updateDropdownWithNewSubject(dropdown, value);
+                    } else {
+                        // 用戶沒有輸入任何內容 - 恢復原始值
+                        const originalValue = dropdown.dataset.originalValue || '';
+                        dropdown.value = originalValue;
+                        console.log(`🔙 恢復原始科目: ${originalValue}`);
                     }
-                    
+
                     // 隱藏輸入框，顯示下拉選單
                     event.target.style.display = 'none';
                     dropdown.style.display = 'block';
@@ -568,11 +578,12 @@ const EditModeController = {
                     const container = event.target.closest('.subject-dropdown-container');
                     const dropdown = container.querySelector('.subject-dropdown');
                     const suggestionBox = container.querySelector('.autocomplete-suggestions');
-                    
-                    // 取消編輯，回到下拉選單
+
+                    // 取消編輯，回到下拉選單並恢復原始值
+                    const originalValue = dropdown.dataset.originalValue || '';
+                    dropdown.value = originalValue;
                     event.target.style.display = 'none';
                     dropdown.style.display = 'block';
-                    dropdown.value = '';
                     suggestionBox.style.display = 'none';
                 }
             });
@@ -625,19 +636,32 @@ const EditModeController = {
      * 更新下拉選單新增科目選項
      */
     updateDropdownWithNewSubject(dropdown, newSubject) {
-        // 檢查是否已存在
+        // Remove old first option if it has ✨ (old selected value)
+        if (dropdown.options[0] && dropdown.options[0].text.startsWith('✨')) {
+            dropdown.remove(0);
+        }
+
+        // Check if new subject already exists (without ✨)
         const existingOptions = Array.from(dropdown.options);
         const exists = existingOptions.some(option => option.value === newSubject);
-        
+
         if (!exists && newSubject) {
-            // 在自定義選項之前插入新選項
-            const customOption = dropdown.querySelector('option[value="__CUSTOM__"]');
+            // Insert new option at the beginning with ✨
             const newOption = new Option(`✨ ${newSubject}`, newSubject, false, true);
-            dropdown.insertBefore(newOption, customOption);
-        } else {
-            // 選中已存在的選項
-            dropdown.value = newSubject;
+            dropdown.insertBefore(newOption, dropdown.options[0]);
+        } else if (exists) {
+            // Remove the existing option (we'll re-add it at the top with ✨)
+            const existingOption = existingOptions.find(opt => opt.value === newSubject);
+            if (existingOption) {
+                dropdown.removeChild(existingOption);
+            }
+            // Add it at the top with ✨
+            const newOption = new Option(`✨ ${newSubject}`, newSubject, false, true);
+            dropdown.insertBefore(newOption, dropdown.options[0]);
         }
+
+        // Ensure it's selected
+        dropdown.value = newSubject;
     },
 
     /**

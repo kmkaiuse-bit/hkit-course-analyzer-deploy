@@ -1396,6 +1396,16 @@
                 const studentInfo = (typeof StudentInfoManager !== 'undefined') ?
                     StudentInfoManager.getStudentInfo() || {} : {};
 
+                // Add programme information
+                const programmeSelect = document.getElementById('programmeType');
+                const programmeId = programmeSelect ? programmeSelect.value : null;
+                const programme = programmeId ? TemplateManager.getProgramme(programmeId) : null;
+
+                if (programme) {
+                    studentInfo.programmeCode = programme.id;
+                    studentInfo.programmeName = programme.name;
+                }
+
                 // Save to database using StorageManager (Supabase + fallbacks)
                 await StorageManager.recordAnalysisResults(validResults, studentInfo);
 

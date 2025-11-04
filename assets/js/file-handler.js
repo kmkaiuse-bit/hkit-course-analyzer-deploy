@@ -376,17 +376,27 @@ const FileHandler = {
         try {
             console.log('📄 Extracting text from PDF for smart pattern matching...');
 
+            // Wait for PDF.js to be available (with timeout)
+            let attempts = 0;
+            while (typeof window.pdfjsLib === 'undefined' && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+
             // Check if PDF.js is available
             if (typeof window.pdfjsLib === 'undefined') {
-                console.warn('PDF.js not loaded, cannot extract text');
+                console.warn('⚠️ PDF.js not loaded after timeout, cannot extract text');
                 return '';
             }
 
             const pdfjsLib = window.pdfjsLib;
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+            console.log('✅ PDF.js loaded, starting extraction...');
+
             // Read file as array buffer
             const arrayBuffer = await file.arrayBuffer();
+            console.log(`📄 File size: ${arrayBuffer.byteLength} bytes`);
 
             // Load PDF
             const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
@@ -400,16 +410,40 @@ const FileHandler = {
                 const page = await pdf.getPage(pageNum);
                 const content = await page.getTextContent();
 
+                console.log(`📄 Page ${pageNum}: ${content.items.length} text items`);
+
                 // Combine all text items from the page
                 const pageText = content.items
-                    .map(item => item.str)
+                    .map(item => {
+                        // Handle both string and object formats
+                        if (typeof item === 'string') {
+                            return item;
+                        } else if (item.str !== undefined) {
+                            return item.str;
+                        } else if (item.text !== undefined) {
+                            return item.text;
+                        }
+                        return '';
+                    })
+                    .filter(text => text.trim().length > 0)  // Remove empty strings
                     .join(' ');
 
-                textContent.push(pageText);
+                console.log(`📄 Page ${pageNum} text length: ${pageText.length} characters`);
+
+                if (pageText.length > 0) {
+                    textContent.push(pageText);
+                }
             }
 
-            const fullText = textContent.join('\n');
-            console.log(`✅ Extracted ${fullText.length} characters from PDF`);
+            const fullText = textContent.join('\n\n');  // Use double newline for better separation
+            console.log(`✅ Extracted ${fullText.length} characters from ${pdf.numPages} pages`);
+
+            // Log a sample of extracted text for debugging
+            if (fullText.length > 0) {
+                console.log(`📝 Sample text (first 200 chars): ${fullText.substring(0, 200)}`);
+            } else {
+                console.warn('⚠️ No text extracted - this might be an image-based PDF');
+            }
 
             return fullText;
 

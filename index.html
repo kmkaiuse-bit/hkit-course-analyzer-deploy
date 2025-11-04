@@ -1229,37 +1229,37 @@
          */
         function setupFloatingButtonEvents() {
             // Analyze button
-            document.getElementById('floatingAnalyzeBtn') ? .addEventListener('click', function () {
-                document.getElementById('analyzeBtn') ? .click();
+            document.getElementById('floatingAnalyzeBtn')?.addEventListener('click', function () {
+                document.getElementById('analyzeBtn')?.click();
             });
 
             // Edit mode buttons
-            document.getElementById('floatingEditBtn') ? .addEventListener('click', function () {
+            document.getElementById('floatingEditBtn')?.addEventListener('click', function () {
                 if (typeof EditModeController !== 'undefined') {
                     EditModeController.enterEditMode();
                 }
             });
 
-            document.getElementById('floatingSaveBtn') ? .addEventListener('click', function () {
+            document.getElementById('floatingSaveBtn')?.addEventListener('click', function () {
                 if (typeof EditModeController !== 'undefined') {
                     EditModeController.saveChanges();
                 }
             });
 
-            document.getElementById('floatingCancelBtn') ? .addEventListener('click', function () {
+            document.getElementById('floatingCancelBtn')?.addEventListener('click', function () {
                 if (typeof EditModeController !== 'undefined') {
                     EditModeController.cancelEdit();
                 }
             });
 
-            document.getElementById('floatingResetBtn') ? .addEventListener('click', function () {
+            document.getElementById('floatingResetBtn')?.addEventListener('click', function () {
                 if (typeof EditModeController !== 'undefined') {
                     EditModeController.resetToTrueOriginal();
                 }
             });
 
-            document.getElementById('floatingStudyPlanBtn') ? .addEventListener('click', function () {
-                document.getElementById('generateStudyPlanBtn') ? .click();
+            document.getElementById('floatingStudyPlanBtn')?.addEventListener('click', function () {
+                document.getElementById('generateStudyPlanBtn')?.click();
             });
         }
     </script>

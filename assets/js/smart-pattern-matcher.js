@@ -18,10 +18,11 @@ const SmartPatternMatcher = {
      * @param {Array} extractedSubjects - List of subjects from transcript
      * @param {Object} learningPatterns - Patterns from learning client
      * @param {Object} programmeTemplate - HKIT programme template
+     * @param {string} programmeCode - Programme code for context filtering
      * @returns {Object} Processing results with pre-applied and AI-pending courses
      */
-    async processWithPatterns(extractedSubjects, learningPatterns, programmeTemplate) {
-        console.log('🧠 Smart Pattern Matcher: Processing', extractedSubjects.length, 'subjects');
+    async processWithPatterns(extractedSubjects, learningPatterns, programmeTemplate, programmeCode = null) {
+        console.log('🧠 Smart Pattern Matcher: Processing', extractedSubjects.length, 'subjects for programme:', programmeCode || 'unknown');
         
         const result = {
             preAppliedResults: [],      // Auto-applied high confidence patterns
@@ -43,7 +44,8 @@ const SmartPatternMatcher = {
             const courseResult = this.processHKITCourse(
                 hkitCourse,
                 extractedSubjects,
-                learningPatterns
+                learningPatterns,
+                programmeCode
             );
             
             if (courseResult.action === 'AUTO_APPLY') {
@@ -72,12 +74,12 @@ const SmartPatternMatcher = {
     /**
      * Process single HKIT course against extracted subjects and patterns
      */
-    processHKITCourse(hkitCourse, extractedSubjects, learningPatterns) {
+    processHKITCourse(hkitCourse, extractedSubjects, learningPatterns, programmeCode = null) {
         let bestMatch = null;
-        
+
         // Check each extracted subject against patterns for this HKIT course
         for (const extractedSubject of extractedSubjects) {
-            const pattern = this.findBestPattern(hkitCourse.code, extractedSubject, learningPatterns);
+            const pattern = this.findBestPattern(hkitCourse.code, extractedSubject, learningPatterns, programmeCode);
             
             if (pattern && (!bestMatch || pattern.confidence > bestMatch.confidence)) {
                 bestMatch = {
@@ -131,13 +133,22 @@ const SmartPatternMatcher = {
 
     /**
      * Find best matching pattern for HKIT course and extracted subject
+     * @param {string} hkitCourseCode - HKIT course code to match
+     * @param {string} extractedSubject - Subject name from transcript
+     * @param {Object} learningPatterns - Available patterns
+     * @param {string} programmeCode - Programme code for filtering (null = accept all)
+     * @returns {Object|null} Best matching pattern or null
      */
-    findBestPattern(hkitCourseCode, extractedSubject, learningPatterns) {
+    findBestPattern(hkitCourseCode, extractedSubject, learningPatterns, programmeCode = null) {
         // Look for patterns where this extracted subject has been seen
         for (const [previousSubject, patternData] of Object.entries(learningPatterns)) {
             if (this.isSubjectMatch(previousSubject, extractedSubject)) {
-                // Find pattern for this specific HKIT course
-                const pattern = patternData.patterns.find(p => p.hkitSubject === hkitCourseCode);
+                // Find pattern for this specific HKIT course with programme filtering
+                // Backward compatibility: patterns without programmeContext are treated as generic (match all)
+                const pattern = patternData.patterns.find(p =>
+                    p.hkitSubject === hkitCourseCode &&
+                    (!p.programmeContext || !programmeCode || p.programmeContext === programmeCode)
+                );
                 if (pattern) {
                     return pattern;
                 }

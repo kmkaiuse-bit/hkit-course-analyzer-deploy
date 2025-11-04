@@ -43,14 +43,15 @@ const GeminiAPI = {
             try {
                 // Get learning patterns from database
                 learningPatterns = await window.learningClient.getRelevantPatterns(extractedSubjects, 0.3);
-                
-                // Process with smart pattern matcher
+
+                // Process with smart pattern matcher (with programme context for filtering)
                 smartResult = await window.SmartPatternMatcher.processWithPatterns(
-                    extractedSubjects, 
-                    learningPatterns, 
-                    programme
+                    extractedSubjects,
+                    learningPatterns,
+                    programme,
+                    programme.id  // Add programme code for context filtering
                 );
-                
+
                 console.log(`🧠 Smart Pattern Results: ${smartResult.stats.autoApplied} auto-applied, ${smartResult.stats.pendingAnalysis} need AI analysis`);
                 
             } catch (error) {

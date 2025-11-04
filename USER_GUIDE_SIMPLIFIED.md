@@ -65,7 +65,8 @@ The system checks if it has seen similar courses before in its learning database
 
 **What Happens:**
 
-The AI analyzes each remaining course by understanding **concepts**, not just matching words.
+The AI (Google Gemini)weaa
+ analyzes each remaining course by understanding **concepts**, not just matching words.
 
 **How AI Thinks:**
 

@@ -107,8 +107,9 @@ const StorageManager = {
      * @param {boolean} exempted - Whether exemption was granted
      * @param {string} source - Source of the decision ('api' or 'user')
      * @param {number} confidence - Confidence score (0-1)
+     * @param {string} programmeCode - Programme code for context (optional)
      */
-    async recordExemptionPattern(previousSubject, hkitSubject, exempted, source = 'api', confidence = 0.5) {
+    async recordExemptionPattern(previousSubject, hkitSubject, exempted, source = 'api', confidence = 0.5, programmeCode = null) {
         if (!this.db || !previousSubject || !hkitSubject) return;
 
         try {
@@ -118,6 +119,7 @@ const StorageManager = {
                 exempted: exempted,
                 source: source,
                 confidence: confidence,
+                programmeContext: programmeCode,
                 timestamp: new Date().toISOString(),
                 count: 1
             };
@@ -304,6 +306,7 @@ const StorageManager = {
                     previousSubject: result['Subject Name of Previous Studies'],
                     hkitSubject: result['HKIT Subject Code'],
                     exempted: result['Exemption Granted'] === 'TRUE',
+                    programme: studentInfo.programmeCode || null,  // ✅ Add programme context
                     source: 'api',
                     confidence: 0.6
                 })).filter(p => p.previousSubject && p.hkitSubject);
@@ -313,7 +316,7 @@ const StorageManager = {
 
                 // Save complete analysis result
                 const exemptionCount = results.filter(r => r['Exemption Granted'] === 'TRUE').length;
-                await this.supabaseClient.saveAnalysisResult({
+                const analysisResult = await this.supabaseClient.saveAnalysisResult({
                     programmeCode: studentInfo.programmeCode || null,
                     programmeName: studentInfo.programmeName || null,
                     transcriptSubjects: results.map(r => r['Subject Name of Previous Studies']),
@@ -327,7 +330,11 @@ const StorageManager = {
                     academicYear: studentInfo.academicYear || null
                 });
 
-                console.log('✅ Saved analysis results to Supabase cloud database');
+                if (analysisResult && analysisResult.success) {
+                    console.log('✅ Saved analysis results to Supabase cloud database (ID:', analysisResult.id, ')');
+                } else {
+                    console.warn('⚠️ Analysis result save returned error:', analysisResult?.error);
+                }
 
                 // Debug logging
                 if (typeof DebugMonitor !== 'undefined') {
@@ -371,7 +378,8 @@ const StorageManager = {
                     hkitSubject,
                     exempted,
                     'api',
-                    0.6 // API results get moderate confidence
+                    0.6, // API results get moderate confidence
+                    studentInfo.programmeCode || null // Add programme context
                 );
             }
         }).filter(Boolean);

@@ -78,6 +78,7 @@ const SupabaseClient = {
                 const newTimesExempted = existing.times_exempted + (pattern.exempted ? 1 : 0);
                 const newTimesRejected = existing.times_rejected + (pattern.exempted ? 0 : 1);
                 const newConfidence = newTimesExempted / (newTimesExempted + newTimesRejected);
+                const newExemptionRate = newTimesExempted / newTimesSeen;  // ✅ Calculate exemption rate
 
                 const { error: updateError } = await this.client
                     .from('exemption_patterns')
@@ -86,6 +87,8 @@ const SupabaseClient = {
                         times_exempted: newTimesExempted,
                         times_rejected: newTimesRejected,
                         confidence: newConfidence.toFixed(4),
+                        exemption_rate: newExemptionRate.toFixed(4),  // ✅ Update exemption_rate
+                        programme_context: pattern.programme || existing.programme_context || null,  // ✅ Update programme_context
                         last_updated: new Date().toISOString()
                     })
                     .eq('id', existing.id);
@@ -97,6 +100,7 @@ const SupabaseClient = {
             } else {
                 // Insert new pattern
                 const confidence = pattern.exempted ? 1.0 : 0.0;
+                const exemptionRate = pattern.exempted ? 1.0 : 0.0;  // ✅ For first record, same as confidence
 
                 const { data: inserted, error: insertError } = await this.client
                     .from('exemption_patterns')
@@ -108,6 +112,7 @@ const SupabaseClient = {
                         times_exempted: pattern.exempted ? 1 : 0,
                         times_rejected: pattern.exempted ? 0 : 1,
                         confidence: confidence.toFixed(4),
+                        exemption_rate: exemptionRate.toFixed(4),  // ✅ Add exemption_rate
                         programme_context: pattern.programme || null
                     })
                     .select()
@@ -234,6 +239,75 @@ const SupabaseClient = {
         } catch (error) {
             console.error('Error fetching stats:', error);
             return { success: false, error: error.message };
+        }
+    },
+
+    /**
+     * Get relevant patterns for smart pattern matching
+     * @param {Array} subjects - List of subject names from transcript
+     * @param {Number} minConfidence - Minimum confidence threshold (default 0.3)
+     * @returns {Object} Patterns grouped by subject name
+     */
+    async getRelevantPatterns(subjects, minConfidence = 0.3) {
+        if (!this.isConnected) {
+            console.warn('Supabase not connected - no patterns available');
+            return {};
+        }
+
+        try {
+            if (!subjects || subjects.length === 0) {
+                return {};
+            }
+
+            // Normalize subjects for matching
+            const normalizedSubjects = subjects.map(subject =>
+                this.normalizeSubject(subject)
+            );
+
+            // Query Supabase for matching patterns
+            const { data, error } = await this.client
+                .from('exemption_patterns')
+                .select('*')
+                .in('previous_normalized', normalizedSubjects)
+                .gte('confidence', minConfidence)
+                .order('confidence', { ascending: false });
+
+            if (error) throw error;
+
+            // Group patterns by original subject (same format as pattern-retriever.js)
+            const patternsBySubject = {};
+
+            for (const subject of subjects) {
+                const normalized = this.normalizeSubject(subject);
+                const matchingPatterns = data.filter(
+                    pattern => pattern.previous_normalized === normalized
+                );
+
+                if (matchingPatterns.length > 0) {
+                    patternsBySubject[subject] = {
+                        normalized: normalized,
+                        patterns: matchingPatterns.map(pattern => ({
+                            hkitSubject: pattern.hkit_subject,
+                            confidence: parseFloat(pattern.confidence || 0),
+                            weightedConfidence: parseFloat(pattern.weighted_confidence || 0),
+                            effectiveConfidence: parseFloat(pattern.weighted_confidence || pattern.confidence || 0),
+                            exemptionRate: parseFloat(pattern.exemption_rate || 0),
+                            sampleSize: pattern.times_seen || 0,
+                            programmeContext: pattern.programme_context,
+                            lastSeen: pattern.last_updated,
+                            confidenceUpdatedAt: pattern.confidence_updated_at,
+                            daysSinceUpdate: 0  // Could calculate if needed
+                        }))
+                    };
+                }
+            }
+
+            console.log(`📊 Retrieved ${Object.keys(patternsBySubject).length} pattern groups from Supabase`);
+            return patternsBySubject;
+
+        } catch (error) {
+            console.error('Error fetching patterns:', error);
+            return {};
         }
     },
 

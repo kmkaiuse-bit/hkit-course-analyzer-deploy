@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     }
 
     // Parse request body
-    const { prompt, fileUri, fileName, model = 'gemini-2.0-flash-exp', temperature = 0.3, maxTokens = 16384 } = req.body;
+    const { prompt, fileUri, fileName, model = 'gemini-2.5-pro', temperature = 0.3, maxTokens = 16384 } = req.body;
 
     // Debug logging
     console.log('📍 Analyze file request received:', {

@@ -438,18 +438,33 @@ const FileHandler = {
             const fullText = textContent.join('\n\n');  // Use double newline for better separation
             console.log(`✅ Extracted ${fullText.length} characters from ${pdf.numPages} pages`);
 
+            // Detect image-based PDFs (scanned documents with no text layer)
+            const isImageBased = fullText.length < 100;  // Less than 100 chars from multi-page PDF = likely image-based
+
             // Log a sample of extracted text for debugging
-            if (fullText.length > 0) {
+            if (fullText.length > 0 && !isImageBased) {
                 console.log(`📝 Sample text (first 200 chars): ${fullText.substring(0, 200)}`);
-            } else {
-                console.warn('⚠️ No text extracted - this might be an image-based PDF');
+                console.log('✅ Text-based PDF detected - smart patterns will work');
+            } else if (isImageBased) {
+                console.warn('📸 Image-based PDF detected (scanned document)');
+                console.warn('🔄 Skipping client-side text extraction - Gemini will handle OCR');
             }
 
-            return fullText;
+            // Return metadata object instead of just string
+            return {
+                text: fullText,
+                isImageBased: isImageBased,
+                pageCount: pdf.numPages
+            };
 
         } catch (error) {
             console.error('PDF text extraction error:', error);
-            return ''; // Return empty string if extraction fails
+            // Return metadata object even on error for consistency
+            return {
+                text: '',
+                isImageBased: true,
+                pageCount: 0
+            };
         }
     },
 

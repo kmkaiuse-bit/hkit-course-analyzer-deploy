@@ -93,11 +93,18 @@ const GeminiAPI = {
             finalResults = aiResults;
         }
 
-        // LEARNING RECORDING: Record results for future learning (if not using smart matcher)
-        if (!smartResult && typeof window !== 'undefined' && window.learningClient && finalResults) {
+        // LEARNING RECORDING: Record results for future learning
+        if (typeof window !== 'undefined' && window.learningClient && finalResults) {
             try {
-                await window.learningClient.recordAnalysisResults(finalResults, programme.id);
-                console.log('📊 Recorded analysis results for learning');
+                if (!smartResult) {
+                    // Image-based PDFs or text extraction failed - record all results from Gemini
+                    await window.learningClient.recordAnalysisResults(finalResults, programme.id);
+                    console.log('📊 Recorded all analysis results for learning (no smart patterns used)');
+                } else if (aiResults && aiResults.length > 0) {
+                    // Text-based PDFs with smart patterns - record only AI-analyzed courses
+                    await window.learningClient.recordAnalysisResults(aiResults, programme.id);
+                    console.log(`📊 Recorded ${aiResults.length} AI-analyzed results for learning (${smartResult.stats.autoApplied} were auto-applied)`);
+                }
             } catch (error) {
                 console.warn('Learning recording failed:', error.message);
             }

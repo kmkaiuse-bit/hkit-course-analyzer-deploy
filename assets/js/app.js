@@ -171,13 +171,29 @@ const App = {
 
             // Extract text from PDFs for smart pattern matching
             let extractedText = '';
+            let isImageBasedPDF = false;
             if (FileHandler.uploadedFiles.length > 0 && FileHandler.uploadedFiles[0].file.type === 'application/pdf') {
                 try {
                     if (typeof Utils !== 'undefined' && Utils.showProgress) {
                         Utils.showProgress(20, 'Extracting text for pattern matching...');
                     }
-                    extractedText = await FileHandler.extractPDFText(FileHandler.uploadedFiles[0].file);
-                    console.log(`📝 Extracted ${extractedText.length} characters for smart pattern matching`);
+                    const extractionResult = await FileHandler.extractPDFText(FileHandler.uploadedFiles[0].file);
+
+                    // Handle metadata object
+                    if (typeof extractionResult === 'object') {
+                        extractedText = extractionResult.text || '';
+                        isImageBasedPDF = extractionResult.isImageBased || false;
+
+                        if (isImageBasedPDF) {
+                            console.log('📸 Image-based PDF - Gemini will handle OCR + analysis');
+                        } else {
+                            console.log(`📝 Text-based PDF - extracted ${extractedText.length} characters for smart patterns`);
+                        }
+                    } else {
+                        // Backward compatibility: handle string return
+                        extractedText = extractionResult || '';
+                        console.log(`📝 Extracted ${extractedText.length} characters for smart pattern matching`);
+                    }
                 } catch (error) {
                     console.warn('Failed to extract PDF text for pattern matching:', error);
                     // Continue with empty text - smart matcher will be skipped

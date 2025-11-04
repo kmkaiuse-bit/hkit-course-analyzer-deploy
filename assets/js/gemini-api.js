@@ -437,56 +437,20 @@ IMPORTANT RULES:
                     console.log('⚠️ PDF too large for Vercel (image-based PDF detected)');
                     console.log(`📊 File size: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
                     console.log(`📊 Estimated base64: ${(estimatedBase64Size / 1024 / 1024).toFixed(2)}MB`);
-                    console.log('🔄 Switching to direct Gemini API call to bypass Vercel limit...');
+                    console.log('🚀 Using Gemini Files API for large file (secure server-side upload)...');
 
-                    // Check for API key (priority: config file > localStorage > error)
-                    let apiKey = null;
+                    // Upload file to Gemini Files API via server
+                    const uploadResult = await this.uploadToFilesAPI(files[0]);
 
-                    // 1. Check config file (YOUR key for all users)
-                    if (window.CLIENT_API_CONFIG && window.CLIENT_API_CONFIG.GEMINI_API_KEY) {
-                        apiKey = window.CLIENT_API_CONFIG.GEMINI_API_KEY;
-                        console.log('✅ Using API key from config file (shared key)');
-                    }
-                    // 2. Check localStorage (user's own key)
-                    else if (localStorage.getItem('geminiApiKey')) {
-                        apiKey = localStorage.getItem('geminiApiKey');
-                        console.log('✅ Using API key from localStorage (user key)');
-                    }
-                    // 3. No key available
-                    else {
-                        throw new Error(
-                            '⚠️ Large PDF detected (image-based)!\n\n' +
-                            'Vercel has a 4.5MB limit. To process this PDF:\n\n' +
-                            'Option 1 (Recommended): Use local version (no limits)\n' +
-                            '   → http://localhost:8000/local/enhanced.html\n\n' +
-                            'Option 2: Enter your Gemini API key above\n' +
-                            '   → Get free key: https://aistudio.google.com/app/apikey\n\n' +
-                            'Option 3: Compress PDF to under 3MB'
-                        );
+                    if (!uploadResult.success || !uploadResult.file) {
+                        throw new Error('Failed to upload file to Gemini Files API');
                     }
 
-                    // Convert files to base64 format for direct API call
-                    console.log('📄 Converting PDFs to base64 for direct API...');
-                    const base64Files = [];
+                    console.log(`✅ File uploaded successfully: ${uploadResult.file.name}`);
+                    console.log(`📍 File URI: ${uploadResult.file.uri}`);
 
-                    for (const fileObj of files) {
-                        if (fileObj.file.type === 'application/pdf') {
-                            console.log(`📄 Processing: ${fileObj.name}`);
-                            const arrayBuffer = await fileObj.file.arrayBuffer();
-                            const base64Data = this.arrayBufferToBase64(arrayBuffer);
-
-                            base64Files.push({
-                                name: fileObj.name,
-                                mimeType: 'application/pdf',
-                                data: base64Data
-                            });
-
-                            console.log(`✅ Converted ${fileObj.name} to base64`);
-                        }
-                    }
-
-                    // Use direct API call to bypass Vercel (with proper base64 format)
-                    return await this.makeDirectGeminiCall(prompt, base64Files, apiKey);
+                    // Analyze using uploaded file reference
+                    return await this.analyzeWithFileReference(prompt, uploadResult.file);
                 }
             }
 
@@ -539,6 +503,82 @@ IMPORTANT RULES:
         } catch (error) {
             console.error('API call error:', error);
             throw error;
+        }
+    },
+
+    /**
+     * Upload file to Gemini Files API via server
+     * @param {Object} fileObj - File object with file property
+     * @returns {Promise<Object>} Upload result with file metadata
+     */
+    async uploadToFilesAPI(fileObj) {
+        try {
+            console.log(`📤 Uploading ${fileObj.name} to Gemini Files API...`);
+
+            // Create FormData for multipart upload
+            const formData = new FormData();
+            formData.append('file', fileObj.file, fileObj.name);
+
+            // Upload to server endpoint
+            const response = await fetch('/api/gemini-upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Upload failed');
+            }
+
+            const result = await response.json();
+            console.log(`✅ Upload complete: ${result.file.name}`);
+
+            return result;
+
+        } catch (error) {
+            console.error('File upload error:', error);
+            throw new Error(`Failed to upload file: ${error.message}`);
+        }
+    },
+
+    /**
+     * Analyze transcript with uploaded file reference
+     * @param {string} prompt - Analysis prompt
+     * @param {Object} fileMetadata - Uploaded file metadata (uri, name, etc.)
+     * @returns {Promise<Object>} Analysis response
+     */
+    async analyzeWithFileReference(prompt, fileMetadata) {
+        try {
+            console.log(`🔍 Analyzing with file reference: ${fileMetadata.name}`);
+
+            // Call analysis endpoint with file reference
+            const response = await fetch('/api/gemini-analyze-file', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    fileUri: fileMetadata.uri,
+                    fileName: fileMetadata.name,
+                    model: 'gemini-2.0-flash-exp',
+                    maxTokens: 16384
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Analysis failed');
+            }
+
+            const result = await response.json();
+            console.log(`✅ Analysis complete`);
+
+            return result;
+
+        } catch (error) {
+            console.error('File analysis error:', error);
+            throw new Error(`Failed to analyze file: ${error.message}`);
         }
     },
 

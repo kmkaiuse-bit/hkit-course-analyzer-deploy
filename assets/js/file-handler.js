@@ -335,24 +335,24 @@ const FileHandler = {
             // Simple PDF info extraction (without full parsing)
             const arrayBuffer = await file.arrayBuffer();
             const uint8Array = new Uint8Array(arrayBuffer);
-            
+
             // Convert to string to look for basic PDF info
             const pdfString = Array.from(uint8Array.slice(0, 2000))
                 .map(byte => String.fromCharCode(byte))
                 .join('');
-            
+
             // Extract basic PDF metadata if available
             const info = [];
             info.push(`📄 PDF File: ${file.name}`);
             info.push(`📊 File Size: ${Utils.formatFileSize(file.size)}`);
             info.push(`📅 Last Modified: ${new Date(file.lastModified).toLocaleDateString()}`);
-            
+
             // Try to find PDF version
             const versionMatch = pdfString.match(/%PDF-(\d+\.\d+)/);
             if (versionMatch) {
                 info.push(`📋 PDF Version: ${versionMatch[1]}`);
             }
-            
+
             info.push('');
             info.push('⚠️ PDF Content Preview:');
             info.push('Full PDF text extraction requires PDF processing during analysis.');
@@ -360,10 +360,62 @@ const FileHandler = {
             info.push('');
             info.push('This preview shows file information only.');
             info.push('PDF text content is processed by the Gemini AI during exemption analysis.');
-            
+
             return info.join('\n');
         } catch (error) {
             return `❌ Error reading PDF: ${error.message}\n\nThis PDF will be processed during analysis.`;
+        }
+    },
+
+    /**
+     * Extract text content from PDF for smart pattern matching
+     * @param {File} file - PDF file object
+     * @returns {Promise<string>} Extracted text content
+     */
+    async extractPDFText(file) {
+        try {
+            console.log('📄 Extracting text from PDF for smart pattern matching...');
+
+            // Check if PDF.js is available
+            if (typeof window.pdfjsLib === 'undefined') {
+                console.warn('PDF.js not loaded, cannot extract text');
+                return '';
+            }
+
+            const pdfjsLib = window.pdfjsLib;
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+            // Read file as array buffer
+            const arrayBuffer = await file.arrayBuffer();
+
+            // Load PDF
+            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+            const pdf = await loadingTask.promise;
+
+            console.log(`📄 PDF loaded: ${pdf.numPages} pages`);
+
+            // Extract text from all pages
+            const textContent = [];
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const content = await page.getTextContent();
+
+                // Combine all text items from the page
+                const pageText = content.items
+                    .map(item => item.str)
+                    .join(' ');
+
+                textContent.push(pageText);
+            }
+
+            const fullText = textContent.join('\n');
+            console.log(`✅ Extracted ${fullText.length} characters from PDF`);
+
+            return fullText;
+
+        } catch (error) {
+            console.error('PDF text extraction error:', error);
+            return ''; // Return empty string if extraction fails
         }
     },
 

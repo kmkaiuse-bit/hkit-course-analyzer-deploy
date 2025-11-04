@@ -169,12 +169,27 @@ const App = {
                 Utils.showProgress(10, 'Reading PDF transcript files...');
             }
 
+            // Extract text from PDFs for smart pattern matching
+            let extractedText = '';
+            if (FileHandler.uploadedFiles.length > 0 && FileHandler.uploadedFiles[0].file.type === 'application/pdf') {
+                try {
+                    if (typeof Utils !== 'undefined' && Utils.showProgress) {
+                        Utils.showProgress(20, 'Extracting text for pattern matching...');
+                    }
+                    extractedText = await FileHandler.extractPDFText(FileHandler.uploadedFiles[0].file);
+                    console.log(`📝 Extracted ${extractedText.length} characters for smart pattern matching`);
+                } catch (error) {
+                    console.warn('Failed to extract PDF text for pattern matching:', error);
+                    // Continue with empty text - smart matcher will be skipped
+                }
+            }
+
             if (typeof Utils !== 'undefined' && Utils.showProgress) {
                 Utils.showProgress(30, 'Sending to AI for analysis...');
             }
 
-            // Call Gemini API with PDF files array
-            const results = await GeminiAPI.analyzeTranscripts('', programmeId, FileHandler.uploadedFiles);
+            // Call Gemini API with PDF files array and extracted text
+            const results = await GeminiAPI.analyzeTranscripts(extractedText, programmeId, FileHandler.uploadedFiles);
             
             if (typeof Utils !== 'undefined' && Utils.showProgress) {
                 Utils.showProgress(80, 'Processing results...');

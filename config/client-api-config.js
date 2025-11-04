@@ -2,16 +2,16 @@
  * Client-side API Configuration
  * For large PDFs that bypass Vercel's 4.5MB limit
  *
- * IMPORTANT: This API key will be visible in the browser.
- * For better security, use Vercel environment variables when possible.
+ * SETUP: Replace YOUR_NEW_API_KEY with your actual Gemini API key
+ * Get your key at: https://aistudio.google.com/app/apikey
+ *
+ * SECURITY: This file is in .gitignore and should NOT be committed to GitHub
  */
 
 const CLIENT_API_CONFIG = {
     // Your Gemini API key (for large PDF direct calls)
-    // Leave empty to require users to enter their own key
-    // Or add your key here to let all users use your key
-    // Get your key at: https://aistudio.google.com/app/apikey
-    GEMINI_API_KEY: 'AIzaSyC9X2LHsLQXxCXpwQFNd41I6xrLpvLEJAc', // TODO: Add your key here: 'AIzaSy...'
+    // Replace with your actual key from https://aistudio.google.com/app/apikey
+    GEMINI_API_KEY: 'YOUR_NEW_API_KEY', // TODO: Replace with your new API key
 
     // API endpoint
     GEMINI_API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1/models',

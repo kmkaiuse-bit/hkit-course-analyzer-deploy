@@ -319,7 +319,7 @@ const EditModeController = {
         
         // If we have a current value, always make it the first selected option
         if (displayValue && displayValue.trim() !== '') {
-            options += `<option value="${displayValue.replace(/"/g, '&quot;')}" selected>✨ ${displayValue}</option>`;
+            options += `<option value="${displayValue.replace(/"/g, '&quot;')}" selected>${displayValue}</option>`;
             // Add separator if we have other subjects
             if (availableSubjects.length > 0) {
                 options += '<option value="">-- 選擇其他科目 --</option>';
@@ -502,7 +502,7 @@ const EditModeController = {
                 
                 if (event.target.value === '__CUSTOM__') {
                     // Store original value before hiding dropdown
-                    // The first option contains the original selected value (with ✨)
+                    // The first option contains the original selected value
                     const originalValue = dropdown.options[0]?.value || '';
                     dropdown.dataset.originalValue = originalValue;
 
@@ -636,27 +636,30 @@ const EditModeController = {
      * 更新下拉選單新增科目選項
      */
     updateDropdownWithNewSubject(dropdown, newSubject) {
-        // Remove old first option if it has ✨ (old selected value)
-        if (dropdown.options[0] && dropdown.options[0].text.startsWith('✨')) {
+        // Remove old first option if it's the currently selected value (not a separator or empty)
+        if (dropdown.options[0] &&
+            dropdown.options[0].value !== '' &&
+            dropdown.options[0].value !== '__CUSTOM__' &&
+            !dropdown.options[0].text.startsWith('--')) {
             dropdown.remove(0);
         }
 
-        // Check if new subject already exists (without ✨)
+        // Check if new subject already exists
         const existingOptions = Array.from(dropdown.options);
         const exists = existingOptions.some(option => option.value === newSubject);
 
         if (!exists && newSubject) {
-            // Insert new option at the beginning with ✨
-            const newOption = new Option(`✨ ${newSubject}`, newSubject, false, true);
+            // Insert new option at the beginning
+            const newOption = new Option(newSubject, newSubject, false, true);
             dropdown.insertBefore(newOption, dropdown.options[0]);
         } else if (exists) {
-            // Remove the existing option (we'll re-add it at the top with ✨)
+            // Remove the existing option (we'll re-add it at the top)
             const existingOption = existingOptions.find(opt => opt.value === newSubject);
             if (existingOption) {
                 dropdown.removeChild(existingOption);
             }
-            // Add it at the top with ✨
-            const newOption = new Option(`✨ ${newSubject}`, newSubject, false, true);
+            // Add it at the top
+            const newOption = new Option(newSubject, newSubject, false, true);
             dropdown.insertBefore(newOption, dropdown.options[0]);
         }
 

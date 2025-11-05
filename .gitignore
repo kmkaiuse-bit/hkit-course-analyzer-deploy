@@ -1,12 +1,17 @@
 # Environment files
 .env
 .env.local
+.env.production
+.env.testing
 .env.*.local
 
 # API keys and secrets
 config/api-config-local.js
 config/client-api-config.js
+local/config/api-config-local.testing.js
+local/config/api-config-local.production.js
 **/api-key*.txt
+**/*-secret*.js
 
 # Dependencies
 node_modules/

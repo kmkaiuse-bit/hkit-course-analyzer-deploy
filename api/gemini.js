@@ -1,3 +1,4 @@
+// ========== GEMINI SDK (PRODUCTION - ACTIVE) ==========
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 module.exports = async (req, res) => {
@@ -17,18 +18,19 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Check for API key
+    // ========== GEMINI SDK (PRODUCTION) ==========
+    // Check for API key (Gemini)
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error('GEMINI_API_KEY not configured');
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'Gemini API key not configured',
         details: 'Please set GEMINI_API_KEY in environment variables'
       });
     }
 
-    // Parse request body - use 2.5 pro for complex multi-course analysis with large output
-    const { prompt, model = 'gemini-2.5-pro', temperature = 0.7, maxTokens = 16384, files = [] } = req.body;
+    // Parse request body
+    const { prompt, model = 'gemini-2.0-flash-exp', temperature = 0.7, maxTokens = 16384, files = [] } = req.body;
 
     // Debug logging
     console.log('📍 Request received:', {
@@ -41,64 +43,49 @@ module.exports = async (req, res) => {
 
     if (!prompt) {
       console.error('❌ Missing prompt in request body');
-      return res.status(400).json({ 
-        error: 'Missing required field: prompt' 
+      return res.status(400).json({
+        error: 'Missing required field: prompt'
       });
     }
 
-    console.log('✅ Initializing Gemini API with model:', model);
-    
-    // Initialize Gemini
+    console.log('✅ Using Gemini SDK with model:', model);
+
+    // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Use a faster model for better performance
     const geminiModel = genAI.getGenerativeModel({
       model: model,
       generationConfig: {
         temperature: temperature,
-        maxOutputTokens: Math.min(maxTokens, 16384), // Increased for multi-course analysis
-        topP: 0.95,
-        topK: 40,
-      },
+        maxOutputTokens: maxTokens,
+      }
     });
 
-    console.log('Generating content...');
-    
-    // Prepare content for generation (handle files if present)
-    let contentToGenerate;
+    // Prepare content parts
+    const parts = [{ text: prompt }];
+
+    // Add files if present (images for vision)
     if (files && files.length > 0) {
-      // Handle files with prompt
-      const parts = [{ text: prompt }];
-      
-      // Add file parts
-      files.forEach(file => {
-        if (file.mimeType === 'application/pdf') {
+      console.log(`📎 Adding ${files.length} file(s) to request`);
+      files.forEach(f => {
+        if (f.mimeType && f.data) {
           parts.push({
             inlineData: {
-              mimeType: file.mimeType,
-              data: file.data
+              mimeType: f.mimeType,
+              data: f.data
             }
           });
         }
       });
-      
-      contentToGenerate = parts;
-    } else {
-      contentToGenerate = prompt;
     }
-    
-    // Generate content with 55 second timeout (leaving 5 second buffer for 60s Vercel limit)
-    const result = await Promise.race([
-      geminiModel.generateContent(contentToGenerate),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 55000)
-      )
-    ]);
 
-    const response = await result.response;
+    console.log('🤖 Generating content via Gemini SDK...');
+
+    // Generate content
+    const result = await geminiModel.generateContent(parts);
+    const response = result.response;
     const text = response.text();
 
-    console.log('Content generated successfully');
+    console.log('✅ Content generated successfully');
 
     // Return the response
     return res.status(200).json({
@@ -107,6 +94,61 @@ module.exports = async (req, res) => {
         text: text
       }
     });
+    // ========== END GEMINI SDK ==========
+
+    /* ========== OPENROUTER (DISABLED - TESTING ONLY) ==========
+    // This code is kept for reference and can be re-enabled for testing
+    // To use OpenRouter:
+    // 1. Comment out the Gemini SDK code above
+    // 2. Uncomment this OpenRouter section
+    // 3. Change process.env.GEMINI_API_KEY to process.env.OPENROUTER_API_KEY
+
+    const messages = [{ role: 'user', content: [{ type: 'text', text: prompt }] }];
+
+    if (files && files.length > 0) {
+      files.forEach(f => {
+        if (f.mimeType && f.data) {
+          messages[0].content.push({
+            type: 'image_url',
+            image_url: { url: `data:${f.mimeType};base64,${f.data}` }
+          });
+        }
+      });
+    }
+
+    const fetchPromise = fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://hkit-course-analyzer-deploy.vercel.app',
+        'X-Title': 'HKIT Course Analyzer'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-pro',
+        messages,
+        temperature,
+        max_tokens: Math.min(maxTokens, 16384),
+        top_p: 0.95,
+        top_k: 40
+      })
+    });
+
+    const response = await Promise.race([
+      fetchPromise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 55000)
+      )
+    ]);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`OpenRouter Error: ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const text = data.choices[0].message.content;
+    ========== END OPENROUTER (DISABLED) ========== */
 
   } catch (error) {
     console.error('Gemini API Error:', error);

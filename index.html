@@ -1265,8 +1265,9 @@
     </script>
 
     <!-- JavaScript Files -->
-    <script src="config/api-config.js"></script>
-    <script src="config/client-api-config.js"></script>
+    <!-- ⚠️ PRODUCTION ENVIRONMENT: Loads production-only config -->
+    <script src="config/api-config.production.js"></script>
+    <!-- Client config NOT loaded in production (server-side keys only) -->
 
     <!-- Supabase Cloud Database Integration -->
     <script src="config/supabase-config.js"></script>

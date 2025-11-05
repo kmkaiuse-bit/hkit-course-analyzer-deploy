@@ -238,18 +238,16 @@ app.post('/api/learning/patterns', async (req, res) => {
     }
 });
 
-// Gemini API Proxy Endpoint (secure - API key stored server-side)
+// OpenRouter API Proxy Endpoint (secure - API key stored server-side)
 app.post('/api/gemini', async (req, res) => {
     try {
-        const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-        // Get API key from environment
-        const apiKey = process.env.GEMINI_API_KEY;
+        // Get API key from environment (OpenRouter)
+        const apiKey = process.env.OPENROUTER_API_KEY;
 
         if (!apiKey) {
             return res.status(500).json({
                 success: false,
-                error: 'Gemini API key not configured on server. Please set GEMINI_API_KEY in .env file.'
+                error: 'OpenRouter API key not configured on server. Please set OPENROUTER_API_KEY in .env file.'
             });
         }
 
@@ -262,60 +260,75 @@ app.post('/api/gemini', async (req, res) => {
             });
         }
 
-        console.log(`📍 Processing Gemini API request with model: ${model}`);
+        console.log(`📍 Processing OpenRouter API request with model: google/gemini-2.5-pro`);
 
-        // Initialize Gemini
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const geminiModel = genAI.getGenerativeModel({
-            model: model,
-            generationConfig: {
-                temperature: temperature,
-                maxOutputTokens: maxTokens,
-                topP: 0.9,
-                topK: 40
-            }
-        });
+        // Build messages array for OpenRouter
+        const messages = [{ role: 'user', content: [{ type: 'text', text: prompt }] }];
 
-        // Prepare request
-        let parts = [{ text: prompt }];
-
-        // Add PDF files if provided
+        // Add files if present (OpenRouter supports images for vision/OCR)
         if (files && files.length > 0) {
-            files.forEach(file => {
-                if (file.mimeType && file.data) {
-                    parts.push({
-                        inlineData: {
-                            mimeType: file.mimeType,
-                            data: file.data
-                        }
-                    });
+            console.log(`📎 Processing ${files.length} file(s)...`);
+            files.forEach((f, index) => {
+                if (f.mimeType && f.data) {
+                    // Add images (PNG, JPEG, etc.) for vision/OCR
+                    if (f.mimeType.startsWith('image/')) {
+                        messages[0].content.push({
+                            type: 'image_url',
+                            image_url: { url: `data:${f.mimeType};base64,${f.data}` }
+                        });
+                        console.log(`  ✅ Image ${index + 1}: ${f.name || 'unnamed'} (${f.mimeType})`);
+                    } else if (f.mimeType === 'application/pdf') {
+                        console.log(`  ⚠️  PDF detected: ${f.name || 'unnamed'} - should be converted to images client-side`);
+                        // PDFs should be converted to images client-side before calling this API
+                    } else {
+                        console.log(`  ⚠️  Unsupported type: ${f.mimeType}`);
+                    }
                 }
             });
         }
 
-        // Generate content
-        const result = await geminiModel.generateContent({
-            contents: [{ parts: parts }]
+        // Call OpenRouter API
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'http://localhost:8000',
+                'X-Title': 'HKIT Course Analyzer'
+            },
+            body: JSON.stringify({
+                model: 'google/gemini-2.5-pro',
+                messages,
+                temperature,
+                max_tokens: maxTokens,
+                top_p: 0.9,
+                top_k: 40
+            })
         });
 
-        const response = await result.response;
-        const text = response.text();
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`OpenRouter Error: ${errorData.error?.message || response.statusText}`);
+        }
 
-        console.log('✅ Gemini API request successful');
+        const data = await response.json();
+        const text = data.choices[0].message.content;
+
+        console.log('✅ OpenRouter API request successful');
 
         res.json({
             success: true,
             data: {
                 text: text,
-                model: model
+                model: 'google/gemini-2.5-pro'
             }
         });
 
     } catch (error) {
-        console.error('❌ Gemini API error:', error);
+        console.error('❌ OpenRouter API error:', error);
         res.status(500).json({
             success: false,
-            error: error.message || 'Failed to process Gemini API request'
+            error: error.message || 'Failed to process OpenRouter API request'
         });
     }
 });

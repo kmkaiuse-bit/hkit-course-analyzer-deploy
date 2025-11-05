@@ -25,7 +25,7 @@ Automates transcript analysis for Hong Kong Institute of Technology programs usi
 
 ## 🚀 **Quick Start**
 
-### **For End Users**
+### **For End Users (Production)**
 1. Visit: **https://hkit-course-analyzer-deploy.vercel.app/**
 2. Enter your Google Gemini API key
 3. Upload transcript PDF
@@ -33,7 +33,7 @@ Automates transcript analysis for Hong Kong Institute of Technology programs usi
 5. Review/edit results if needed
 6. Click "💾 Save to Database" to persist to cloud
 
-### **For Developers**
+### **For Developers (Production)**
 ```bash
 # Clone repository
 git clone https://github.com/kmkaiuse-bit/hkit-course-analyzer-deploy.git
@@ -48,6 +48,19 @@ python -m http.server 8000
 
 # Open in browser
 http://localhost:8000/
+```
+
+### **For Developers (Testing Environment)**
+```bash
+# Start backend server (optional, for backend mode)
+npm run server
+
+# Open testing environment
+start local/enhanced.html
+# OR: python -m http.server 8000 && open http://localhost:8000/local/enhanced.html
+
+# Configure testing environment
+# See ENVIRONMENT_SETUP.md for detailed instructions
 ```
 
 ---
@@ -254,6 +267,127 @@ Supabase credentials are stored in `config/supabase-config.js`:
 
 ---
 
+## 🌍 **Environment Separation**
+
+### **Overview**
+
+The project uses **separate configurations** for production and testing environments:
+
+| Environment | API Provider | Entry Point | Config File | Purpose |
+|-------------|--------------|-------------|-------------|---------|
+| **Production** | Gemini API | `index.html` | `api-config.production.js` | Stable, deployed on Vercel |
+| **Testing** | OpenRouter | `local/enhanced.html` | `api-config.testing.js` | Experimental, local only |
+
+### **Why Separate Environments?**
+
+- ✅ **Stability**: Production remains stable while testing new features
+- ✅ **Security**: Server-side API keys in production, client-side allowed in testing
+- ✅ **Flexibility**: Experiment with OpenRouter without affecting production
+- ✅ **Isolation**: No mixing of configurations or providers
+
+### **Production Environment (Gemini)**
+
+**Deployment**: Vercel serverless platform
+**API Provider**: Google Gemini API
+**API Key Storage**: Vercel environment variables (server-side only)
+**Entry Point**: `index.html`
+**Config**: `config/api-config.production.js`
+
+```javascript
+// Production config loads via Vercel Functions
+const API_CONFIG = {
+    ENVIRONMENT: 'production',
+    API_PROVIDER: 'gemini',
+    functions: {
+        gemini: '/api/gemini',
+        geminiChunked: '/api/gemini-chunked'
+    }
+};
+```
+
+**Setup Instructions**:
+1. Add `GEMINI_API_KEY` to Vercel Dashboard environment variables
+2. Deploy via GitHub push (auto-deploys)
+3. Access at: https://hkit-course-analyzer-deploy.vercel.app/
+
+### **Testing Environment (OpenRouter)**
+
+**Deployment**: Local development only
+**API Provider**: OpenRouter (experimental)
+**API Key Storage**: `.env.local` or `config/client-api-config.js`
+**Entry Point**: `local/enhanced.html`
+**Config**: `config/api-config.testing.js`
+
+```javascript
+// Testing config supports both backend and frontend modes
+const API_CONFIG = {
+    ENVIRONMENT: 'testing',
+    API_PROVIDER: 'openrouter',
+    backend: {
+        baseUrl: 'http://localhost:3001'
+    },
+    openrouter: {
+        model: 'google/gemini-2.5-pro'
+    }
+};
+```
+
+**Setup Instructions**:
+1. Copy `.env.local.example` to `.env.local`
+2. Add `OPENROUTER_API_KEY` (optional)
+3. Start backend: `npm run server` (optional)
+4. Open: `local/enhanced.html`
+
+### **Switching Between Environments**
+
+```bash
+# Use Production (Gemini)
+start index.html
+# OR deploy to Vercel: git push origin main
+
+# Use Testing (OpenRouter)
+start local/enhanced.html
+# With backend: npm run server (in separate terminal)
+```
+
+### **Security Model**
+
+**Production (Secure)**:
+- ✅ API keys stored in Vercel environment variables
+- ✅ All API calls go through serverless functions
+- ✅ No client-side key exposure
+- ✅ Keys never committed to git
+
+**Testing (Local Only)**:
+- ⚠️ Client-side keys allowed for testing convenience
+- ⚠️ `.env.local` and `client-api-config.js` in `.gitignore`
+- ⚠️ Never use production keys in testing
+- ✅ Backend mode recommended for better security
+
+### **Configuration Files**
+
+```
+config/
+├── api-config.production.js     # Production (Gemini, Vercel Functions)
+├── api-config.testing.js        # Testing (OpenRouter experiments)
+├── api-config.js                # Production copy (for Vercel compatibility)
+├── client-api-config.template.js # Template (safe to commit)
+└── client-api-config.js         # Your local keys (gitignored)
+
+.env.example                      # Production env template
+.env.local.example                # Testing env template
+.env.local                        # Your local env (gitignored)
+```
+
+### **Detailed Setup Guide**
+
+For complete environment setup instructions, see:
+- **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - Comprehensive setup guide
+- **[ENVIRONMENT_SEPARATION_PLAN.md](./ENVIRONMENT_SEPARATION_PLAN.md)** - Implementation plan
+- **[SECURITY_AUDIT_2025-01-05.md](./SECURITY_AUDIT_2025-01-05.md)** - Security audit report
+
+---
+
 ## 💾 **Save to Database Workflow**
 
 ### **User Experience**
@@ -374,12 +508,15 @@ SELECT * FROM pattern_analysis ORDER BY total_uses DESC;
 - `UAT_TEST_CASES.md` - User acceptance test scenarios
 
 ### **For Developers**
+- **`ENVIRONMENT_SETUP.md`** - Production and testing environment setup guide ⭐ NEW
+- **`ENVIRONMENT_SEPARATION_PLAN.md`** - Environment separation implementation plan ⭐ NEW
 - `docs/development/PRD_LEARNING_DATABASE.md` - Database design & PRD
 - `docs/deployment/SUPABASE_VERCEL_SETUP_SOP.md` - Deployment guide
 - `docs/deployment/SUPABASE_BACKUP_GUIDE.md` - Backup procedures
 - `MASTER_PRD.md` - Master product requirements
 
 ### **For Administrators**
+- **`SECURITY_AUDIT_2025-01-05.md`** - Security audit report ⭐ NEW
 - `BACKEND_SETUP_GUIDE.md` - Backend configuration
 - `TESTING_GUIDE.md` - Testing procedures
 - `PROJECT_JOURNEY_REPORT.md` - Development history
@@ -436,6 +573,6 @@ All rights reserved.
 
 ---
 
-**Last Updated**: November 2025
-**Version**: 2.0 (Supabase Integration)
+**Last Updated**: January 2025
+**Version**: 2.1 (Supabase Integration + Environment Separation)
 **Status**: Production Ready ✅

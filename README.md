@@ -323,7 +323,7 @@ Success Notification
 
 ### **Manual Testing**
 1. Visit production site: https://hkit-course-analyzer-deploy.vercel.app/
-2. Enter Gemini API key
+2. Enter Gemini API key (legacy)
 3. Upload sample transcript (see `Test/` folder)
 4. Click "Analyze Files"
 5. Verify results display correctly

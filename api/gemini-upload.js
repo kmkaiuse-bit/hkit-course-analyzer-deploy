@@ -121,10 +121,17 @@ module.exports = async (req, res) => {
         });
 
       } catch (uploadError) {
-        console.error('Upload error:', uploadError);
+        console.error('❌ Upload error:', uploadError);
+        console.error('Error name:', uploadError.name);
+        console.error('Error message:', uploadError.message);
+        console.error('Error stack:', uploadError.stack);
+
         return res.status(500).json({
           error: 'File upload failed',
-          details: uploadError.message
+          details: uploadError.message,
+          errorType: uploadError.name,
+          hasApiKey: !!process.env.GEMINI_API_KEY,
+          timestamp: new Date().toISOString()
         });
       }
     });

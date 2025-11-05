@@ -14,12 +14,24 @@ Automates transcript analysis for Hong Kong Institute of Technology programs usi
 
 ---
 
-## ⚡ **Current Status: November 2025**
+## ⚡ **Current Status: January 2025**
 
 **✅ Production Ready**: Deployed on Vercel with full Supabase integration
 **✅ Cloud Database**: Automatic data persistence to Supabase PostgreSQL
 **✅ User-Controlled Saves**: Manual confirmation workflow prevents incorrect data
 **✅ Three-Tier Storage**: Supabase Cloud → PostgreSQL Server → IndexedDB fallback
+**✅ Environment Separation**: Distinct production (Gemini) and testing (OpenRouter) environments
+
+### **⚠️ IMPORTANT: Two Separate Environments**
+
+This project has **TWO distinct environments** - do NOT mix them:
+
+| Environment | Entry Point | API Provider | Use Case |
+|-------------|-------------|--------------|----------|
+| 🌍 **Production** | `index.html` | Gemini API (Vercel) | Live deployment, stable |
+| 🧪 **Testing** | `local/enhanced.html` | OpenRouter (Local) | Experiments, local only |
+
+📖 **See:** [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) for detailed setup instructions
 
 ---
 
@@ -67,40 +79,85 @@ start local/enhanced.html
 
 ## 📁 **Project Structure**
 
+### **🌍 Production Environment** (Deployed on Vercel)
 ```
-hkit-course-analyzer-deploy/
-├── 📄 index.html                    # Main production app (Vercel entry point)
-├── 📁 assets/                       # Static assets
-│   ├── 📁 css/                     # Stylesheets
-│   └── 📁 js/                      # JavaScript modules
-│       ├── 📁 modules/             # Core application modules
-│       │   ├── storageManager.js   # Supabase + IndexedDB storage
+📦 Production Files (index.html → Vercel)
+├── 📄 index.html                         # 🌍 PRODUCTION entry point
+├── 📁 assets/                            # 🌍 Production static assets
+│   ├── 📁 css/                          # Stylesheets
+│   └── 📁 js/                           # JavaScript modules
+│       ├── 📁 modules/                  # Core application modules
+│       │   ├── storageManager.js        # Supabase + IndexedDB storage
 │       │   ├── editModeController.js
 │       │   ├── studentInfoManager.js
 │       │   └── ...
-│       ├── supabase-client.js      # Supabase cloud database client
-│       ├── learning-client.js      # PostgreSQL learning system
-│       ├── gemini-api.js           # Google Gemini AI integration
-│       └── app.js                  # Main application logic
-├── 📁 config/                       # Configuration files
-│   ├── supabase-config.js          # Supabase connection settings
-│   ├── api-config.js               # API configuration
-│   └── client-api-config.js        # Client-side API config
-├── 📁 api/                          # Vercel serverless functions
-│   └── gemini.js                   # Gemini API proxy endpoint
-├── 📁 db/                           # Database schemas
-│   └── migrations/
-│       └── 002_supabase_schema.sql # Supabase PostgreSQL schema
-├── 📁 docs/                         # Documentation
-│   ├── 📁 development/             # PRDs and development docs
-│   │   └── PRD_LEARNING_DATABASE.md
-│   └── 📁 deployment/              # Deployment guides
-│       ├── SUPABASE_VERCEL_SETUP_SOP.md
-│       └── SUPABASE_BACKUP_GUIDE.md
-├── 📁 local/                        # Local development versions
-│   └── enhanced.html               # Feature-complete local version
-└── vercel.json                     # Vercel deployment config
+│       ├── supabase-client.js           # Supabase cloud database client
+│       ├── learning-client.js           # PostgreSQL learning system
+│       ├── gemini-api.js                # Google Gemini AI integration
+│       └── app.js                       # Main application logic
+├── 📁 config/                            # 🌍 Production configuration
+│   ├── api-config.production.js         # ⭐ Production config (Gemini via Vercel)
+│   ├── api-config.js                    # Copy of production config
+│   ├── supabase-config.js               # Supabase connection settings
+│   └── client-api-config.template.js    # Template (safe to commit)
+├── 📁 api/                               # 🌍 Vercel serverless functions
+│   ├── gemini.js                        # Gemini API proxy endpoint
+│   ├── gemini-upload.js                 # File upload to Gemini Files API
+│   ├── gemini-analyze-file.js           # Analyze with file reference
+│   └── gemini-chunked.js                # Chunked processing
 ```
+
+### **🧪 Testing Environment** (Local Development Only)
+```
+📦 Testing Files (local/enhanced.html → Local)
+├── 📁 local/                             # 🧪 TESTING environment
+│   ├── enhanced.html                    # 🧪 TESTING entry point
+│   ├── 📁 assets/                       # Testing-specific assets
+│   │   └── 📁 js/                       # Testing JavaScript modules
+│   │       ├── gemini-api.js            # OpenRouter integration
+│   │       └── utils.js                 # Enhanced utilities
+│   └── 📁 config/                       # 🧪 Testing configuration
+│       └── api-config-smart.js          # Smart environment detector
+├── 📁 config/                            # 🧪 Testing configuration
+│   ├── api-config.testing.js            # ⭐ Testing config (OpenRouter)
+│   └── client-api-config.js             # Local API key (gitignored)
+```
+
+### **📚 Documentation & Environment Separation**
+```
+📦 Documentation Files
+├── ENVIRONMENT_SETUP.md                  # ⭐ Complete environment setup guide
+├── ENVIRONMENT_SEPARATION_PLAN.md        # ⭐ Implementation plan & tracking
+├── SECURITY_AUDIT_2025-01-05.md          # ⭐ Security audit report
+├── OPENROUTER_MIGRATION_PLAN.md          # Testing environment guidelines
+├── MASTER_TECHNICAL_DOCUMENTATION.md     # Technical overview
+├── README.md                             # This file
+├── .env.example                          # Production env template
+└── .env.local.example                    # Testing env template
+```
+
+### **🗄️ Database & Infrastructure**
+```
+📦 Database & Deployment
+├── 📁 db/                                # Database schemas
+│   └── migrations/
+│       ├── 001_initial_schema.sql
+│       └── 002_supabase_schema.sql
+├── 📁 server/                            # Backend server (optional)
+│   └── learning-server.js               # PostgreSQL learning system
+└── vercel.json                          # Vercel deployment config
+```
+
+### **🔑 Key Files for Environment Separation**
+
+| File | Environment | Purpose |
+|------|-------------|---------|
+| `index.html` | 🌍 Production | Entry point for production (Vercel) |
+| `local/enhanced.html` | 🧪 Testing | Entry point for testing (Local) |
+| `config/api-config.production.js` | 🌍 Production | Gemini API via Vercel Functions |
+| `config/api-config.testing.js` | 🧪 Testing | OpenRouter API (experimental) |
+| `api/gemini.js` | 🌍 Production | Server-side Gemini SDK |
+| `local/assets/js/gemini-api.js` | 🧪 Testing | Client-side OpenRouter calls |
 
 ---
 

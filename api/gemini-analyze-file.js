@@ -70,30 +70,38 @@ module.exports = async (req, res) => {
     });
 
     console.log(`🔍 Analyzing file: ${fileName} with uploaded file reference...`);
+    console.log(`📍 File URI: ${fileUri}`);
 
     // Prepare content with file reference
-    const contentToGenerate = [
-      {
-        text: prompt
-      },
+    // Format according to Gemini SDK: https://ai.google.dev/gemini-api/docs/file-upload
+    const parts = [
       {
         fileData: {
           fileUri: fileUri,
           mimeType: 'application/pdf'
         }
+      },
+      {
+        text: prompt
       }
     ];
 
+    console.log(`📍 Generating content with ${parts.length} parts...`);
+
     // Generate content with 55 second timeout (leaving 5 second buffer for 60s Vercel limit)
     const result = await Promise.race([
-      geminiModel.generateContent(contentToGenerate),
+      geminiModel.generateContent({ contents: [{ role: 'user', parts: parts }] }),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 55000)
       )
     ]);
 
-    const response = await result.response;
+    console.log(`✅ Generate content call completed`);
+
+    const response = result.response;
     const text = response.text();
+
+    console.log(`✅ Text extracted from response`);
 
     console.log('✅ Content generated successfully');
     console.log(`📊 Response length: ${text.length} characters`);

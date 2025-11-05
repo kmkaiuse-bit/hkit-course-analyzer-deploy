@@ -107,10 +107,18 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('❌ Gemini API Error:', error);
     console.error('Error name:', error.name);
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
+
+    // Log error details for debugging
+    if (error.response) {
+      console.error('Error response:', error.response);
+    }
+    if (error.status) {
+      console.error('Error status:', error.status);
+    }
 
     // More detailed error response for debugging
     return res.status(500).json({
@@ -118,7 +126,11 @@ module.exports = async (req, res) => {
       message: error.message || 'Unknown error occurred',
       errorType: error.name || 'Unknown',
       details: error.stack ? error.stack.substring(0, 500) : undefined,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      // Add these for better debugging
+      fileUri: req.body?.fileUri,
+      model: req.body?.model,
+      hasApiKey: !!process.env.GEMINI_API_KEY
     });
   }
 };

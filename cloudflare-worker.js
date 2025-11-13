@@ -1,5 +1,6 @@
 /**
  * Cloudflare Worker - OpenRouter Proxy for Large Files
+ * Last updated: 2025-01-13
  *
  * Deployment:
  * 1. Go to https://workers.cloudflare.com/

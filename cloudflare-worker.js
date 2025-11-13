@@ -32,9 +32,29 @@ export default {
       });
     }
 
-    // Only allow POST
+    // Handle GET for health check
+    if (request.method === 'GET') {
+      return new Response(JSON.stringify({
+        status: 'ok',
+        service: 'HKIT Course Analyzer - OpenRouter Proxy',
+        version: '1.0.0',
+        message: 'Worker is running! Use POST requests to analyze PDFs.',
+        endpoints: {
+          analyze: 'POST / with JSON body containing prompt and files'
+        },
+        limits: {
+          maxFileSize: '7.5MB',
+          requestBodySize: '10MB'
+        }
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Only allow POST for actual processing
     if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      return new Response(JSON.stringify({ error: 'Method not allowed. Use POST for PDF analysis or GET for health check.' }), {
         status: 405,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });

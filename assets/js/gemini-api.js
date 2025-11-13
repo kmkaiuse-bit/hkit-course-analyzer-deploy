@@ -399,56 +399,86 @@ IMPORTANT RULES:
      */
     async callVercelAPI(prompt, files = []) {
         try {
-            // Check file size limits for Vercel serverless functions
-            if (files.length > 0) {
-                const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
-                const estimatedBase64Size = totalSize * 1.33;
-                const vercelLimit = 4.5 * 1024 * 1024; // 4.5MB
-
-                if (estimatedBase64Size > vercelLimit) {
-                    console.log('⚠️ PDF too large for Vercel serverless function limit');
-                    console.log(`📊 File size: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
-                    console.log(`📊 Estimated base64: ${(estimatedBase64Size / 1024 / 1024).toFixed(2)}MB`);
-
-                    // Provide helpful error message
-                    throw new Error(
-                        `File too large for processing (${(totalSize / 1024 / 1024).toFixed(2)}MB). ` +
-                        `Maximum supported size is approximately 3.5MB. ` +
-                        `Please try:\n` +
-                        `1. Use a smaller PDF file\n` +
-                        `2. Split the transcript into multiple smaller files\n` +
-                        `3. Extract text from PDF and paste directly`
-                    );
-                }
-            }
-
-            // For small files or no files, use Vercel
-            console.log('📡 Using Vercel API (file size within limits)');
-
             const requestData = {
                 prompt: prompt,
                 model: 'gemini-2.5-pro',
                 maxTokens: 16384
             };
 
-            // Send files through Vercel (small enough to fit)
+            // Process files - try text extraction first for large PDFs
             if (files.length > 0) {
+                const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
+                const estimatedBase64Size = totalSize * 1.33;
+                const vercelLimit = 4.5 * 1024 * 1024; // 4.5MB
+                const isLarge = estimatedBase64Size > vercelLimit;
+
+                if (isLarge) {
+                    console.log(`⚠️ Large PDF detected (${(totalSize / 1024 / 1024).toFixed(2)}MB)`);
+                    console.log('🔍 Attempting text extraction to reduce size...');
+                }
+
                 requestData.files = [];
 
                 for (const fileObj of files) {
                     if (fileObj.file.type === 'application/pdf') {
-                        console.log(`Processing PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
-                        const arrayBuffer = await fileObj.file.arrayBuffer();
-                        const base64Data = this.arrayBufferToBase64(arrayBuffer);
+                        let processedSuccessfully = false;
 
-                        requestData.files.push({
-                            name: fileObj.name,
-                            mimeType: 'application/pdf',
-                            data: base64Data
-                        });
+                        // For large files, try text extraction first
+                        if (isLarge && window.pdfjsLib) {
+                            try {
+                                console.log(`📄 Extracting text from ${fileObj.name}...`);
+                                const arrayBuffer = await fileObj.file.arrayBuffer();
+                                const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+                                let extractedText = '';
+                                for (let i = 1; i <= pdf.numPages; i++) {
+                                    const page = await pdf.getPage(i);
+                                    const textContent = await page.getTextContent();
+                                    const pageText = textContent.items.map(item => item.str).join(' ');
+                                    extractedText += pageText + '\n';
+                                }
+
+                                // Check if text extraction was successful
+                                if (extractedText.trim().length > 100) {
+                                    console.log(`✅ Text extracted successfully (${extractedText.length} chars)`);
+                                    // Modify prompt to include extracted text instead of sending PDF
+                                    requestData.prompt = prompt + '\n\nTranscript Text:\n' + extractedText;
+                                    processedSuccessfully = true;
+                                } else {
+                                    console.log('⚠️ Minimal text extracted - PDF may be image-based');
+                                }
+                            } catch (error) {
+                                console.log('⚠️ Text extraction failed:', error.message);
+                            }
+                        }
+
+                        // If text extraction didn't work, send as PDF
+                        if (!processedSuccessfully) {
+                            if (isLarge) {
+                                throw new Error(
+                                    `File too large for processing (${(totalSize / 1024 / 1024).toFixed(2)}MB). ` +
+                                    `This appears to be an image-based PDF. Please:\n` +
+                                    `1. Use OCR to extract text and paste directly\n` +
+                                    `2. Split the transcript into smaller files (max 3MB each)\n` +
+                                    `3. Use a text-based PDF instead of scanned images`
+                                );
+                            }
+
+                            console.log(`Processing PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
+                            const arrayBuffer = await fileObj.file.arrayBuffer();
+                            const base64Data = this.arrayBufferToBase64(arrayBuffer);
+
+                            requestData.files.push({
+                                name: fileObj.name,
+                                mimeType: 'application/pdf',
+                                data: base64Data
+                            });
+                        }
                     }
                 }
             }
+
+            console.log('📡 Calling Vercel API endpoint...');
 
             // 调用我们的安全Vercel Function
             const response = await fetch('/api/gemini', {

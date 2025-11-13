@@ -399,30 +399,26 @@ IMPORTANT RULES:
      */
     async callVercelAPI(prompt, files = []) {
         try {
-            // For image-based PDFs, check if we need to bypass Vercel
+            // Check file size limits for Vercel serverless functions
             if (files.length > 0) {
                 const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
                 const estimatedBase64Size = totalSize * 1.33;
                 const vercelLimit = 4.5 * 1024 * 1024; // 4.5MB
 
                 if (estimatedBase64Size > vercelLimit) {
-                    console.log('⚠️ PDF too large for Vercel (image-based PDF detected)');
+                    console.log('⚠️ PDF too large for Vercel serverless function limit');
                     console.log(`📊 File size: ${(totalSize / 1024 / 1024).toFixed(2)}MB`);
                     console.log(`📊 Estimated base64: ${(estimatedBase64Size / 1024 / 1024).toFixed(2)}MB`);
-                    console.log('🚀 Using Gemini Files API for large file (secure server-side upload)...');
 
-                    // Upload file to Gemini Files API via server
-                    const uploadResult = await this.uploadToFilesAPI(files[0]);
-
-                    if (!uploadResult.success || !uploadResult.file) {
-                        throw new Error('Failed to upload file to Gemini Files API');
-                    }
-
-                    console.log(`✅ File uploaded successfully: ${uploadResult.file.name}`);
-                    console.log(`📍 File URI: ${uploadResult.file.uri}`);
-
-                    // Analyze using uploaded file reference
-                    return await this.analyzeWithFileReference(prompt, uploadResult.file);
+                    // Provide helpful error message
+                    throw new Error(
+                        `File too large for processing (${(totalSize / 1024 / 1024).toFixed(2)}MB). ` +
+                        `Maximum supported size is approximately 3.5MB. ` +
+                        `Please try:\n` +
+                        `1. Use a smaller PDF file\n` +
+                        `2. Split the transcript into multiple smaller files\n` +
+                        `3. Extract text from PDF and paste directly`
+                    );
                 }
             }
 

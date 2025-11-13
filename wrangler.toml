@@ -1,5 +1,5 @@
 # Cloudflare Workers Configuration
-name = "hkit-analyzer"
+name = "hkit-as"
 main = "cloudflare-worker.js"
 compatibility_date = "2025-01-13"
 

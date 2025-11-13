@@ -610,143 +610,202 @@ VERIFICATION: Count the courses in the transcript above. Your JSON array MUST co
     },
 
     /**
-     * Make direct call to Gemini API
+     * Make direct call to OpenRouter API (using Gemini 2.5 Pro)
      */
-    async makeDirectGeminiCall(prompt, files, apiKey) {
-        const modelName = 'gemini-2.5-flash';
-        const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
-        
-        console.log('📍 Using model:', modelName);
-        
-        // Prepare request body
-        let requestBody;
+    async makeDirectOpenRouterCall(prompt, files, apiKey) {
+        const url = 'https://openrouter.ai/api/v1/chat/completions';
+
+        console.log('📍 Using OpenRouter with model: google/gemini-2.5-pro');
+
+        // Build messages array for OpenRouter
+        const messages = [{ role: 'user', content: [{ type: 'text', text: prompt }] }];
+
+        // Add files if present
         if (files && files.length > 0) {
-            const parts = [{ text: prompt }];
-            files.forEach(file => {
-                if (file.mimeType === 'application/pdf') {
-                    parts.push({
-                        inlineData: {
-                            mimeType: file.mimeType,
-                            data: file.data
-                        }
+            files.forEach(f => {
+                if (f.mimeType && f.data) {
+                    messages[0].content.push({
+                        type: 'image_url',
+                        image_url: { url: `data:${f.mimeType};base64,${f.data}` }
                     });
                 }
             });
-            requestBody = {
-                contents: [{ parts: parts }],
-                generationConfig: {
-                    temperature: 0.3,  // Lower for more consistent academic analysis
-                    maxOutputTokens: 8192,
-                    topP: 0.9,  // Slightly more focused
-                    topK: 40
-                }
-            };
-        } else {
-            requestBody = {
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
-                    temperature: 0.3,  // Lower for more consistent academic analysis
-                    maxOutputTokens: 8192,
-                    topP: 0.9,  // Slightly more focused
-                    topK: 40
-                }
-            };
         }
 
-        console.log('📍 Making direct API call to:', url.split('?')[0]);
-        
+        console.log('📍 Making OpenRouter API call...');
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'HKIT Course Analyzer'
                 },
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify({
+                    model: 'google/gemini-2.5-pro',
+                    messages,
+                    temperature: 0.3,
+                    max_tokens: 16384,
+                    top_p: 0.9,
+                    top_k: 40
+                })
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`OpenRouter Error: ${errorData.error?.message || response.statusText}`);
             }
 
             const data = await response.json();
-            console.log('📍 Received response from Gemini API');
+            console.log('📍 Received response from OpenRouter');
             console.log('📍 Response structure:', JSON.stringify(data, null, 2));
-            
-            // Extract response text from standard Gemini format
-            let text = null;
-            
-            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-                const candidate = data.candidates[0];
-                console.log('📍 Successfully received response from Gemini 1.5 Pro');
-                
-                if (candidate.content.parts[0] && candidate.content.parts[0].text) {
-                    text = candidate.content.parts[0].text;
-                }
-            }
-            
-            if (text) {
-                console.log('📍 Extracted text length:', text.length);
-                return {
-                    success: true,
-                    data: { text: text }
-                };
-            } else {
-                console.error('📍 Could not find text in response:', data);
-                console.error('📍 Full response keys:', Object.keys(data));
-                if (data.candidates) {
-                    console.error('📍 Candidate keys:', Object.keys(data.candidates[0] || {}));
-                }
-                
-                // Try to extract any text-like content
-                const responseStr = JSON.stringify(data);
-                console.error('📍 Full response as string:', responseStr);
-                
-                throw new Error('Could not extract text from Gemini API response. Check console for details.');
-            }
+
+            // Extract response text from OpenRouter format
+            const text = data.choices[0].message.content;
+
+            console.log('📍 Extracted text length:', text.length);
+            return {
+                success: true,
+                data: { text: text }
+            };
+
         } catch (error) {
-            console.error('Direct Gemini API call failed:', error);
+            console.error('OpenRouter API call failed:', error);
             throw error;
         }
     },
 
     /**
-     * Process files for local API calls
+     * DEPRECATED: Make direct call to Gemini API (kept for rollback)
+     * Commented out for OpenRouter migration
+     */
+
+    /**
+     * Convert PDF page to base64 PNG image (TEST VERSION - First page only)
+     */
+    async convertPDFPageToImage(pdfArrayBuffer, pageNumber = 1) {
+        try {
+            console.log(`🔄 Converting PDF page ${pageNumber} to image...`);
+
+            // Load PDF
+            const pdf = await pdfjsLib.getDocument({ data: pdfArrayBuffer }).promise;
+            console.log(`📄 PDF loaded: ${pdf.numPages} pages`);
+
+            // Get specific page
+            const page = await pdf.getPage(pageNumber);
+
+            // Set scale for good quality (2 = 144 DPI)
+            const scale = 2.0;
+            const viewport = page.getViewport({ scale });
+
+            // Create canvas
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            // Render PDF page to canvas
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+
+            // Convert canvas to base64 PNG (remove "data:image/png;base64," prefix)
+            const base64Image = canvas.toDataURL('image/png').split(',')[1];
+
+            console.log(`✅ PDF page ${pageNumber} converted to image (${base64Image.length} chars)`);
+
+            return {
+                base64: base64Image,
+                width: viewport.width,
+                height: viewport.height,
+                pageNumber: pageNumber
+            };
+
+        } catch (error) {
+            console.error(`❌ Failed to convert PDF page ${pageNumber}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Process files for local API calls (UPDATED: Convert PDFs to images for OpenRouter)
      */
     async processFilesForLocal(files) {
         const processedFiles = [];
-        
+
         for (const fileObj of files) {
             if (fileObj.file.type === 'application/pdf') {
                 try {
-                    console.log(`Processing PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
-                    
+                    console.log(`🔍 Processing PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
+                    console.log(`⚠️  TEST MODE: Converting ONLY first page to image`);
+
                     // Check file size limit
                     if (fileObj.file.size > 20 * 1024 * 1024) {
                         throw new Error(`PDF file too large: ${fileObj.name}. Maximum size is 20MB.`);
                     }
-                    
+
+                    // Convert PDF to array buffer
                     const arrayBuffer = await fileObj.file.arrayBuffer();
-                    const base64Data = this.arrayBufferToBase64(arrayBuffer);
-                    
+
+                    // TEST: Convert first page to image
+                    const imageData = await this.convertPDFPageToImage(arrayBuffer, 1);
+
                     processedFiles.push({
-                        name: fileObj.name,
-                        mimeType: 'application/pdf',
-                        data: base64Data
+                        name: `${fileObj.name} - Page ${imageData.pageNumber}`,
+                        mimeType: 'image/png',
+                        data: imageData.base64
                     });
-                    
-                    console.log(`✅ PDF processed successfully: ${fileObj.name}`);
+
+                    console.log(`✅ PDF page converted to image successfully`);
                 } catch (error) {
                     console.error('Error processing PDF file:', error);
                     throw new Error(`Failed to process PDF file: ${fileObj.name} - ${error.message}`);
                 }
             }
         }
-        
+
         return processedFiles;
     },
+
+    // ========== OLD GEMINI API VERSION (COMMENTED OUT FOR ROLLBACK) ==========
+    // /**
+    //  * Process files for local API calls (OLD - Direct PDF base64)
+    //  */
+    // async processFilesForLocal_OLD(files) {
+    //     const processedFiles = [];
+    //
+    //     for (const fileObj of files) {
+    //         if (fileObj.file.type === 'application/pdf') {
+    //             try {
+    //                 console.log(`Processing PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
+    //
+    //                 // Check file size limit
+    //                 if (fileObj.file.size > 20 * 1024 * 1024) {
+    //                     throw new Error(`PDF file too large: ${fileObj.name}. Maximum size is 20MB.`);
+    //                 }
+    //
+    //                 const arrayBuffer = await fileObj.file.arrayBuffer();
+    //                 const base64Data = this.arrayBufferToBase64(arrayBuffer);
+    //
+    //                 processedFiles.push({
+    //                     name: fileObj.name,
+    //                     mimeType: 'application/pdf',
+    //                     data: base64Data
+    //                 });
+    //
+    //                 console.log(`✅ PDF processed successfully: ${fileObj.name}`);
+    //             } catch (error) {
+    //                 console.error('Error processing PDF file:', error);
+    //                 throw new Error(`Failed to process PDF file: ${fileObj.name} - ${error.message}`);
+    //             }
+    //         }
+    //     }
+    //
+    //     return processedFiles;
+    // },
 
     /**
      * Call Gemini API through Vercel Function (Production Mode)
@@ -824,22 +883,38 @@ VERIFICATION: Count the courses in the transcript above. Your JSON array MUST co
     parseResponse(response) {
         try {
             console.log('📍 Parsing response:', response);
-            // Extract text from response (handle both Vercel function and direct Gemini formats)
+            // Extract text from response (handle OpenRouter, Vercel function, and direct Gemini formats)
             let text;
-            if (response.success && response.data && response.data.text) {
-                // Vercel function format
+            if (response.choices && response.choices[0] && response.choices[0].message) {
+                // OpenRouter format (check FIRST)
+                console.log('📍 Using OpenRouter format');
+                text = response.choices[0].message.content;
+            } else if (response.data && response.data.text) {
+                // Backend/Vercel function format
+                console.log('📍 Using Backend/Vercel function format');
                 text = response.data.text;
             } else if (response.candidates && response.candidates[0] && response.candidates[0].content) {
                 // Direct Gemini response format
+                console.log('📍 Using direct Gemini format');
                 text = response.candidates[0].content.parts[0].text;
             } else {
+                console.error('📍 Could not match any response format!');
+                console.error('📍 response.choices:', response.choices);
                 throw new Error('Invalid API response structure');
             }
             
             // const text = response.candidates[0].content.parts[0].text;
-            
-            // Clean up response (remove markdown code blocks if present)
-            const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+            // Clean up response (remove markdown code blocks and quotes)
+            let cleanText = text.trim();
+
+            // Remove leading/trailing quotes if present
+            if (cleanText.startsWith('"') && cleanText.endsWith('"')) {
+                cleanText = cleanText.slice(1, -1);
+            }
+
+            // Remove markdown code blocks (```json and ```)
+            cleanText = cleanText.replace(/^```json\s*/g, '').replace(/\s*```$/g, '').trim();
             
             // Parse JSON
             const results = JSON.parse(cleanText);

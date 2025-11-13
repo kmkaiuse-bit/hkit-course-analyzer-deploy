@@ -11,7 +11,7 @@
 const CLIENT_API_CONFIG = {
     // Your Gemini API key (for large PDF direct calls)
     // Replace with your actual key from https://aistudio.google.com/app/apikey
-    GEMINI_API_KEY: 'AIzaSyARYSgqQXd4sZCngOos3UNV_5r5XpCOUtA', // TODO: Replace with your new API key
+    GEMINI_API_KEY: 'YOUR_GEMINI_API_KEY_HERE', // REMOVED: Key was exposed in backup
 
     // API endpoint
     GEMINI_API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1/models',

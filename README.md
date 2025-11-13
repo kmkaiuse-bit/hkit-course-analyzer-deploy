@@ -14,18 +14,30 @@ Automates transcript analysis for Hong Kong Institute of Technology programs usi
 
 ---
 
-## ⚡ **Current Status: November 2025**
+## ⚡ **Current Status: January 2025**
 
 **✅ Production Ready**: Deployed on Vercel with full Supabase integration
 **✅ Cloud Database**: Automatic data persistence to Supabase PostgreSQL
 **✅ User-Controlled Saves**: Manual confirmation workflow prevents incorrect data
 **✅ Three-Tier Storage**: Supabase Cloud → PostgreSQL Server → IndexedDB fallback
+**✅ Environment Separation**: Distinct production (Gemini) and testing (OpenRouter) environments
+
+### **⚠️ IMPORTANT: Two Separate Environments**
+
+This project has **TWO distinct environments** - do NOT mix them:
+
+| Environment | Entry Point | API Provider | Use Case |
+|-------------|-------------|--------------|----------|
+| 🌍 **Production** | `index.html` | Gemini API (Vercel) | Live deployment, stable |
+| 🧪 **Testing** | `local/enhanced.html` | OpenRouter (Local) | Experiments, local only |
+
+📖 **See:** [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) for detailed setup instructions
 
 ---
 
 ## 🚀 **Quick Start**
 
-### **For End Users**
+### **For End Users (Production)**
 1. Visit: **https://hkit-course-analyzer-deploy.vercel.app/**
 2. Enter your Google Gemini API key
 3. Upload transcript PDF
@@ -33,7 +45,7 @@ Automates transcript analysis for Hong Kong Institute of Technology programs usi
 5. Review/edit results if needed
 6. Click "💾 Save to Database" to persist to cloud
 
-### **For Developers**
+### **For Developers (Production)**
 ```bash
 # Clone repository
 git clone https://github.com/kmkaiuse-bit/hkit-course-analyzer-deploy.git
@@ -50,44 +62,102 @@ python -m http.server 8000
 http://localhost:8000/
 ```
 
+### **For Developers (Testing Environment)**
+```bash
+# Start backend server (optional, for backend mode)
+npm run server
+
+# Open testing environment
+start local/enhanced.html
+# OR: python -m http.server 8000 && open http://localhost:8000/local/enhanced.html
+
+# Configure testing environment
+# See ENVIRONMENT_SETUP.md for detailed instructions
+```
+
 ---
 
 ## 📁 **Project Structure**
 
+### **🌍 Production Environment** (Deployed on Vercel)
 ```
-hkit-course-analyzer-deploy/
-├── 📄 index.html                    # Main production app (Vercel entry point)
-├── 📁 assets/                       # Static assets
-│   ├── 📁 css/                     # Stylesheets
-│   └── 📁 js/                      # JavaScript modules
-│       ├── 📁 modules/             # Core application modules
-│       │   ├── storageManager.js   # Supabase + IndexedDB storage
+📦 Production Files (index.html → Vercel)
+├── 📄 index.html                         # 🌍 PRODUCTION entry point
+├── 📁 assets/                            # 🌍 Production static assets
+│   ├── 📁 css/                          # Stylesheets
+│   └── 📁 js/                           # JavaScript modules
+│       ├── 📁 modules/                  # Core application modules
+│       │   ├── storageManager.js        # Supabase + IndexedDB storage
 │       │   ├── editModeController.js
 │       │   ├── studentInfoManager.js
 │       │   └── ...
-│       ├── supabase-client.js      # Supabase cloud database client
-│       ├── learning-client.js      # PostgreSQL learning system
-│       ├── gemini-api.js           # Google Gemini AI integration
-│       └── app.js                  # Main application logic
-├── 📁 config/                       # Configuration files
-│   ├── supabase-config.js          # Supabase connection settings
-│   ├── api-config.js               # API configuration
-│   └── client-api-config.js        # Client-side API config
-├── 📁 api/                          # Vercel serverless functions
-│   └── gemini.js                   # Gemini API proxy endpoint
-├── 📁 db/                           # Database schemas
-│   └── migrations/
-│       └── 002_supabase_schema.sql # Supabase PostgreSQL schema
-├── 📁 docs/                         # Documentation
-│   ├── 📁 development/             # PRDs and development docs
-│   │   └── PRD_LEARNING_DATABASE.md
-│   └── 📁 deployment/              # Deployment guides
-│       ├── SUPABASE_VERCEL_SETUP_SOP.md
-│       └── SUPABASE_BACKUP_GUIDE.md
-├── 📁 local/                        # Local development versions
-│   └── enhanced.html               # Feature-complete local version
-└── vercel.json                     # Vercel deployment config
+│       ├── supabase-client.js           # Supabase cloud database client
+│       ├── learning-client.js           # PostgreSQL learning system
+│       ├── gemini-api.js                # Google Gemini AI integration
+│       └── app.js                       # Main application logic
+├── 📁 config/                            # 🌍 Production configuration
+│   ├── api-config.production.js         # ⭐ Production config (Gemini via Vercel)
+│   ├── api-config.js                    # Copy of production config
+│   ├── supabase-config.js               # Supabase connection settings
+│   └── client-api-config.template.js    # Template (safe to commit)
+├── 📁 api/                               # 🌍 Vercel serverless functions
+│   ├── gemini.js                        # Gemini API proxy endpoint
+│   ├── gemini-upload.js                 # File upload to Gemini Files API
+│   ├── gemini-analyze-file.js           # Analyze with file reference
+│   └── gemini-chunked.js                # Chunked processing
 ```
+
+### **🧪 Testing Environment** (Local Development Only)
+```
+📦 Testing Files (local/enhanced.html → Local)
+├── 📁 local/                             # 🧪 TESTING environment
+│   ├── enhanced.html                    # 🧪 TESTING entry point
+│   ├── 📁 assets/                       # Testing-specific assets
+│   │   └── 📁 js/                       # Testing JavaScript modules
+│   │       ├── gemini-api.js            # OpenRouter integration
+│   │       └── utils.js                 # Enhanced utilities
+│   └── 📁 config/                       # 🧪 Testing configuration
+│       └── api-config-smart.js          # Smart environment detector
+├── 📁 config/                            # 🧪 Testing configuration
+│   ├── api-config.testing.js            # ⭐ Testing config (OpenRouter)
+│   └── client-api-config.js             # Local API key (gitignored)
+```
+
+### **📚 Documentation & Environment Separation**
+```
+📦 Documentation Files
+├── ENVIRONMENT_SETUP.md                  # ⭐ Complete environment setup guide
+├── ENVIRONMENT_SEPARATION_PLAN.md        # ⭐ Implementation plan & tracking
+├── SECURITY_AUDIT_2025-01-05.md          # ⭐ Security audit report
+├── OPENROUTER_MIGRATION_PLAN.md          # Testing environment guidelines
+├── MASTER_TECHNICAL_DOCUMENTATION.md     # Technical overview
+├── README.md                             # This file
+├── .env.example                          # Production env template
+└── .env.local.example                    # Testing env template
+```
+
+### **🗄️ Database & Infrastructure**
+```
+📦 Database & Deployment
+├── 📁 db/                                # Database schemas
+│   └── migrations/
+│       ├── 001_initial_schema.sql
+│       └── 002_supabase_schema.sql
+├── 📁 server/                            # Backend server (optional)
+│   └── learning-server.js               # PostgreSQL learning system
+└── vercel.json                          # Vercel deployment config
+```
+
+### **🔑 Key Files for Environment Separation**
+
+| File | Environment | Purpose |
+|------|-------------|---------|
+| `index.html` | 🌍 Production | Entry point for production (Vercel) |
+| `local/enhanced.html` | 🧪 Testing | Entry point for testing (Local) |
+| `config/api-config.production.js` | 🌍 Production | Gemini API via Vercel Functions |
+| `config/api-config.testing.js` | 🧪 Testing | OpenRouter API (experimental) |
+| `api/gemini.js` | 🌍 Production | Server-side Gemini SDK |
+| `local/assets/js/gemini-api.js` | 🧪 Testing | Client-side OpenRouter calls |
 
 ---
 
@@ -254,6 +324,127 @@ Supabase credentials are stored in `config/supabase-config.js`:
 
 ---
 
+## 🌍 **Environment Separation**
+
+### **Overview**
+
+The project uses **separate configurations** for production and testing environments:
+
+| Environment | API Provider | Entry Point | Config File | Purpose |
+|-------------|--------------|-------------|-------------|---------|
+| **Production** | Gemini API | `index.html` | `api-config.production.js` | Stable, deployed on Vercel |
+| **Testing** | OpenRouter | `local/enhanced.html` | `api-config.testing.js` | Experimental, local only |
+
+### **Why Separate Environments?**
+
+- ✅ **Stability**: Production remains stable while testing new features
+- ✅ **Security**: Server-side API keys in production, client-side allowed in testing
+- ✅ **Flexibility**: Experiment with OpenRouter without affecting production
+- ✅ **Isolation**: No mixing of configurations or providers
+
+### **Production Environment (Gemini)**
+
+**Deployment**: Vercel serverless platform
+**API Provider**: Google Gemini API
+**API Key Storage**: Vercel environment variables (server-side only)
+**Entry Point**: `index.html`
+**Config**: `config/api-config.production.js`
+
+```javascript
+// Production config loads via Vercel Functions
+const API_CONFIG = {
+    ENVIRONMENT: 'production',
+    API_PROVIDER: 'gemini',
+    functions: {
+        gemini: '/api/gemini',
+        geminiChunked: '/api/gemini-chunked'
+    }
+};
+```
+
+**Setup Instructions**:
+1. Add `GEMINI_API_KEY` to Vercel Dashboard environment variables
+2. Deploy via GitHub push (auto-deploys)
+3. Access at: https://hkit-course-analyzer-deploy.vercel.app/
+
+### **Testing Environment (OpenRouter)**
+
+**Deployment**: Local development only
+**API Provider**: OpenRouter (experimental)
+**API Key Storage**: `.env.local` or `config/client-api-config.js`
+**Entry Point**: `local/enhanced.html`
+**Config**: `config/api-config.testing.js`
+
+```javascript
+// Testing config supports both backend and frontend modes
+const API_CONFIG = {
+    ENVIRONMENT: 'testing',
+    API_PROVIDER: 'openrouter',
+    backend: {
+        baseUrl: 'http://localhost:3001'
+    },
+    openrouter: {
+        model: 'google/gemini-2.5-pro'
+    }
+};
+```
+
+**Setup Instructions**:
+1. Copy `.env.local.example` to `.env.local`
+2. Add `OPENROUTER_API_KEY` (optional)
+3. Start backend: `npm run server` (optional)
+4. Open: `local/enhanced.html`
+
+### **Switching Between Environments**
+
+```bash
+# Use Production (Gemini)
+start index.html
+# OR deploy to Vercel: git push origin main
+
+# Use Testing (OpenRouter)
+start local/enhanced.html
+# With backend: npm run server (in separate terminal)
+```
+
+### **Security Model**
+
+**Production (Secure)**:
+- ✅ API keys stored in Vercel environment variables
+- ✅ All API calls go through serverless functions
+- ✅ No client-side key exposure
+- ✅ Keys never committed to git
+
+**Testing (Local Only)**:
+- ⚠️ Client-side keys allowed for testing convenience
+- ⚠️ `.env.local` and `client-api-config.js` in `.gitignore`
+- ⚠️ Never use production keys in testing
+- ✅ Backend mode recommended for better security
+
+### **Configuration Files**
+
+```
+config/
+├── api-config.production.js     # Production (Gemini, Vercel Functions)
+├── api-config.testing.js        # Testing (OpenRouter experiments)
+├── api-config.js                # Production copy (for Vercel compatibility)
+├── client-api-config.template.js # Template (safe to commit)
+└── client-api-config.js         # Your local keys (gitignored)
+
+.env.example                      # Production env template
+.env.local.example                # Testing env template
+.env.local                        # Your local env (gitignored)
+```
+
+### **Detailed Setup Guide**
+
+For complete environment setup instructions, see:
+- **[ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)** - Comprehensive setup guide
+- **[ENVIRONMENT_SEPARATION_PLAN.md](./ENVIRONMENT_SEPARATION_PLAN.md)** - Implementation plan
+- **[SECURITY_AUDIT_2025-01-05.md](./SECURITY_AUDIT_2025-01-05.md)** - Security audit report
+
+---
+
 ## 💾 **Save to Database Workflow**
 
 ### **User Experience**
@@ -323,7 +514,7 @@ Success Notification
 
 ### **Manual Testing**
 1. Visit production site: https://hkit-course-analyzer-deploy.vercel.app/
-2. Enter Gemini API key
+2. Enter Gemini API key (legacy)
 3. Upload sample transcript (see `Test/` folder)
 4. Click "Analyze Files"
 5. Verify results display correctly
@@ -374,12 +565,15 @@ SELECT * FROM pattern_analysis ORDER BY total_uses DESC;
 - `UAT_TEST_CASES.md` - User acceptance test scenarios
 
 ### **For Developers**
+- **`ENVIRONMENT_SETUP.md`** - Production and testing environment setup guide ⭐ NEW
+- **`ENVIRONMENT_SEPARATION_PLAN.md`** - Environment separation implementation plan ⭐ NEW
 - `docs/development/PRD_LEARNING_DATABASE.md` - Database design & PRD
 - `docs/deployment/SUPABASE_VERCEL_SETUP_SOP.md` - Deployment guide
 - `docs/deployment/SUPABASE_BACKUP_GUIDE.md` - Backup procedures
 - `MASTER_PRD.md` - Master product requirements
 
 ### **For Administrators**
+- **`SECURITY_AUDIT_2025-01-05.md`** - Security audit report ⭐ NEW
 - `BACKEND_SETUP_GUIDE.md` - Backend configuration
 - `TESTING_GUIDE.md` - Testing procedures
 - `PROJECT_JOURNEY_REPORT.md` - Development history
@@ -436,6 +630,6 @@ All rights reserved.
 
 ---
 
-**Last Updated**: November 2025
-**Version**: 2.0 (Supabase Integration)
+**Last Updated**: January 2025
+**Version**: 2.1 (Supabase Integration + Environment Separation)
 **Status**: Production Ready ✅

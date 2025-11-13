@@ -277,110 +277,75 @@ IMPORTANT RULES:
         const processedFiles = await this.processFilesForLocal(files);
         console.log('📍 Processed files:', processedFiles.length);
         
-        // Make direct API call with Gemini 1.5 Pro (optimized for speed and reliability)
-        console.log('📍 Using Gemini 1.5 Pro for optimal performance...');
-        return await this.makeDirectGeminiCall(prompt, processedFiles, apiKey);
+        // Make direct API call via OpenRouter (using Gemini 2.5 Pro)
+        console.log('📍 Using OpenRouter with Gemini 2.5 Pro for optimal performance...');
+        return await this.makeDirectOpenRouterCall(prompt, processedFiles, apiKey);
     },
 
     /**
-     * Make direct call to Gemini API
+     * Make direct call to OpenRouter API (using Gemini 2.5 Pro)
      */
-    async makeDirectGeminiCall(prompt, files, apiKey) {
-        const modelName = 'gemini-2.5-pro';  // Use Pro for complex multi-course analysis
-        const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
+    async makeDirectOpenRouterCall(prompt, files, apiKey) {
+        const url = 'https://openrouter.ai/api/v1/chat/completions';
 
-        console.log('📍 Using model:', modelName);
-        
-        // Prepare request body
-        let requestBody;
+        console.log('📍 Using OpenRouter with model: google/gemini-2.5-pro');
+
+        // Build messages array for OpenRouter
+        const messages = [{ role: 'user', content: [{ type: 'text', text: prompt }] }];
+
+        // Add files if present
         if (files && files.length > 0) {
-            const parts = [{ text: prompt }];
-            files.forEach(file => {
-                if (file.mimeType === 'application/pdf') {
-                    parts.push({
-                        inlineData: {
-                            mimeType: file.mimeType,
-                            data: file.data
-                        }
+            files.forEach(f => {
+                if (f.mimeType && f.data) {
+                    messages[0].content.push({
+                        type: 'image_url',
+                        image_url: { url: `data:${f.mimeType};base64,${f.data}` }
                     });
                 }
             });
-            requestBody = {
-                contents: [{ parts: parts }],
-                generationConfig: {
-                    temperature: 0.3,  // Lower for more consistent academic analysis
-                    maxOutputTokens: 16384,  // Increased for multi-course analysis
-                    topP: 0.9,  // Slightly more focused
-                    topK: 40
-                }
-            };
-        } else {
-            requestBody = {
-                contents: [{
-                    parts: [{ text: prompt }]
-                }],
-                generationConfig: {
-                    temperature: 0.3,  // Lower for more consistent academic analysis
-                    maxOutputTokens: 16384,  // Increased for multi-course analysis
-                    topP: 0.9,  // Slightly more focused
-                    topK: 40
-                }
-            };
         }
 
-        console.log('📍 Making direct API call to:', url.split('?')[0]);
-        
+        console.log('📍 Making OpenRouter API call...');
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'HKIT Course Analyzer'
                 },
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify({
+                    model: 'google/gemini-2.5-pro',
+                    messages,
+                    temperature: 0.3,
+                    max_tokens: 16384,
+                    top_p: 0.9,
+                    top_k: 40
+                })
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`OpenRouter Error: ${errorData.error?.message || response.statusText}`);
             }
 
             const data = await response.json();
-            console.log('📍 Received response from Gemini API');
+            console.log('📍 Received response from OpenRouter');
             console.log('📍 Response structure:', JSON.stringify(data, null, 2));
-            
-            // Extract response text from standard Gemini format
-            let text = null;
-            
-            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-                const candidate = data.candidates[0];
-                console.log('📍 Successfully received response from Gemini 1.5 Pro');
-                
-                if (candidate.content.parts[0] && candidate.content.parts[0].text) {
-                    text = candidate.content.parts[0].text;
-                }
-            }
-            
-            if (text) {
-                console.log('📍 Extracted text length:', text.length);
-                return {
-                    success: true,
-                    data: { text: text }
-                };
-            } else {
-                console.error('📍 Could not find text in response:', data);
-                console.error('📍 Full response keys:', Object.keys(data));
-                if (data.candidates) {
-                    console.error('📍 Candidate keys:', Object.keys(data.candidates[0] || {}));
-                }
-                
-                // Try to extract any text-like content
-                const responseStr = JSON.stringify(data);
-                console.error('📍 Full response as string:', responseStr);
-                
-                throw new Error('Could not extract text from Gemini API response. Check console for details.');
-            }
+
+            // Extract response text from OpenRouter format
+            const text = data.choices[0].message.content;
+
+            console.log('📍 Extracted text length:', text.length);
+            return {
+                success: true,
+                data: { text: text }
+            };
+
         } catch (error) {
-            console.error('Direct Gemini API call failed:', error);
+            console.error('OpenRouter API call failed:', error);
             throw error;
         }
     },
@@ -534,16 +499,20 @@ IMPORTANT RULES:
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Upload failed');
+                console.error('❌ Upload failed with status:', response.status);
+                console.error('❌ Error details:', errorData);
+                throw new Error(errorData.details || errorData.error || 'Upload failed');
             }
 
             const result = await response.json();
             console.log(`✅ Upload complete: ${result.file.name}`);
+            console.log(`📍 File URI: ${result.file.uri}`);
 
             return result;
 
         } catch (error) {
-            console.error('File upload error:', error);
+            console.error('❌ File upload error:', error);
+            console.error('Error message:', error.message);
             throw new Error(`Failed to upload file: ${error.message}`);
         }
     },
@@ -602,9 +571,13 @@ IMPORTANT RULES:
             console.log('📍 response.data:', response.data);
             console.log('📍 response.data keys:', response.data ? Object.keys(response.data) : 'N/A');
 
-            // Extract text from response (handle both Vercel function and direct Gemini formats)
+            // Extract text from response (handle OpenRouter, Vercel function, and direct Gemini formats)
             let text;
-            if (response.success && response.data && response.data.text) {
+            if (response.choices && response.choices[0] && response.choices[0].message) {
+                // OpenRouter format (check FIRST)
+                console.log('📍 Using OpenRouter format');
+                text = response.choices[0].message.content;
+            } else if (response.success && response.data && response.data.text) {
                 // Vercel function format
                 console.log('📍 Using Vercel function format');
                 text = response.data.text;
@@ -617,6 +590,7 @@ IMPORTANT RULES:
                 console.error('📍 response.success:', response.success);
                 console.error('📍 response.data:', response.data);
                 console.error('📍 response.candidates:', response.candidates);
+                console.error('📍 response.choices:', response.choices);
                 throw new Error('Invalid API response structure');
             }
             

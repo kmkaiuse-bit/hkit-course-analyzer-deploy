@@ -20,18 +20,32 @@ Automates transcript analysis for Hong Kong Institute of Technology programs usi
 **✅ Cloud Database**: Automatic data persistence to Supabase PostgreSQL
 **✅ User-Controlled Saves**: Manual confirmation workflow prevents incorrect data
 **✅ Three-Tier Storage**: Supabase Cloud → PostgreSQL Server → IndexedDB fallback
-**✅ Environment Separation**: Distinct production (Gemini) and testing (OpenRouter) environments
+**🌍 Global Access**: OpenRouter integration removes regional restrictions
+**📦 Large File Support**: Cloudflare Worker handles PDFs up to 7.5MB
+**⚡ Dual Architecture**: Smart routing between Vercel (fast) and Cloudflare (large files)
 
-### **⚠️ IMPORTANT: Two Separate Environments**
+### **🌐 Architecture: Dual-Endpoint System**
 
-This project has **TWO distinct environments** - do NOT mix them:
+The production system uses **smart routing** to handle files of all sizes:
 
-| Environment | Entry Point | API Provider | Use Case |
-|-------------|-------------|--------------|----------|
-| 🌍 **Production** | `index.html` | Gemini API (Vercel) | Live deployment, stable |
-| 🧪 **Testing** | `local/enhanced.html` | OpenRouter (Local) | Experiments, local only |
+| File Size | Endpoint | Service | Limit |
+|-----------|----------|---------|-------|
+| **< 3.5MB** | Vercel Functions | Fast processing | 4.5MB |
+| **3.5-7.5MB** | Cloudflare Worker | Large file support | 10MB |
 
-📖 **See:** [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) for detailed setup instructions
+**How it works:**
+```
+User uploads PDF → Frontend detects size
+    ↓
+    ├─ Small PDF → Vercel Functions (/api/gemini) → OpenRouter → Gemini 2.5 Pro
+    └─ Large PDF → Cloudflare Worker → OpenRouter → Gemini 2.5 Pro
+```
+
+**Benefits:**
+- ✅ **No region restrictions** - OpenRouter provides global access
+- ✅ **Handles large scanned transcripts** - Up to 7.5MB without paid upgrades
+- ✅ **Automatic routing** - No user action needed
+- ✅ **Cost-effective** - Free tiers on Vercel + Cloudflare
 
 ---
 
@@ -39,11 +53,12 @@ This project has **TWO distinct environments** - do NOT mix them:
 
 ### **For End Users (Production)**
 1. Visit: **https://hkit-course-analyzer-deploy.vercel.app/**
-2. Enter your Google Gemini API key
-3. Upload transcript PDF
-4. Click "Analyze Files"
-5. Review/edit results if needed
-6. Click "💾 Save to Database" to persist to cloud
+2. Upload transcript PDF (up to 7.5MB supported)
+3. Click "Analyze Files"
+4. Review/edit results if needed
+5. Click "💾 Save to Database" to persist to cloud
+
+**Note:** No API key required - system uses OpenRouter for global access
 
 ### **For Developers (Production)**
 ```bash
@@ -101,10 +116,15 @@ start local/enhanced.html
 │   ├── supabase-config.js               # Supabase connection settings
 │   └── client-api-config.template.js    # Template (safe to commit)
 ├── 📁 api/                               # 🌍 Vercel serverless functions
-│   ├── gemini.js                        # Gemini API proxy endpoint
-│   ├── gemini-upload.js                 # File upload to Gemini Files API
+│   ├── gemini.js                        # OpenRouter API proxy (<3.5MB files)
+│   ├── gemini-upload.js                 # File upload endpoint
 │   ├── gemini-analyze-file.js           # Analyze with file reference
 │   └── gemini-chunked.js                # Chunked processing
+├── cloudflare-worker.js                 # 🌐 Cloudflare Worker (large files)
+├── cloudflare-worker-simple.js          # Dashboard-compatible version
+├── wrangler.toml                        # Cloudflare Workers config
+├── CLOUDFLARE_QUICK_SETUP.md            # Quick setup guide
+└── CLOUDFLARE_WORKER_GITHUB_SETUP.md    # GitHub integration guide
 ```
 
 ### **🧪 Testing Environment** (Local Development Only)
@@ -197,10 +217,14 @@ start local/enhanced.html
 
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
 - **PDF Processing**: PDF.js for client-side parsing
-- **AI Engine**: Google Gemini 1.5-flash model
+- **AI Engine**: Google Gemini 2.5 Pro via OpenRouter
+- **API Gateway**: OpenRouter (removes regional restrictions)
 - **Cloud Database**: Supabase (PostgreSQL)
-- **Deployment**: Vercel serverless platform
-- **Architecture**: Modular component system with error handling
+- **Deployment**:
+  - Vercel serverless functions (primary, <3.5MB files)
+  - Cloudflare Workers (large files, 3.5-7.5MB)
+- **CI/CD**: GitHub integration with auto-deploy
+- **Architecture**: Dual-endpoint system with smart routing
 
 ---
 
@@ -252,9 +276,10 @@ Change tracking for all database operations:
 ## 📋 **Setup & Deployment**
 
 ### **Prerequisites**
-- Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+- OpenRouter API key ([Get one here](https://openrouter.ai/keys))
 - Supabase account (free tier available)
 - Vercel account (free tier sufficient)
+- Cloudflare account (free tier sufficient)
 - GitHub account
 
 ### **Initial Setup**
@@ -288,13 +313,47 @@ const SUPABASE_CONFIG = {
 npm i -g vercel
 vercel --prod
 
-# Option 2: GitHub Integration
+# Option 2: GitHub Integration (Recommended)
 # 1. Push code to GitHub
 # 2. Import project in Vercel dashboard
-# 3. Vercel auto-deploys on every push
+# 3. Add OPENROUTER_API_KEY environment variable
+# 4. Vercel auto-deploys on every push
 ```
 
-#### **4. Supabase-Vercel Integration** (Optional)
+**Add Environment Variable in Vercel:**
+```
+Settings → Environment Variables →
+Name: OPENROUTER_API_KEY
+Value: sk-or-v1-xxxxx...
+```
+
+#### **4. Deploy Cloudflare Worker** (For large file support)
+```bash
+# Method 1: GitHub Integration (Recommended)
+# 1. Go to https://dash.cloudflare.com/
+# 2. Workers & Pages → Create Application → Connect to Git
+# 3. Select your GitHub repository
+# 4. Add OPENROUTER_API_KEY environment variable
+# 5. Deploy - auto-deploys on every push
+
+# Method 2: Manual Dashboard Upload
+# See: CLOUDFLARE_QUICK_SETUP.md for 3-minute setup guide
+```
+
+**Add Environment Variable in Cloudflare:**
+```
+Worker Settings → Variables and Secrets → Production →
+Name: OPENROUTER_API_KEY
+Value: sk-or-v1-xxxxx...
+```
+
+**Update index.html with Worker URL:**
+```javascript
+// Find this line in index.html (~line 28)
+window.CLOUDFLARE_WORKER_URL = 'https://your-worker.workers.dev';
+```
+
+#### **5. Supabase-Vercel Integration** (Optional)
 ```bash
 # In Supabase Dashboard:
 # Integrations → Vercel → Connect
@@ -309,11 +368,12 @@ vercel --prod
 
 ### **API Keys**
 
-The system requires a Google Gemini API key for AI analysis:
+The system uses OpenRouter for AI analysis (requires API key in deployment):
 
-1. **Get API Key**: https://makersuite.google.com/app/apikey
-2. **Enter in UI**: Paste key in API configuration section
-3. **Storage**: Saved in browser localStorage (user's device only)
+1. **Get API Key**: https://openrouter.ai/keys
+2. **Add to Vercel**: Environment Variables → OPENROUTER_API_KEY
+3. **Add to Cloudflare**: Worker Settings → Variables → OPENROUTER_API_KEY
+4. **End Users**: No API key required - handled by backend
 
 ### **Database Configuration**
 
@@ -485,27 +545,37 @@ For complete environment setup instructions, see:
 ```
 User Uploads PDF
        ↓
-PDF.js Extracts Text
+Frontend Detects File Size
        ↓
-Gemini AI Analyzes
-       ↓
-Display Results (Editable)
-       ↓
-User Reviews/Edits
-       ↓
+    ┌──────────────────┐
+    │  < 3.5MB         │  > 3.5MB
+    ↓                  ↓
+Vercel Function    Cloudflare Worker
+(/api/gemini)      (hkit-as.workers.dev)
+    ↓                  ↓
+    └─── OpenRouter ───┘
+              ↓
+    Google Gemini 2.5 Pro
+              ↓
+         AI Analysis
+              ↓
+    Display Results (Editable)
+              ↓
+      User Reviews/Edits
+              ↓
 User Clicks "Save to Database"
-       ↓
-Confirmation Dialog
-       ↓
-User Confirms
-       ↓
+              ↓
+      Confirmation Dialog
+              ↓
+        User Confirms
+              ↓
 Try Save to Supabase Cloud ☁️
        ↓ (if fails)
 Try Save to PostgreSQL Server 🏥
        ↓ (if fails)
 Save to IndexedDB (Browser) 📦
        ↓
-Success Notification
+  Success Notification
 ```
 
 ---
@@ -514,10 +584,12 @@ Success Notification
 
 ### **Manual Testing**
 1. Visit production site: https://hkit-course-analyzer-deploy.vercel.app/
-2. Enter Gemini API key (legacy)
-3. Upload sample transcript (see `Test/` folder)
-4. Click "Analyze Files"
-5. Verify results display correctly
+2. Upload sample transcript (see `Test/` folder)
+   - Test small file (<3MB) → Should use Vercel endpoint
+   - Test large file (5-7MB) → Should use Cloudflare Worker
+3. Click "Analyze Files"
+4. Verify results display correctly
+5. Check browser console (F12) to see which endpoint was used
 6. Click "💾 Save to Database"
 7. Confirm save dialog
 8. Check Supabase Table Editor for saved data
@@ -598,10 +670,23 @@ SELECT * FROM pattern_analysis ORDER BY total_uses DESC;
 - During edit mode, button is hidden (save edits first)
 - Check browser console for JavaScript errors
 
-### **API Key Issues**
-- Verify key is valid: https://makersuite.google.com/app/apikey
-- Clear browser cache and re-enter key
-- Check API usage limits in Google Console
+### **API Key Issues (Deployment)**
+- Verify OpenRouter key is valid: https://openrouter.ai/keys
+- Check Vercel environment variables: Dashboard → Settings → Environment Variables
+- Check Cloudflare environment variables: Worker → Settings → Variables
+- Ensure key is in **Production** environment (not Preview)
+
+### **"API key not configured" Error**
+- Add OPENROUTER_API_KEY to Cloudflare Worker environment variables
+- Ensure variable is in Production section
+- Trigger redeploy: Push a commit to GitHub or manual redeploy
+- Wait 1-2 minutes for deployment to complete
+
+### **Large File Processing Issues**
+- Files >7.5MB not supported - split PDF or compress
+- Check browser console for endpoint routing logs
+- Verify Cloudflare Worker URL in index.html
+- Ensure Cloudflare Worker has OPENROUTER_API_KEY set
 
 ---
 
@@ -623,13 +708,16 @@ All rights reserved.
 ## 🙏 **Acknowledgments**
 
 - **Google Gemini AI**: Powering intelligent course matching
+- **OpenRouter**: API gateway providing global access
 - **Supabase**: Cloud database infrastructure
-- **Vercel**: Serverless deployment platform
+- **Vercel**: Primary serverless deployment platform
+- **Cloudflare Workers**: Large file processing infrastructure
 - **PDF.js**: Client-side PDF processing
 - **HKIT**: Hong Kong Institute of Technology
 
 ---
 
 **Last Updated**: January 2025
-**Version**: 2.1 (Supabase Integration + Environment Separation)
+**Version**: 2.2 (OpenRouter Integration + Cloudflare Worker + Large File Support)
 **Status**: Production Ready ✅
+**Global Access**: Available worldwide without regional restrictions

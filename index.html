@@ -21,6 +21,11 @@
             pdfjsLib.GlobalWorkerOptions.workerSrc =
                 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         }
+
+        // Cloudflare Worker endpoint for large files (>3.5MB scanned PDFs)
+        // Set this after deploying your Cloudflare Worker
+        // Leave empty to show setup instructions when needed
+        window.CLOUDFLARE_WORKER_URL = '';
     </script>
 
     <!-- Local Mode Styles -->

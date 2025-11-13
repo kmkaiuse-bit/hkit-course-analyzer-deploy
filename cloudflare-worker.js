@@ -91,9 +91,19 @@ export default {
       if (files && files.length > 0) {
         messageContent = [{ type: 'text', text: prompt }];
 
-        // Add file parts (images/PDFs as base64)
+        // Add file parts (PDFs use 'file' type for Gemini native support, images use 'image_url')
         files.forEach(file => {
-          if (file.mimeType === 'application/pdf' || file.mimeType.startsWith('image/')) {
+          if (file.mimeType === 'application/pdf') {
+            // OpenRouter PDF format - uses Gemini's native PDF support
+            messageContent.push({
+              type: 'file',
+              file: {
+                filename: file.name || 'document.pdf',
+                file_data: `data:${file.mimeType};base64,${file.data}`
+              }
+            });
+          } else if (file.mimeType.startsWith('image/')) {
+            // Image format
             messageContent.push({
               type: 'image_url',
               image_url: {

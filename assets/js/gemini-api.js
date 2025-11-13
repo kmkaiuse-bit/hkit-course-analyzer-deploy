@@ -219,14 +219,14 @@ IMPORTANT RULES:
         try {
             const bytes = new Uint8Array(buffer);
             let binary = '';
-            
+
             // Process in chunks to avoid stack overflow
             const chunkSize = 8192; // 8KB chunks
             for (let i = 0; i < bytes.length; i += chunkSize) {
                 const chunk = bytes.slice(i, i + chunkSize);
                 binary += String.fromCharCode.apply(null, chunk);
             }
-            
+
             return btoa(binary);
         } catch (error) {
             console.error('Base64 conversion error:', error);
@@ -436,6 +436,8 @@ IMPORTANT RULES:
                 for (const fileObj of files) {
                     if (fileObj.file.type === 'application/pdf') {
                         console.log(`Processing scanned PDF: ${fileObj.name} (${fileObj.file.size} bytes)`);
+
+                        // Both Vercel (native Gemini) and Cloudflare Worker (OpenRouter) support PDFs directly
                         const arrayBuffer = await fileObj.file.arrayBuffer();
                         const base64Data = this.arrayBufferToBase64(arrayBuffer);
 
@@ -444,6 +446,8 @@ IMPORTANT RULES:
                             mimeType: 'application/pdf',
                             data: base64Data
                         });
+
+                        console.log(`✅ PDF processed: ${fileObj.name}`)
                     }
                 }
             }

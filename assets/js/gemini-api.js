@@ -527,7 +527,7 @@ IMPORTANT RULES:
         try {
             console.log(`🔍 Analyzing with file reference: ${fileMetadata.name}`);
 
-            // Call analysis endpoint with file reference
+            // Call analysis endpoint with file data (base64)
             const response = await fetch('/api/gemini-analyze-file', {
                 method: 'POST',
                 headers: {
@@ -535,8 +535,9 @@ IMPORTANT RULES:
                 },
                 body: JSON.stringify({
                     prompt: prompt,
-                    fileUri: fileMetadata.uri,
+                    fileData: fileMetadata.data || fileMetadata.uri, // Support both new (data) and old (uri) format
                     fileName: fileMetadata.name,
+                    mimeType: fileMetadata.mimeType || 'application/pdf',
                     model: 'gemini-2.5-pro',
                     maxTokens: 16384
                 })

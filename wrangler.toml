@@ -1,28 +1,7 @@
 # Cloudflare Workers Configuration
-# https://developers.cloudflare.com/workers/wrangler/configuration/
-
 name = "hkit-analyzer"
 main = "cloudflare-worker.js"
 compatibility_date = "2025-01-13"
 
-# Account details (optional - will be set via Cloudflare dashboard)
-# account_id = ""
-
-[env.production]
-# Production environment variables
-# These are set in the Cloudflare dashboard under Settings > Environment Variables
+# Environment variables are set in Cloudflare dashboard
 # Required: OPENROUTER_API_KEY
-
-# Limits
-[limits]
-# Free tier limits
-cpu_ms = 10  # 10ms CPU time per request
-
-# Observability
-[observability]
-enabled = true
-
-# Routes (optional - if you want to use custom domains)
-# [[routes]]
-# pattern = "analyzer.yourdomain.com/*"
-# zone_name = "yourdomain.com"

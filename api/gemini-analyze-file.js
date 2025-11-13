@@ -1,5 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
+// File analysis endpoint - OpenRouter compatible (uses base64 inline data)
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,25 +17,36 @@ module.exports = async (req, res) => {
 
   try {
     // Check for API key
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      console.error('GEMINI_API_KEY not configured');
+      console.error('OPENROUTER_API_KEY not configured');
       return res.status(500).json({
-        error: 'Gemini API key not configured',
-        details: 'Please set GEMINI_API_KEY in environment variables'
+        error: 'OpenRouter API key not configured',
+        details: 'Please set OPENROUTER_API_KEY in environment variables'
       });
     }
 
-    // Parse request body
-    const { prompt, fileUri, fileName, model = 'gemini-2.5-pro', temperature = 0.3, maxTokens = 16384 } = req.body;
+    // Parse request body - now accepts fileData (base64) instead of fileUri
+    const { prompt, fileData, fileUri, fileName, mimeType = 'application/pdf', model = 'gemini-2.5-pro', temperature = 0.3, maxTokens = 16384 } = req.body;
+
+    // Use fileData (from new upload endpoint) or fileUri (legacy compatibility)
+    const base64Data = fileData || fileUri;
+
+    // Map model names to OpenRouter format
+    const modelMap = {
+      'gemini-2.5-pro': 'google/gemini-2.5-pro',
+      'gemini-1.5-pro': 'google/gemini-1.5-pro',
+      'gemini-2.5-flash': 'google/gemini-2.0-flash-exp:free'
+    };
+    const openRouterModel = modelMap[model] || 'google/gemini-2.5-pro';
 
     // Debug logging
     console.log('📍 Analyze file request received:', {
       hasPrompt: !!prompt,
       promptLength: prompt?.length || 0,
-      fileUri: fileUri,
+      hasFileData: !!base64Data,
       fileName: fileName,
-      model: model
+      model: openRouterModel
     });
 
     if (!prompt) {
@@ -46,56 +56,60 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (!fileUri) {
-      console.error('❌ Missing fileUri in request body');
+    if (!base64Data) {
+      console.error('❌ Missing fileData or fileUri in request body');
       return res.status(400).json({
-        error: 'Missing required field: fileUri'
+        error: 'Missing required field: fileData or fileUri (base64 encoded file data)'
       });
     }
 
-    console.log('✅ Initializing Gemini API with model:', model);
+    console.log(`🔍 Analyzing file: ${fileName} via OpenRouter...`);
 
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    // Get the generative model
-    const geminiModel = genAI.getGenerativeModel({
-      model: model,
-      generationConfig: {
-        temperature: temperature,
-        maxOutputTokens: Math.min(maxTokens, 16384),
-        topP: 0.95,
-        topK: 40,
-      },
-    });
-
-    console.log(`🔍 Analyzing file: ${fileName} with uploaded file reference...`);
-
-    // Prepare content with file reference
-    const contentToGenerate = [
+    // Prepare message content with file (OpenAI-compatible format)
+    const messageContent = [
+      { type: 'text', text: prompt },
       {
-        text: prompt
-      },
-      {
-        fileData: {
-          fileUri: fileUri,
-          mimeType: 'application/pdf'
+        type: 'image_url',
+        image_url: {
+          url: `data:${mimeType};base64,${base64Data}`
         }
       }
     ];
 
-    // Generate content with 55 second timeout (leaving 5 second buffer for 60s Vercel limit)
-    const result = await Promise.race([
-      geminiModel.generateContent(contentToGenerate),
+    // Call OpenRouter API with 55 second timeout
+    const fetchPromise = fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://hkit-course-analyzer.vercel.app',
+        'X-Title': 'HKIT Course Analyzer',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: openRouterModel,
+        messages: [{ role: 'user', content: messageContent }],
+        temperature: temperature,
+        max_tokens: Math.min(maxTokens, 16384),
+        top_p: 0.95
+      })
+    });
+
+    const response = await Promise.race([
+      fetchPromise,
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 55000)
       )
     ]);
 
-    const response = await result.response;
-    const text = response.text();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+    }
 
-    console.log('✅ Content generated successfully');
+    const data = await response.json();
+    const text = data.choices[0].message.content;
+
+    console.log('✅ Content generated successfully via OpenRouter');
     console.log(`📊 Response length: ${text.length} characters`);
 
     // Return the response
@@ -107,7 +121,7 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('OpenRouter API Error:', error);
     console.error('Error name:', error.name);
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);

@@ -1,5 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { GoogleAIFileManager } = require('@google/generative-ai/server');
+// File upload endpoint - OpenRouter compatible (uses base64 encoding instead of file management API)
 const busboy = require('busboy');
 
 module.exports = async (req, res) => {
@@ -20,19 +19,16 @@ module.exports = async (req, res) => {
 
   try {
     // Check for API key
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      console.error('GEMINI_API_KEY not configured');
+      console.error('OPENROUTER_API_KEY not configured');
       return res.status(500).json({
-        error: 'Gemini API key not configured',
-        details: 'Please set GEMINI_API_KEY in environment variables'
+        error: 'OpenRouter API key not configured',
+        details: 'Please set OPENROUTER_API_KEY in environment variables'
       });
     }
 
-    console.log('📤 Starting file upload to Gemini Files API...');
-
-    // Initialize File Manager
-    const fileManager = new GoogleAIFileManager(apiKey);
+    console.log('📤 Processing file upload for OpenRouter...');
 
     // Parse multipart form data
     const bb = busboy({ headers: req.headers });
@@ -64,59 +60,24 @@ module.exports = async (req, res) => {
           return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        // Upload file to Gemini Files API
-        console.log(`🚀 Uploading ${fileName} to Gemini...`);
+        console.log(`📦 Encoding ${fileName} as base64...`);
 
-        // For Gemini Files API, we need to save to temp file first
-        // since the SDK expects file paths
-        const fs = require('fs');
-        const path = require('path');
-        const os = require('os');
+        // Convert to base64 for OpenRouter (inline data approach)
+        const base64Data = fileBuffer.toString('base64');
 
-        const tmpDir = os.tmpdir();
-        const tmpFilePath = path.join(tmpDir, fileName);
+        console.log(`✅ File processed successfully`);
 
-        // Write to temp file
-        fs.writeFileSync(tmpFilePath, fileBuffer);
-
-        // Upload to Gemini Files API
-        const uploadResult = await fileManager.uploadFile(tmpFilePath, {
-          mimeType: mimeType,
-          displayName: fileName,
-        });
-
-        // Clean up temp file
-        fs.unlinkSync(tmpFilePath);
-
-        console.log(`✅ File uploaded successfully`);
-        console.log(`📍 File URI: ${uploadResult.file.uri}`);
-        console.log(`📍 File name: ${uploadResult.file.name}`);
-        console.log(`📍 File state: ${uploadResult.file.state}`);
-
-        // Wait for file to be processed if needed
-        let file = uploadResult.file;
-        while (file.state === 'PROCESSING') {
-          console.log('⏳ Waiting for file processing...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          file = await fileManager.getFile(file.name);
-        }
-
-        if (file.state === 'FAILED') {
-          throw new Error('File processing failed');
-        }
-
-        console.log('✅ File ready for analysis');
-
-        // Return file information
+        // Return file data in a format compatible with OpenRouter
+        // Instead of a URI, we return base64 data that can be used inline
         return res.status(200).json({
           success: true,
           file: {
-            uri: file.uri,
-            name: file.name,
-            mimeType: file.mimeType,
-            sizeBytes: file.sizeBytes,
-            displayName: file.displayName,
-            state: file.state
+            data: base64Data,
+            name: fileName,
+            mimeType: mimeType,
+            sizeBytes: fileBuffer.length,
+            displayName: fileName,
+            state: 'ACTIVE' // Mimic Google's response format for compatibility
           }
         });
 

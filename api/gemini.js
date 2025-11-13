@@ -1,5 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
+// OpenRouter API implementation for global Gemini access (no region restrictions)
 module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,89 +17,113 @@ module.exports = async (req, res) => {
 
   try {
     // Check for API key
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      console.error('GEMINI_API_KEY not configured');
-      return res.status(500).json({ 
-        error: 'Gemini API key not configured',
-        details: 'Please set GEMINI_API_KEY in environment variables'
+      console.error('OPENROUTER_API_KEY not configured');
+      return res.status(500).json({
+        error: 'OpenRouter API key not configured',
+        details: 'Please set OPENROUTER_API_KEY in environment variables'
       });
     }
 
-    // Parse request body - use 2.5 pro for complex multi-course analysis with large output
+    // Parse request body - use google/gemini-2.5-pro via OpenRouter
     const { prompt, model = 'gemini-2.5-pro', temperature = 0.7, maxTokens = 16384, files = [] } = req.body;
+
+    // Map model names to OpenRouter format
+    const modelMap = {
+      'gemini-2.5-pro': 'google/gemini-2.5-pro',
+      'gemini-1.5-pro': 'google/gemini-1.5-pro',
+      'gemini-2.5-flash': 'google/gemini-2.0-flash-exp:free'
+    };
+    const openRouterModel = modelMap[model] || 'google/gemini-2.5-pro';
 
     // Debug logging
     console.log('📍 Request received:', {
       hasPrompt: !!prompt,
       promptLength: prompt?.length || 0,
-      model: model,
+      model: openRouterModel,
       filesCount: files?.length || 0,
       bodyKeys: Object.keys(req.body || {})
     });
 
     if (!prompt) {
       console.error('❌ Missing prompt in request body');
-      return res.status(400).json({ 
-        error: 'Missing required field: prompt' 
+      return res.status(400).json({
+        error: 'Missing required field: prompt'
       });
     }
 
-    console.log('✅ Initializing Gemini API with model:', model);
-    
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Use a faster model for better performance
-    const geminiModel = genAI.getGenerativeModel({
-      model: model,
-      generationConfig: {
-        temperature: temperature,
-        maxOutputTokens: Math.min(maxTokens, 16384), // Increased for multi-course analysis
-        topP: 0.95,
-        topK: 40,
-      },
-    });
+    console.log('✅ Calling OpenRouter API with model:', openRouterModel);
 
-    console.log('Generating content...');
-    
-    // Prepare content for generation (handle files if present)
-    let contentToGenerate;
+    // Prepare message content (OpenAI-compatible format)
+    let messageContent;
     if (files && files.length > 0) {
-      // Handle files with prompt
-      const parts = [{ text: prompt }];
-      
-      // Add file parts
+      // Handle files with prompt - OpenRouter supports multimodal content
+      messageContent = [
+        { type: 'text', text: prompt }
+      ];
+
+      // Add file parts (images/PDFs as base64)
       files.forEach(file => {
-        if (file.mimeType === 'application/pdf') {
-          parts.push({
-            inlineData: {
-              mimeType: file.mimeType,
-              data: file.data
+        if (file.mimeType === 'application/pdf' || file.mimeType.startsWith('image/')) {
+          messageContent.push({
+            type: 'image_url',
+            image_url: {
+              url: `data:${file.mimeType};base64,${file.data}`
             }
           });
         }
       });
-      
-      contentToGenerate = parts;
     } else {
-      contentToGenerate = prompt;
+      messageContent = prompt;
     }
-    
-    // Generate content with 55 second timeout (leaving 5 second buffer for 60s Vercel limit)
-    const result = await Promise.race([
-      geminiModel.generateContent(contentToGenerate),
+
+    // Prepare OpenRouter request
+    const openRouterRequest = {
+      model: openRouterModel,
+      messages: [
+        {
+          role: 'user',
+          content: messageContent
+        }
+      ],
+      temperature: temperature,
+      max_tokens: Math.min(maxTokens, 16384),
+      top_p: 0.95
+    };
+
+    console.log('Generating content via OpenRouter...');
+
+    // Call OpenRouter API with 55 second timeout
+    const fetchPromise = fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://hkit-course-analyzer.vercel.app',
+        'X-Title': 'HKIT Course Analyzer',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(openRouterRequest)
+    });
+
+    const response = await Promise.race([
+      fetchPromise,
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timeout - please try again with shorter input')), 55000)
       )
     ]);
 
-    const response = await result.response;
-    const text = response.text();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+    }
 
-    console.log('Content generated successfully');
+    const data = await response.json();
+    const text = data.choices[0].message.content;
 
-    // Return the response
+    console.log('Content generated successfully via OpenRouter');
+
+    // Return the response in the same format as before
     return res.status(200).json({
       success: true,
       data: {
@@ -109,11 +132,11 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('OpenRouter API Error:', error);
     console.error('Error name:', error.name);
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
-    
+
     // More detailed error response for debugging
     return res.status(500).json({
       error: 'Failed to generate content',

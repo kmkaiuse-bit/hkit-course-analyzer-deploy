@@ -1,8 +1,7 @@
 /**
- * Chunked Gemini API Processing for Large Files
+ * Chunked OpenRouter API Processing for Large Files
  * Handles timeout issues by processing PDFs in chunks
  */
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Simple in-memory store for job tracking (use Vercel KV in production)
 const jobs = new Map();
@@ -25,45 +24,33 @@ module.exports = async (req, res) => {
 
   try {
     // Check for API key
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ 
-        error: 'Gemini API key not configured',
-        details: 'Please set GEMINI_API_KEY in environment variables'
+      return res.status(500).json({
+        error: 'OpenRouter API key not configured',
+        details: 'Please set OPENROUTER_API_KEY in environment variables'
       });
     }
 
     const { prompt, files = [], chunkSize = 5 } = req.body;
 
     if (!prompt) {
-      return res.status(400).json({ 
-        error: 'Missing required field: prompt' 
+      return res.status(400).json({
+        error: 'Missing required field: prompt'
       });
     }
 
     // Generate job ID
     const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 4096,
-        topP: 0.9,
-        topK: 40,
-      },
-    });
 
     // Check if we need chunking (large files or many files)
-    const needsChunking = files.length > 1 || files.some(file => 
+    const needsChunking = files.length > 1 || files.some(file =>
       Buffer.from(file.data, 'base64').length > 500 * 1024 // 500KB
     );
 
     if (!needsChunking) {
       // Process immediately for small files
-      const result = await processChunk(model, prompt, files, 0);
+      const result = await processChunk(apiKey, prompt, files, 0);
       return res.status(200).json({
         success: true,
         jobId,
@@ -85,11 +72,11 @@ module.exports = async (req, res) => {
 
     jobs.set(jobId, job);
 
-    // Process first chunk immediately 
+    // Process first chunk immediately
     try {
       const firstChunkResult = await Promise.race([
-        processChunk(model, prompt, chunks[0], 0),
-        new Promise((_, reject) => 
+        processChunk(apiKey, prompt, chunks[0], 0),
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Chunk timeout')), 8000)
         )
       ]);
@@ -112,7 +99,7 @@ module.exports = async (req, res) => {
 
     // Schedule remaining chunks for background processing
     if (chunks.length > 1) {
-      processRemainingChunks(model, prompt, chunks.slice(1), job);
+      processRemainingChunks(apiKey, prompt, chunks.slice(1), job);
     } else {
       job.status = 'completed';
     }
@@ -154,35 +141,56 @@ function chunkFiles(files, maxFilesPerChunk = 5) {
 }
 
 /**
- * Process a single chunk of files
+ * Process a single chunk of files using OpenRouter
  */
-async function processChunk(model, prompt, files, chunkIndex) {
+async function processChunk(apiKey, prompt, files, chunkIndex) {
   console.log(`Processing chunk ${chunkIndex} with ${files.length} files`);
-  
-  let contentToGenerate;
+
+  // Prepare message content (OpenAI-compatible format)
+  let messageContent;
   if (files && files.length > 0) {
-    const parts = [{ text: prompt }];
-    
+    messageContent = [{ type: 'text', text: prompt }];
+
     files.forEach(file => {
-      if (file.mimeType === 'application/pdf') {
-        parts.push({
-          inlineData: {
-            mimeType: file.mimeType,
-            data: file.data
+      if (file.mimeType === 'application/pdf' || file.mimeType.startsWith('image/')) {
+        messageContent.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:${file.mimeType};base64,${file.data}`
           }
         });
       }
     });
-    
-    contentToGenerate = parts;
   } else {
-    contentToGenerate = prompt;
+    messageContent = prompt;
   }
-  
-  const result = await model.generateContent(contentToGenerate);
-  const response = await result.response;
-  const text = response.text();
-  
+
+  // Call OpenRouter API
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://hkit-course-analyzer.vercel.app',
+      'X-Title': 'HKIT Course Analyzer',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-pro',
+      messages: [{ role: 'user', content: messageContent }],
+      temperature: 0.3,
+      max_tokens: 4096,
+      top_p: 0.9
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`OpenRouter API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices[0].message.content;
+
   // Parse and return structured data
   try {
     return JSON.parse(text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
@@ -199,20 +207,20 @@ async function processChunk(model, prompt, files, chunkIndex) {
 /**
  * Process remaining chunks in background (simulated)
  */
-async function processRemainingChunks(model, prompt, remainingChunks, job) {
+async function processRemainingChunks(apiKey, prompt, remainingChunks, job) {
   // In a real implementation, this would use a queue system
   // For now, we'll process sequentially with delays
-  
+
   for (let i = 0; i < remainingChunks.length; i++) {
     const chunkIndex = i + 1; // +1 because first chunk was already processed
-    
+
     try {
       // Add small delay to simulate background processing
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       const chunkResult = await Promise.race([
-        processChunk(model, prompt, remainingChunks[i], chunkIndex),
-        new Promise((_, reject) => 
+        processChunk(apiKey, prompt, remainingChunks[i], chunkIndex),
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Chunk timeout')), 8000)
         )
       ]);
@@ -222,7 +230,7 @@ async function processRemainingChunks(model, prompt, remainingChunks, job) {
         completed: true,
         data: chunkResult
       });
-      
+
     } catch (error) {
       console.error(`Chunk ${chunkIndex} processing failed:`, error);
       job.results.push({
@@ -231,10 +239,10 @@ async function processRemainingChunks(model, prompt, remainingChunks, job) {
         error: error.message
       });
     }
-    
+
     job.completedChunks++;
   }
-  
+
   job.status = 'completed';
   console.log(`Job ${job.id} completed with ${job.completedChunks}/${job.totalChunks} chunks`);
 }
